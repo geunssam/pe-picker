@@ -1,0 +1,384 @@
+/* ============================================
+   PE Picker - Tag Game Styles
+   술래뽑기 전용 스타일 (클래스펫 디자인 적용)
+   ============================================ */
+
+/* === Phase 전환 === */
+.tag-phase {
+  animation: fadeIn 0.3s ease;
+}
+
+/* === 뽑기 설정 2×2 레이아웃 === */
+.tag-settings-4col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.tag-setting-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.tag-setting-item .setting-label {
+  font-size: var(--font-size-base);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tag-setting-item .number-stepper {
+  width: 100%;
+  justify-content: center;
+}
+
+.tag-setting-item .number-stepper input {
+  width: 52px;
+  min-width: 52px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.tag-setting-item .number-stepper input::-webkit-inner-spin-button,
+.tag-setting-item .number-stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* === 학생 생성 3버튼 === */
+.tag-student-gen-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.tag-student-gen-buttons .btn {
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-full);
+  border: 1.5px solid rgba(124, 158, 245, 0.35);
+  padding: var(--space-md) var(--space-sm);
+  justify-content: center;
+}
+
+/* === 액션 버튼 그룹 === */
+.tag-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+/* === Phase 2 버튼 4열 그리드 === */
+.tag-phase2-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.tag-phase2-grid .btn {
+  font-size: var(--font-size-sm);
+  padding: var(--space-md) var(--space-sm);
+  white-space: nowrap;
+  border-radius: var(--radius-md);
+}
+/* === 학생 카드 영역 === */
+.tag-student-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-xs);
+}
+
+.tag-student-card {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(124, 158, 245, 0.1);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.tag-student-card.gender-male {
+  border-color: rgba(100, 149, 237, 0.5);
+  background: rgba(100, 149, 237, 0.08);
+}
+
+.tag-student-card.gender-female {
+  border-color: rgba(255, 105, 180, 0.5);
+  background: rgba(255, 105, 180, 0.08);
+}
+
+.tag-student-card.excluded {
+  background: rgba(200, 200, 200, 0.2);
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  border-color: rgba(200, 200, 200, 0.3);
+  opacity: 0.6;
+}
+
+.tag-card-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(245, 124, 124, 0.15);
+  color: var(--color-danger);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+  line-height: 1;
+}
+
+.tag-card-remove:hover {
+  background: rgba(245, 124, 124, 0.3);
+}
+
+.tag-student-card.excluded .tag-card-remove {
+  background: rgba(124, 224, 163, 0.15);
+  color: var(--color-success-dark);
+}
+
+/* === 라운드 표시 === */
+.tag-round-display {
+  text-align: center;
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-xl);
+  animation: fadeIn 0.3s ease;
+}
+
+/* === 결과 컨테이너 === */
+.tag-result-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* === 결과 카드 === */
+.tag-result-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  animation: scaleIn 0.4s ease forwards;
+}
+
+.tag-result-card .result-role {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-sm);
+}
+
+.tag-result-card .result-role.role-it {
+  color: var(--color-danger);
+}
+
+.tag-result-card .result-role.role-angel {
+  color: var(--color-primary);
+}
+
+.tag-result-card .result-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.tag-result-card .result-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  animation: scaleIn 0.3s ease forwards;
+}
+
+.tag-result-card .result-name.name-it {
+  background: rgba(245, 124, 124, 0.1);
+  color: var(--color-danger-dark);
+}
+
+.tag-result-card .result-name.name-angel {
+  background: rgba(124, 158, 245, 0.1);
+  color: var(--color-primary-dark);
+}
+
+/* === 폴딩 섹션 === */
+.tag-collapsible {
+  margin-bottom: var(--space-sm);
+}
+
+.tag-collapse-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tag-collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.tag-collapse-toggle .collapse-arrow {
+  font-size: var(--font-size-xs);
+  transition: transform var(--transition-fast);
+}
+
+.tag-collapse-toggle.open .collapse-arrow {
+  transform: rotate(180deg);
+}
+
+.tag-collapse-content {
+  padding: var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.tag-candidate-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+.tag-candidate-tag.type-it {
+  background: rgba(245, 124, 124, 0.1);
+  color: var(--color-danger-dark);
+}
+
+.tag-candidate-tag.type-angel {
+  background: rgba(124, 158, 245, 0.1);
+  color: var(--color-primary-dark);
+}
+
+.tag-candidate-tag.type-history {
+  background: rgba(150, 150, 150, 0.1);
+  color: var(--text-tertiary);
+}
+
+/* === 타이머 Phase (Phase 3) === */
+.tag-timer-phase {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+}
+
+.tag-timer-display-wrapper {
+  margin-bottom: var(--space-2xl);
+}
+
+.tag-timer-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-sm);
+}
+
+.tag-timer-display {
+  font-size: min(20vw, 100px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+}
+
+.tag-timer-display.timer-normal {
+  color: var(--color-success);
+}
+
+.tag-timer-display.timer-warning {
+  color: var(--color-warning-dark);
+}
+
+.tag-timer-display.timer-danger {
+  color: var(--color-danger);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.tag-timer-controls {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  margin-bottom: var(--space-xl);
+}
+
+.tag-timer-sub-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+/* === 타이머 전체화면 모드 === */
+.tag-timer-phase.timer-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fullscreen);
+  background: var(--text-primary);
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+}
+
+.tag-timer-phase.timer-fullscreen .tag-timer-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-size-lg);
+}
+
+.tag-timer-phase.timer-fullscreen .tag-timer-display {
+  font-size: min(25vw, 160px);
+}
+
+.tag-timer-phase.timer-fullscreen .tag-timer-controls .btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 200px;
+}
+
+.tag-timer-phase.timer-fullscreen .tag-timer-sub-controls .btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tag-timer-phase.timer-fullscreen .tag-timer-sub-controls .btn-danger {
+  background: rgba(245, 124, 124, 0.3);
+  color: var(--color-danger);
+}

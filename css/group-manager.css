@@ -1,0 +1,148 @@
+/* ============================================
+   PE Picker - Group Manager Styles
+   모둠뽑기 전용 스타일
+   ============================================ */
+
+/* === 모둠 카드 컨테이너 === */
+.gm-groups-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+@media (min-width: 480px) {
+  .gm-groups-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* === 모둠 카드 === */
+.gm-group-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  opacity: 0;
+}
+
+.gm-group-card.revealed {
+  opacity: 1;
+  animation: cardReveal 0.5s ease forwards;
+}
+
+.gm-group-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.gm-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--text-white);
+}
+
+.gm-group-members {
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.gm-member-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  opacity: 0;
+}
+
+.gm-member-tag.revealed {
+  opacity: 1;
+  animation: nameReveal 0.3s ease forwards;
+}
+
+/* === 모둠 색상 === */
+.gm-color-1 .gm-group-header { background: var(--group-1); }
+.gm-color-2 .gm-group-header { background: var(--group-2); }
+.gm-color-3 .gm-group-header { background: var(--group-3); }
+.gm-color-4 .gm-group-header { background: var(--group-4); }
+.gm-color-5 .gm-group-header { background: var(--group-5); }
+.gm-color-6 .gm-group-header { background: var(--group-6); }
+.gm-color-7 .gm-group-header { background: var(--group-7); }
+.gm-color-8 .gm-group-header { background: var(--group-8); }
+
+.gm-color-1 .gm-member-tag { background: rgba(59, 130, 246, 0.1); }
+.gm-color-2 .gm-member-tag { background: rgba(16, 185, 129, 0.1); }
+.gm-color-3 .gm-member-tag { background: rgba(245, 158, 11, 0.1); }
+.gm-color-4 .gm-member-tag { background: rgba(239, 68, 68, 0.1); }
+.gm-color-5 .gm-member-tag { background: rgba(139, 92, 246, 0.1); }
+.gm-color-6 .gm-member-tag { background: rgba(236, 72, 153, 0.1); }
+.gm-color-7 .gm-member-tag { background: rgba(6, 182, 212, 0.1); }
+.gm-color-8 .gm-member-tag { background: rgba(132, 204, 22, 0.1); }
+
+/* === 쿠키 영역 === */
+.gm-cookie-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.gm-cookie-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+.gm-cookie-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+
+.gm-cookie-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.gm-cookie-btn:active {
+  transform: scale(0.9);
+}
+
+/* === 타이머 디스플레이 === */
+.gm-timer-display {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  min-width: 80px;
+  text-align: center;
+}
+
+.gm-timer-display.warning {
+  color: var(--color-danger);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* === 프리셋 버튼 활성 === */
+.gm-timer-preset.active {
+  background: var(--gradient-primary) !important;
+  color: var(--text-white) !important;
+  border-color: transparent !important;
+}
