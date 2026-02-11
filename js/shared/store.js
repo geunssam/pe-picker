@@ -47,12 +47,13 @@ const Store = (() => {
     _set(KEYS.CLASSES, classes);
   }
 
-  function addClass(name, students) {
+  function addClass(name, students, groupNames = null) {
     const classes = getClasses();
     const newClass = {
       id: Date.now().toString(),
       name,
       students, // [{ name, number, gender }] 또는 string[]
+      groupNames: groupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'], // 기본 모둠 이름
       createdAt: new Date().toISOString(),
     };
     classes.push(newClass);
@@ -60,11 +61,15 @@ const Store = (() => {
     return newClass;
   }
 
-  function updateClass(id, name, students) {
+  function updateClass(id, name, students, groupNames = null) {
     const classes = getClasses();
     const idx = classes.findIndex(c => c.id === id);
     if (idx === -1) return null;
-    classes[idx] = { ...classes[idx], name, students };
+    const updated = { ...classes[idx], name, students };
+    if (groupNames !== null) {
+      updated.groupNames = groupNames;
+    }
+    classes[idx] = updated;
     saveClasses(classes);
     return classes[idx];
   }
@@ -112,11 +117,23 @@ const Store = (() => {
       defaultTime: 300,
       timerAlert: 'soundAndVisual',
       animationEnabled: true,
+      defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑'],
     };
   }
 
   function saveSettings(settings) {
     _set(KEYS.SETTINGS, settings);
+  }
+
+  function getDefaultGroupNames() {
+    const settings = getSettings();
+    return settings.defaultGroupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'];
+  }
+
+  function saveDefaultGroupNames(names) {
+    const settings = getSettings();
+    settings.defaultGroupNames = names;
+    saveSettings(settings);
   }
 
   // === 쿠키 히스토리 ===
@@ -222,6 +239,8 @@ const Store = (() => {
     // 설정
     getSettings,
     saveSettings,
+    getDefaultGroupNames,
+    saveDefaultGroupNames,
     // 쿠키
     getCookieHistory,
     addCookieRecord,

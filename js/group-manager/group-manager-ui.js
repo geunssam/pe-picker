@@ -53,6 +53,7 @@ const GroupManagerUI = (() => {
   // === 카드 HTML 생성 ===
   function createGroupCardHTML(group) {
     const colorIdx = ((group.id - 1) % 8) + 1;
+    const groupName = group.name || `${group.id}모둠`;
     const membersHTML = group.members.map(name =>
       `<span class="gm-member-tag">${name}</span>`
     ).join('');
@@ -60,7 +61,7 @@ const GroupManagerUI = (() => {
     return `
       <div class="gm-group-card gm-color-${colorIdx}" data-group-id="${group.id}">
         <div class="gm-group-header">
-          <span>${group.id}모둠 (${group.members.length}명)</span>
+          <span>${groupName} (${group.members.length}명)</span>
           <div class="gm-cookie-area">
             <button class="gm-cookie-btn" onclick="GroupManager.removeCookie(${group.id})">−</button>
             <span class="gm-cookie-count" id="gm-cookie-${group.id}">🍪 ${group.cookies || 0}</span>

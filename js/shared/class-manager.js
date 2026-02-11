@@ -23,10 +23,15 @@ const ClassManager = (() => {
 
     // 설정 페이지: 학급 목록 렌더
     renderSettingsClassList();
+    loadDefaultGroupNames();
 
     // 설정: 새 학급 추가 버튼
     const addBtn = document.getElementById('settings-add-class');
     if (addBtn) addBtn.addEventListener('click', () => openModal(null, renderSettingsClassList));
+
+    // 설정: 기본 모둠 이름 저장 버튼
+    const saveDefaultBtn = document.getElementById('save-default-group-names');
+    if (saveDefaultBtn) saveDefaultBtn.addEventListener('click', saveDefaultGroupNamesHandler);
 
     // 설정: 데이터 초기화
     const resetBtn = document.getElementById('settings-reset-data');
@@ -77,17 +82,38 @@ const ClassManager = (() => {
     const nameInput = document.getElementById('class-name-input');
     const studentsInput = document.getElementById('class-students-input');
 
+    // 모둠 이름 섹션
+    const groupNameSection = document.getElementById('class-group-names-section');
+    const groupNameInputs = [];
+    for (let i = 1; i <= 6; i++) {
+      groupNameInputs.push(document.getElementById(`class-group-name-${i}`));
+    }
+
     if (classId) {
+      // 편집 모드
       const cls = Store.getClassById(classId);
       if (cls) {
         titleEl.textContent = '학급 편집';
         nameInput.value = cls.name;
         studentsInput.value = getStudentNames(classId).join('\n');
+
+        // 모둠 이름 섹션 표시
+        if (groupNameSection) groupNameSection.style.display = '';
+
+        // 모둠 이름 채우기
+        const groupNames = cls.groupNames || Store.getDefaultGroupNames();
+        groupNameInputs.forEach((input, idx) => {
+          if (input) input.value = groupNames[idx] || '';
+        });
       }
     } else {
+      // 새 학급 추가 모드
       titleEl.textContent = '새 학급 추가';
       nameInput.value = '';
       studentsInput.value = '';
+
+      // 모둠 이름 섹션 숨기기
+      if (groupNameSection) groupNameSection.style.display = 'none';
     }
 
     UI.showModal('class-modal');
@@ -122,10 +148,21 @@ const ClassManager = (() => {
     }
 
     if (editingClassId) {
-      Store.updateClass(editingClassId, name, students);
+      // 편집 모드: 모둠 이름 수집
+      const groupNames = [];
+      for (let i = 1; i <= 6; i++) {
+        const input = document.getElementById(`class-group-name-${i}`);
+        if (input && input.value.trim()) {
+          groupNames.push(input.value.trim());
+        }
+      }
+      // 모둠 이름이 없으면 기본값 사용
+      const finalGroupNames = groupNames.length > 0 ? groupNames : Store.getDefaultGroupNames();
+      Store.updateClass(editingClassId, name, students, finalGroupNames);
       UI.showToast(`${name} 수정 완료`, 'success');
     } else {
-      Store.addClass(name, students);
+      // 새 학급: 기본 모둠 이름 사용
+      Store.addClass(name, students, Store.getDefaultGroupNames());
       UI.showToast(`${name} 추가 완료`, 'success');
     }
 
@@ -239,6 +276,35 @@ const ClassManager = (() => {
     UI.showToast('학급 삭제 완료', 'success');
     renderSettingsClassList();
     refreshAllSelects();
+  }
+
+  // === 기본 모둠 이름 관리 ===
+  function loadDefaultGroupNames() {
+    const defaultNames = Store.getDefaultGroupNames();
+    for (let i = 1; i <= 6; i++) {
+      const input = document.getElementById(`default-group-name-${i}`);
+      if (input) {
+        input.value = defaultNames[i - 1] || '';
+      }
+    }
+  }
+
+  function saveDefaultGroupNamesHandler() {
+    const names = [];
+    for (let i = 1; i <= 6; i++) {
+      const input = document.getElementById(`default-group-name-${i}`);
+      if (input && input.value.trim()) {
+        names.push(input.value.trim());
+      }
+    }
+
+    if (names.length === 0) {
+      UI.showToast('최소 1개 이상의 모둠 이름을 입력하세요', 'error');
+      return;
+    }
+
+    Store.saveDefaultGroupNames(names);
+    UI.showToast('기본 모둠 이름 저장 완료', 'success');
   }
 
   return {

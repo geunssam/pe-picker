@@ -34,6 +34,10 @@ const GroupManager = (() => {
     document.getElementById('gm-class-modal-cancel')?.addEventListener('click', () => UI.hideModal('gm-class-select-modal'));
     document.getElementById('gm-class-modal-confirm')?.addEventListener('click', confirmClassSelect);
 
+    // 모둠 이름 방식 변경
+    document.getElementById('gm-naming-mode')?.addEventListener('change', handleNamingModeChange);
+    document.getElementById('gm-class-name-select')?.addEventListener('change', handleClassNameSelectChange);
+
     // 모둠 설정 변경 시 정보 갱신
     ['gm-group-size', 'gm-group-count'].forEach(id => {
       const el = document.getElementById(id);
@@ -87,6 +91,7 @@ const GroupManager = (() => {
   function onPageEnter() {
     updateCalcInfo();
     updateGmUI();
+    populateClassNameSelect();
   }
 
   // === Phase UI 전환 ===
@@ -401,12 +406,16 @@ const GroupManager = (() => {
 
     const shuffled = UI.shuffleArray(students);
 
+    // 모둠 이름 가져오기
+    const groupNames = getGroupNames(groupCount);
+
     // 모둠 구성 (정원만큼)
     currentGroups = [];
     for (let i = 0; i < groupCount; i++) {
       const start = i * groupSize;
       currentGroups.push({
         id: i + 1,
+        name: groupNames[i] || `${i + 1}모둠`,
         members: shuffled.slice(start, start + groupSize),
         cookies: 0,
       });
@@ -533,6 +542,84 @@ const GroupManager = (() => {
       display.textContent = UI.formatTime(seconds);
       display.classList.toggle('warning', seconds <= 10 && seconds > 0);
     }
+  }
+
+  // === 모둠 이름 관련 함수 ===
+  function populateClassNameSelect() {
+    const select = document.getElementById('gm-class-name-select');
+    if (!select) return;
+
+    const classes = Store.getClasses();
+    select.innerHTML = '<option value="">학급 선택...</option>';
+    classes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+  }
+
+  function handleNamingModeChange(e) {
+    const mode = e.target.value;
+    const classContainer = document.getElementById('gm-class-name-select-container');
+    const customContainer = document.getElementById('gm-custom-names-container');
+
+    if (mode === 'class') {
+      classContainer.style.display = '';
+      customContainer.style.display = 'none';
+    } else if (mode === 'custom') {
+      classContainer.style.display = 'none';
+      customContainer.style.display = '';
+    } else {
+      classContainer.style.display = 'none';
+      customContainer.style.display = 'none';
+    }
+  }
+
+  function handleClassNameSelectChange(e) {
+    const classId = e.target.value;
+    if (!classId) return;
+
+    const cls = Store.getClassById(classId);
+    if (!cls || !cls.groupNames) return;
+
+    // 커스텀 입력 필드에 학급 모둠 이름 채우기
+    const inputs = document.querySelectorAll('.gm-custom-name');
+    inputs.forEach((input, idx) => {
+      input.value = cls.groupNames[idx] || '';
+    });
+  }
+
+  function getGroupNames(count) {
+    const mode = document.getElementById('gm-naming-mode')?.value || 'number';
+
+    if (mode === 'number') {
+      // 숫자순
+      return Array.from({ length: count }, (_, i) => `${i + 1}모둠`);
+    } else if (mode === 'class') {
+      // 학급 설정 이름
+      const classId = document.getElementById('gm-class-name-select')?.value;
+      if (classId) {
+        const cls = Store.getClassById(classId);
+        if (cls && cls.groupNames) {
+          return cls.groupNames.slice(0, count);
+        }
+      }
+      // 학급이 선택되지 않았으면 기본값
+      return ['하나', '믿음', '우정', '희망', '협력', '사랑'].slice(0, count);
+    } else if (mode === 'custom') {
+      // 즉석 커스텀
+      const inputs = document.querySelectorAll('.gm-custom-name');
+      const names = [];
+      for (let i = 0; i < count && i < inputs.length; i++) {
+        const name = inputs[i].value.trim();
+        names.push(name || `${i + 1}모둠`);
+      }
+      return names;
+    }
+
+    // 기본값
+    return Array.from({ length: count }, (_, i) => `${i + 1}모둠`);
   }
 
   return {

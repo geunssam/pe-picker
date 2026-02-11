@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
@@ -11,7 +12,8 @@
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/design-system.css">
@@ -20,6 +22,7 @@
   <link rel="stylesheet" href="css/tag-game.css">
   <link rel="stylesheet" href="css/group-manager.css">
 </head>
+
 <body>
 
   <!-- 상단 네비바 -->
@@ -29,20 +32,30 @@
     </div>
     <nav class="navbar-tabs">
       <button data-route="tag-game" class="navbar-tab active">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="10" cy="7" r="3"/><path d="M4 18c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5"/>
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10" cy="7" r="3" />
+          <path d="M4 18c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5" />
         </svg>
         <span>술래뽑기</span>
       </button>
       <button data-route="group-manager" class="navbar-tab">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="7" cy="7" r="2.5"/><circle cx="13" cy="7" r="2.5"/><path d="M2 16.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5"/><path d="M12 12c2.5 0 4.5 1.8 4.5 4"/>
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="7" cy="7" r="2.5" />
+          <circle cx="13" cy="7" r="2.5" />
+          <path d="M2 16.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" />
+          <path d="M12 12c2.5 0 4.5 1.8 4.5 4" />
         </svg>
         <span>모둠뽑기</span>
       </button>
       <button data-route="settings" class="navbar-tab">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="2" width="14" height="16" rx="2"/><line x1="7" y1="6" x2="13" y2="6"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="7" y1="14" x2="10" y2="14"/>
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="2" width="14" height="16" rx="2" />
+          <line x1="7" y1="6" x2="13" y2="6" />
+          <line x1="7" y1="10" x2="13" y2="10" />
+          <line x1="7" y1="14" x2="10" y2="14" />
         </svg>
         <span>학급관리</span>
       </button>
@@ -301,6 +314,48 @@
           </div>
         </div>
 
+        <!-- 모둠 이름 설정 -->
+        <div class="section">
+          <div class="section-title">🏷️ 모둠 이름 설정</div>
+          <div class="glass-card" style="padding: var(--space-lg);">
+            <div style="margin-bottom: var(--space-md);">
+              <label
+                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">이름
+                방식</label>
+              <select id="gm-naming-mode" class="input" style="width: 100%;">
+                <option value="number">숫자순 (1모둠, 2모둠, 3모둠...)</option>
+                <option value="class">학급 설정 이름 사용</option>
+                <option value="custom">즉석 커스텀</option>
+              </select>
+            </div>
+
+            <!-- 학급 선택 (학급 설정 이름 모드일 때만) -->
+            <div id="gm-class-name-select-container" style="display: none; margin-bottom: var(--space-md);">
+              <label
+                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">학급
+                선택</label>
+              <select id="gm-class-name-select" class="input" style="width: 100%;">
+                <option value="">학급 선택...</option>
+              </select>
+            </div>
+
+            <!-- 즉석 커스텀 입력 -->
+            <div id="gm-custom-names-container" style="display: none;">
+              <label
+                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">모둠
+                이름 입력</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+                <input class="input gm-custom-name" type="text" placeholder="1번 모둠" maxlength="10">
+                <input class="input gm-custom-name" type="text" placeholder="2번 모둠" maxlength="10">
+                <input class="input gm-custom-name" type="text" placeholder="3번 모둠" maxlength="10">
+                <input class="input gm-custom-name" type="text" placeholder="4번 모둠" maxlength="10">
+                <input class="input gm-custom-name" type="text" placeholder="5번 모둠" maxlength="10">
+                <input class="input gm-custom-name" type="text" placeholder="6번 모둠" maxlength="10">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 모둠 뽑기 버튼 -->
         <button class="btn btn-primary btn-lg" id="gm-pick-btn" style="width: 100%; margin-bottom: var(--space-xl);">
           🎲 모둠 뽑기
@@ -314,7 +369,8 @@
       <div id="gm-timer-section" class="section" style="display: none;">
         <div class="section-title">⏱ 타이머</div>
         <div class="glass-card" style="padding: var(--space-lg);">
-          <div class="gm-timer-presets" style="display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-md);">
+          <div class="gm-timer-presets"
+            style="display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-md);">
             <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="30">30초</button>
             <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="60">1분</button>
             <button class="btn btn-sm btn-secondary gm-timer-preset active" data-seconds="180">3분</button>
@@ -365,8 +421,32 @@
       <div class="section">
         <div class="glass-card" style="padding: var(--space-lg);">
           <div id="settings-class-list" class="settings-class-list"></div>
-          <button class="btn btn-primary btn-sm" id="settings-add-class" style="width: 100%; margin-top: var(--space-md);">
+          <button class="btn btn-primary btn-sm" id="settings-add-class"
+            style="width: 100%; margin-top: var(--space-md);">
             + 새 학급 추가
+          </button>
+        </div>
+      </div>
+
+      <!-- 기본 모둠 이름 설정 -->
+      <div class="section">
+        <div class="section-title">🏷️ 기본 모둠 이름 설정</div>
+        <div class="glass-card" style="padding: var(--space-lg);">
+          <div style="margin-bottom: var(--space-sm); color: var(--text-secondary); font-size: var(--font-size-sm);">
+            새 학급에 기본으로 적용될 모둠 이름입니다. 각 학급은 편집을 통해 개별적으로 수정할 수 있습니다.
+          </div>
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-top: var(--space-md);">
+            <input class="input" type="text" id="default-group-name-1" placeholder="1번 모둠" maxlength="10">
+            <input class="input" type="text" id="default-group-name-2" placeholder="2번 모둠" maxlength="10">
+            <input class="input" type="text" id="default-group-name-3" placeholder="3번 모둠" maxlength="10">
+            <input class="input" type="text" id="default-group-name-4" placeholder="4번 모둠" maxlength="10">
+            <input class="input" type="text" id="default-group-name-5" placeholder="5번 모둠" maxlength="10">
+            <input class="input" type="text" id="default-group-name-6" placeholder="6번 모둠" maxlength="10">
+          </div>
+          <button class="btn btn-primary btn-sm" id="save-default-group-names"
+            style="width: 100%; margin-top: var(--space-md);">
+            저장
           </button>
         </div>
       </div>
@@ -403,20 +483,38 @@
       </div>
       <div class="modal-body">
         <div style="margin-bottom: var(--space-lg);">
-          <label style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">학급 이름</label>
+          <label
+            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">학급
+            이름</label>
           <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반">
         </div>
         <div style="margin-bottom: var(--space-lg);">
-          <label style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">
+          <label
+            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">
             학생 명단 <span style="font-weight: 400; color: var(--text-tertiary);">(한 줄에 한 명)</span>
           </label>
-          <textarea class="input" id="class-students-input" rows="8" placeholder="김민준&#10;이서연&#10;박지호&#10;..."></textarea>
+          <textarea class="input" id="class-students-input" rows="8"
+            placeholder="김민준&#10;이서연&#10;박지호&#10;..."></textarea>
         </div>
         <div style="margin-bottom: var(--space-md);">
           <button class="btn btn-sm btn-secondary" id="class-csv-import" style="width: 100%;">
             📂 CSV/TXT 파일 가져오기
           </button>
           <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none;">
+        </div>
+        <div id="class-group-names-section" style="margin-bottom: var(--space-lg);">
+          <label
+            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">
+            모둠 이름 설정 <span style="font-weight: 400; color: var(--text-tertiary);">(최대 6개)</span>
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+            <input class="input" type="text" id="class-group-name-1" placeholder="1번 모둠" maxlength="10">
+            <input class="input" type="text" id="class-group-name-2" placeholder="2번 모둠" maxlength="10">
+            <input class="input" type="text" id="class-group-name-3" placeholder="3번 모둠" maxlength="10">
+            <input class="input" type="text" id="class-group-name-4" placeholder="4번 모둠" maxlength="10">
+            <input class="input" type="text" id="class-group-name-5" placeholder="5번 모둠" maxlength="10">
+            <input class="input" type="text" id="class-group-name-6" placeholder="6번 모둠" maxlength="10">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -472,11 +570,13 @@
         <div style="display: flex; gap: var(--space-md); align-items: center;">
           <div style="flex: 1;">
             <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-            <input class="input" type="number" id="tag-number-start" value="1" min="1" max="99" style="margin-top: var(--space-xs);">
+            <input class="input" type="number" id="tag-number-start" value="1" min="1" max="99"
+              style="margin-top: var(--space-xs);">
           </div>
           <div style="flex: 1;">
             <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-            <input class="input" type="number" id="tag-number-end" value="20" min="1" max="99" style="margin-top: var(--space-xs);">
+            <input class="input" type="number" id="tag-number-end" value="20" min="1" max="99"
+              style="margin-top: var(--space-xs);">
           </div>
         </div>
         <div style="font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-md);">
@@ -503,11 +603,13 @@
           <div style="display: flex; gap: var(--space-md); align-items: center;">
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="tag-gender-male-start" value="1" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="tag-gender-male-start" value="1" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="tag-gender-male-end" value="7" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="tag-gender-male-end" value="7" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
           </div>
         </div>
@@ -516,11 +618,13 @@
           <div style="display: flex; gap: var(--space-md); align-items: center;">
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="tag-gender-female-start" value="41" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="tag-gender-female-start" value="41" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="tag-gender-female-end" value="45" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="tag-gender-female-end" value="45" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
           </div>
         </div>
@@ -559,7 +663,8 @@
         <button class="modal-close" id="manual-input-close">✕</button>
       </div>
       <div class="modal-body">
-        <textarea class="input" id="manual-input-text" rows="6" placeholder="학생 이름이나 번호를 쉼표로 구분하여 입력하세요&#10;예: 김철수, 이영희, 박민수 또는 1번, 2번, 3번"></textarea>
+        <textarea class="input" id="manual-input-text" rows="6"
+          placeholder="학생 이름이나 번호를 쉼표로 구분하여 입력하세요&#10;예: 김철수, 이영희, 박민수 또는 1번, 2번, 3번"></textarea>
         <div style="font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-sm);">
           💡 쉼표(,) 또는 줄바꿈으로 구분
         </div>
@@ -582,11 +687,13 @@
         <div style="display: flex; gap: var(--space-md); align-items: center;">
           <div style="flex: 1;">
             <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-            <input class="input" type="number" id="gm-number-start" value="1" min="1" max="99" style="margin-top: var(--space-xs);">
+            <input class="input" type="number" id="gm-number-start" value="1" min="1" max="99"
+              style="margin-top: var(--space-xs);">
           </div>
           <div style="flex: 1;">
             <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-            <input class="input" type="number" id="gm-number-end" value="20" min="1" max="99" style="margin-top: var(--space-xs);">
+            <input class="input" type="number" id="gm-number-end" value="20" min="1" max="99"
+              style="margin-top: var(--space-xs);">
           </div>
         </div>
       </div>
@@ -610,11 +717,13 @@
           <div style="display: flex; gap: var(--space-md); align-items: center;">
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="gm-gender-male-start" value="1" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="gm-gender-male-start" value="1" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="gm-gender-male-end" value="7" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="gm-gender-male-end" value="7" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
           </div>
         </div>
@@ -623,11 +732,13 @@
           <div style="display: flex; gap: var(--space-md); align-items: center;">
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="gm-gender-female-start" value="41" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="gm-gender-female-start" value="41" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
             <div style="flex: 1;">
               <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="gm-gender-female-end" value="45" min="1" max="99" style="margin-top: var(--space-xs);">
+              <input class="input" type="number" id="gm-gender-female-end" value="45" min="1" max="99"
+                style="margin-top: var(--space-xs);">
             </div>
           </div>
         </div>
@@ -672,8 +783,9 @@
   <script src="js/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').catch(() => { });
     }
   </script>
 </body>
+
 </html>
