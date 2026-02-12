@@ -38,6 +38,16 @@ const App = (() => {
       backBtn.addEventListener('click', goBackToLanding);
     }
 
+    // 로그아웃 버튼
+    const logoutBtn = document.getElementById('navbar-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (confirm('로그아웃 하시겠습니까?')) {
+          goBackToLanding();
+        }
+      });
+    }
+
     // 초기 라우트 결정
     const hash = window.location.hash.replace('#', '');
     const selectedClass = Store.getSelectedClass();

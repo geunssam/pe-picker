@@ -60,30 +60,47 @@
   max-width: 100%;
 }
 
+/* 좌측: 로고 */
 .navbar-left {
   display: flex;
   align-items: center;
   flex: 1;
+  justify-content: flex-start;
 }
 
+.navbar-logo {
+  font-size: 20px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+/* 중앙: 탭 메뉴 */
 .navbar-tabs {
   flex: 1;
   justify-content: center;
 }
 
-.top-navbar::after {
-  content: '';
+/* 우측: 학급정보 + 버튼들 */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   flex: 1;
-}
-.navbar-logo {
-  font-size: 20px;
+  justify-content: flex-end;
 }
 
-.navbar-title {
-  font-size: 16px;
+.navbar-class-info {
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+  color: var(--text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 .navbar-tabs {
@@ -789,7 +806,38 @@
   gap: var(--space-sm);
 }
 
-/* === Navbar Back Button === */
+/* === Navbar Buttons === */
+.navbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.navbar-btn:hover {
+  background: rgba(124, 158, 245, 0.15);
+  color: var(--color-primary);
+}
+
+.navbar-btn-logout {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-danger);
+}
+
+.navbar-btn-logout:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+}
+
+/* 하위 호환성 */
 .navbar-back-btn {
   display: flex;
   align-items: center;
@@ -802,7 +850,6 @@
   cursor: pointer;
   color: var(--text-secondary);
   transition: all 0.2s;
-  margin-right: var(--space-sm);
   flex-shrink: 0;
 }
 
@@ -812,6 +859,28 @@
 }
 
 /* === Responsive === */
+@media (max-width: 480px) {
+  .navbar-logo {
+    font-size: 18px;
+  }
+
+  .navbar-class-info {
+    display: none; /* 모바일에서 학급정보 숨김 */
+  }
+
+  .navbar-tab span {
+    display: none; /* 모바일에서 탭 텍스트 숨김 */
+  }
+
+  .navbar-tab {
+    padding: 8px 10px;
+  }
+
+  .top-navbar {
+    padding: 0 var(--space-md);
+  }
+}
+
 @media (min-width: 768px) {
   .app-container {
     max-width: 560px;
