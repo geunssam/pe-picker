@@ -25,10 +25,15 @@
 
 <body>
 
-  <!-- 상단 네비바 -->
-  <header class="top-navbar">
+  <!-- 상단 네비바 (학급 내부에서만 표시) -->
+  <header id="top-navbar" class="top-navbar" style="display: none;">
     <div class="navbar-left">
-      <h1 class="navbar-title">🎰 만능 뽑기</h1>
+      <button id="navbar-back-btn" class="navbar-back-btn" title="학급 목록으로">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4l-6 6 6 6"/>
+        </svg>
+      </button>
+      <h1 id="navbar-class-name" class="navbar-title">학급명</h1>
     </div>
     <nav class="navbar-tabs">
       <button data-route="tag-game" class="navbar-tab active">
@@ -73,6 +78,23 @@
 
   <!-- App Container -->
   <div class="app-container">
+
+    <!-- ===================================================================
+         ==================== 랜딩 페이지 (학급 선택) ====================
+         =================================================================== -->
+    <div id="page-class-selector" class="page-view">
+      <div class="landing-header">
+        <div class="landing-logo">🎰</div>
+        <h1 class="landing-title">만능 뽑기</h1>
+        <p class="landing-subtitle">학급을 선택하여 시작하세요</p>
+      </div>
+      <div id="landing-class-list" class="landing-class-list">
+        <!-- JS에서 동적 생성 -->
+      </div>
+      <button class="btn btn-primary btn-lg landing-add-btn" id="landing-add-class">
+        + 새 학급 만들기
+      </button>
+    </div>
 
     <!-- ===================================================================
          ==================== 술래뽑기 페이지 ====================
@@ -159,11 +181,6 @@
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">👫 성별 구분</button>
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
             </div>
-
-            <!-- 학급 select (숨겨진 상태 - 학급 불러오기 모달에서 사용) -->
-            <select id="tag-class-select" style="display: none;">
-              <option value="">학급 선택...</option>
-            </select>
 
             <!-- 학생 카드 영역 -->
             <div id="tag-student-cards" class="tag-student-cards"></div>
@@ -337,6 +354,19 @@
               <select id="gm-class-name-select" class="input" style="width: 100%;">
                 <option value="">학급 선택...</option>
               </select>
+              <div style="margin-top: var(--space-sm); display: flex; flex-direction: column; gap: var(--space-xs);">
+                <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                  <input type="checkbox" id="gm-use-fixed-groups" style="width: 16px; height: 16px;" checked>
+                  <label for="gm-use-fixed-groups"
+                    style="font-size: var(--font-size-sm); cursor: pointer; font-weight: 600; color: var(--primary-color);">📌
+                    고정 모둠 그대로 사용</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                  <input type="checkbox" id="gm-random-names" style="width: 16px; height: 16px;">
+                  <label for="gm-random-names" style="font-size: var(--font-size-sm); cursor: pointer;">(이름만) 랜덤
+                    섞기</label>
+                </div>
+              </div>
             </div>
 
             <!-- 즉석 커스텀 입력 -->
@@ -413,18 +443,27 @@
       <div class="page-header">
         <div>
           <div class="page-title">학급 관리</div>
-          <div class="page-subtitle">학급과 학생 명단을 관리합니다</div>
+          <div class="page-subtitle">현재 학급의 정보를 관리합니다</div>
         </div>
       </div>
 
-      <!-- 학급 목록 -->
+      <!-- 현재 학급 정보 -->
       <div class="section">
+        <div id="settings-current-class" class="glass-card" style="padding: var(--space-lg);">
+          <!-- JS에서 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 학급 학생 목록 -->
+      <div class="section">
+        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>📋 학생 목록</span>
+          <button class="btn btn-primary btn-sm" id="settings-add-class" style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md);">
+            편집
+          </button>
+        </div>
         <div class="glass-card" style="padding: var(--space-lg);">
           <div id="settings-class-list" class="settings-class-list"></div>
-          <button class="btn btn-primary btn-sm" id="settings-add-class"
-            style="width: 100%; margin-top: var(--space-md);">
-            + 새 학급 추가
-          </button>
         </div>
       </div>
 
@@ -432,22 +471,17 @@
       <div class="section">
         <div class="section-title">🏷️ 기본 모둠 이름 설정</div>
         <div class="glass-card" style="padding: var(--space-lg);">
-          <div style="margin-bottom: var(--space-sm); color: var(--text-secondary); font-size: var(--font-size-sm);">
-            새 학급에 기본으로 적용될 모둠 이름입니다. 각 학급은 편집을 통해 개별적으로 수정할 수 있습니다.
+          <div style="margin-bottom: var(--space-md); color: var(--text-secondary); font-size: var(--font-size-sm);">
+            새 학급에 기본으로 적용될 모둠 이름입니다 (최대 8개).
           </div>
-          <div
-            style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-top: var(--space-md);">
-            <input class="input" type="text" id="default-group-name-1" placeholder="1번 모둠" maxlength="10">
-            <input class="input" type="text" id="default-group-name-2" placeholder="2번 모둠" maxlength="10">
-            <input class="input" type="text" id="default-group-name-3" placeholder="3번 모둠" maxlength="10">
-            <input class="input" type="text" id="default-group-name-4" placeholder="4번 모둠" maxlength="10">
-            <input class="input" type="text" id="default-group-name-5" placeholder="5번 모둠" maxlength="10">
-            <input class="input" type="text" id="default-group-name-6" placeholder="6번 모둠" maxlength="10">
+          <div id="default-group-names-list" class="pill-grid">
+            <!-- JS에서 동적 렌더링 -->
           </div>
-          <button class="btn btn-primary btn-sm" id="save-default-group-names"
-            style="width: 100%; margin-top: var(--space-md);">
-            저장
-          </button>
+          <div class="settings-btn-row">
+            <button class="btn btn-sm btn-sky" id="default-group-add">+ 추가</button>
+            <button class="btn btn-sm btn-danger" id="default-group-remove">− 삭제</button>
+            <button class="btn btn-sm btn-primary" id="save-default-group-names">저장</button>
+          </div>
         </div>
       </div>
 
@@ -457,7 +491,7 @@
         <div class="glass-card" style="padding: var(--space-lg);">
           <div class="setting-row">
             <div class="setting-label">체육 수업 도우미</div>
-            <div style="font-size: var(--font-size-sm); color: var(--text-tertiary);">v1.0.0</div>
+            <div style="font-size: var(--font-size-sm); color: var(--text-tertiary);">v2.0.0</div>
           </div>
           <div class="setting-row">
             <div class="setting-label">데이터 초기화</div>
@@ -476,46 +510,55 @@
 
   <!-- 학급 편집 모달 -->
   <div id="class-modal" class="modal-overlay">
-    <div class="modal">
+    <div class="modal timetable-modal">
       <div class="modal-header">
         <div class="modal-title" id="class-modal-title">학급 편집</div>
         <button class="modal-close" id="class-modal-close">✕</button>
       </div>
-      <div class="modal-body">
-        <div style="margin-bottom: var(--space-lg);">
-          <label
-            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">학급
-            이름</label>
-          <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반">
+      <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto;">
+
+        <!-- 학급 이름 + 모둠 수 (한 줄) -->
+        <div class="timetable-top-bar">
+          <div class="timetable-top-item">
+            <label class="timetable-label">학급 이름</label>
+            <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반">
+          </div>
+          <div class="timetable-top-item timetable-top-stepper">
+            <label class="timetable-label">모둠 수</label>
+            <div class="number-stepper">
+              <button class="stepper-btn" data-target="class-group-count" data-dir="down">−</button>
+              <input type="number" id="class-group-count" value="6" min="2" max="8">
+              <button class="stepper-btn" data-target="class-group-count" data-dir="up">+</button>
+            </div>
+          </div>
         </div>
-        <div style="margin-bottom: var(--space-lg);">
-          <label
-            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">
-            학생 명단 <span style="font-weight: 400; color: var(--text-tertiary);">(한 줄에 한 명)</span>
-          </label>
-          <textarea class="input" id="class-students-input" rows="8"
-            placeholder="김민준&#10;이서연&#10;박지호&#10;..."></textarea>
+
+        <!-- 시간표 스타일 테이블 -->
+        <div class="timetable-hint">첫 번째 학생은 모둠장(⭐)으로 표시됩니다</div>
+        <div class="timetable-scroll">
+          <table id="class-group-grid" class="timetable">
+            <!-- JS에서 동적 생성 -->
+          </table>
         </div>
-        <div style="margin-bottom: var(--space-md);">
-          <button class="btn btn-sm btn-secondary" id="class-csv-import" style="width: 100%;">
-            📂 CSV/TXT 파일 가져오기
+
+        <!-- CSV 가져오기 & 템플릿 -->
+        <div style="margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+            <button class="btn btn-sm btn-secondary" id="class-csv-download" style="font-size: var(--font-size-xs);">
+              📥 템플릿 다운로드
+            </button>
+            <button class="btn btn-sm btn-secondary" id="class-csv-import" style="font-size: var(--font-size-xs);">
+              📂 CSV 가져오기
+            </button>
+          </div>
+          <button class="btn btn-sm btn-primary" id="class-google-sheets-import" style="font-size: var(--font-size-xs);">
+            📊 구글 시트에서 가져오기
           </button>
           <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none;">
         </div>
-        <div id="class-group-names-section" style="margin-bottom: var(--space-lg);">
-          <label
-            style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">
-            모둠 이름 설정 <span style="font-weight: 400; color: var(--text-tertiary);">(최대 6개)</span>
-          </label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
-            <input class="input" type="text" id="class-group-name-1" placeholder="1번 모둠" maxlength="10">
-            <input class="input" type="text" id="class-group-name-2" placeholder="2번 모둠" maxlength="10">
-            <input class="input" type="text" id="class-group-name-3" placeholder="3번 모둠" maxlength="10">
-            <input class="input" type="text" id="class-group-name-4" placeholder="4번 모둠" maxlength="10">
-            <input class="input" type="text" id="class-group-name-5" placeholder="5번 모둠" maxlength="10">
-            <input class="input" type="text" id="class-group-name-6" placeholder="6번 모둠" maxlength="10">
-          </div>
-        </div>
+
+        <!-- 레거시 호환용 숨김 필드 -->
+        <textarea id="class-students-input" style="display: none;"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="class-modal-cancel">취소</button>
@@ -636,25 +679,6 @@
     </div>
   </div>
 
-  <!-- 학급 불러오기 모달 (술래뽑기) -->
-  <div id="tag-class-select-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">학급 명단 불러오기</div>
-        <button class="modal-close" id="tag-class-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <select id="tag-class-modal-select" class="input" style="width: 100%;">
-          <option value="">학급 선택...</option>
-        </select>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="tag-class-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="tag-class-modal-confirm">불러오기</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 수동 입력 모달 (술래뽑기) -->
   <div id="manual-input-modal" class="modal-overlay">
     <div class="modal">
@@ -746,25 +770,6 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="gm-gender-modal-cancel">취소</button>
         <button class="btn btn-primary" id="gm-gender-modal-confirm">카드 생성</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 학급 불러오기 모달 (모둠뽑기) -->
-  <div id="gm-class-select-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">학급 명단 불러오기</div>
-        <button class="modal-close" id="gm-class-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <select id="gm-class-modal-select" class="input" style="width: 100%;">
-          <option value="">학급 선택...</option>
-        </select>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="gm-class-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="gm-class-modal-confirm">불러오기</button>
       </div>
     </div>
   </div>

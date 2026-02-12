@@ -36,7 +36,24 @@ const TagGame = (() => {
   }
 
   function onPageEnter() {
-    ClassManager.populateSelect('tag-class-select');
+    // 선택된 학급에서 학생 자동 로딩 (카드가 비어있을 때만)
+    const container = $('tag-student-cards');
+    if (container && container.children.length === 0) {
+      autoLoadFromSelectedClass();
+    }
+  }
+
+  function autoLoadFromSelectedClass() {
+    const cls = Store.getSelectedClass();
+    if (!cls) return;
+    const students = ClassManager.getStudentNames(cls.id);
+    if (students.length === 0) return;
+    const container = $('tag-student-cards');
+    if (!container) return;
+    container.innerHTML = '';
+    students.forEach(name => createStudentCard(container, name));
+    $('tag-student-count').value = students.length;
+    gameSettings.studentCount = students.length;
   }
 
   // ========== 이벤트 리스너 ==========
@@ -79,11 +96,6 @@ const TagGame = (() => {
     $('tag-gender-modal-close')?.addEventListener('click', () => UI.hideModal('tag-gender-modal'));
     $('tag-gender-modal-cancel')?.addEventListener('click', () => UI.hideModal('tag-gender-modal'));
     $('tag-gender-modal-confirm')?.addEventListener('click', confirmGenderInput);
-
-    // 학급 불러오기 모달
-    $('tag-class-modal-close')?.addEventListener('click', () => UI.hideModal('tag-class-select-modal'));
-    $('tag-class-modal-cancel')?.addEventListener('click', () => UI.hideModal('tag-class-select-modal'));
-    $('tag-class-modal-confirm')?.addEventListener('click', confirmClassSelect);
 
     // 수동 입력 모달
     $('manual-input-close')?.addEventListener('click', () => UI.hideModal('manual-input-modal'));
@@ -217,19 +229,14 @@ const TagGame = (() => {
     UI.showToast(`${count}명 카드 생성 완료 (남 ${maleEnd - maleStart + 1}명, 여 ${femaleEnd - femaleStart + 1}명)`, 'success');
   }
 
-  // 버튼 3: 학급 불러오기 모달
+  // 버튼 3: 학급 불러오기 (선택된 학급에서 즉시 로드)
   function openClassSelectModal() {
-    ClassManager.populateSelect('tag-class-modal-select');
-    UI.showModal('tag-class-select-modal');
-  }
-
-  function confirmClassSelect() {
-    const classId = $('tag-class-modal-select')?.value;
-    if (!classId) {
-      UI.showToast('학급을 선택하세요', 'error');
+    const cls = Store.getSelectedClass();
+    if (!cls) {
+      UI.showToast('선택된 학급이 없습니다', 'error');
       return;
     }
-    const students = ClassManager.getStudentNames(classId);
+    const students = ClassManager.getStudentNames(cls.id);
     if (students.length === 0) {
       UI.showToast('학생이 없습니다', 'error');
       return;
@@ -239,7 +246,6 @@ const TagGame = (() => {
     students.forEach(name => createStudentCard(container, name));
     $('tag-student-count').value = students.length;
     gameSettings.studentCount = students.length;
-    UI.hideModal('tag-class-select-modal');
     UI.showToast(`${students.length}명 불러오기 완료`, 'success');
   }
 

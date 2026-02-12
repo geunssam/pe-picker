@@ -13,6 +13,7 @@ const Store = (() => {
     CURRENT_GROUPS: `${PREFIX}current_groups`,
     SETTINGS: `${PREFIX}settings`,
     COOKIE_HISTORY: `${PREFIX}cookie_history`,
+    SELECTED_CLASS: `${PREFIX}selected_class`,
   };
 
   // --- Helpers ---
@@ -47,13 +48,16 @@ const Store = (() => {
     _set(KEYS.CLASSES, classes);
   }
 
-  function addClass(name, students, groupNames = null) {
+  function addClass(name, students, groupNames = null, groups = null, groupCount = 6) {
     const classes = getClasses();
+    const defaultNames = getDefaultGroupNames();
     const newClass = {
       id: Date.now().toString(),
       name,
       students, // [{ name, number, gender }] 또는 string[]
-      groupNames: groupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'], // 기본 모둠 이름
+      groupNames: groupNames || defaultNames.slice(0, groupCount),
+      groups: groups || [], // [[s1, s2], [s3, s4], ...]
+      groupCount,
       createdAt: new Date().toISOString(),
     };
     classes.push(newClass);
@@ -61,13 +65,19 @@ const Store = (() => {
     return newClass;
   }
 
-  function updateClass(id, name, students, groupNames = null) {
+  function updateClass(id, name, students, groupNames = null, groups = null, groupCount = null) {
     const classes = getClasses();
     const idx = classes.findIndex(c => c.id === id);
     if (idx === -1) return null;
     const updated = { ...classes[idx], name, students };
     if (groupNames !== null) {
       updated.groupNames = groupNames;
+    }
+    if (groups !== null) {
+      updated.groups = groups;
+    }
+    if (groupCount !== null) {
+      updated.groupCount = groupCount;
     }
     classes[idx] = updated;
     saveClasses(classes);
@@ -117,7 +127,7 @@ const Store = (() => {
       defaultTime: 300,
       timerAlert: 'soundAndVisual',
       animationEnabled: true,
-      defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑'],
+      defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑', '소망', '열정'],
     };
   }
 
@@ -127,7 +137,7 @@ const Store = (() => {
 
   function getDefaultGroupNames() {
     const settings = getSettings();
-    return settings.defaultGroupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'];
+    return settings.defaultGroupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑', '소망', '열정'];
   }
 
   function saveDefaultGroupNames(names) {
@@ -187,6 +197,40 @@ const Store = (() => {
     }
   }
 
+  // === 선택된 학급 ===
+  function getSelectedClassId() {
+    return _get(KEYS.SELECTED_CLASS) || null;
+  }
+
+  function setSelectedClassId(id) {
+    _set(KEYS.SELECTED_CLASS, id);
+  }
+
+  function clearSelectedClass() {
+    _remove(KEYS.SELECTED_CLASS);
+  }
+
+  function getSelectedClass() {
+    const id = getSelectedClassId();
+    return id ? getClassById(id) : null;
+  }
+
+  // === groupCount 마이그레이션 ===
+  function migrateGroupCount() {
+    const classes = getClasses();
+    let changed = false;
+    classes.forEach(c => {
+      if (c.groupCount === undefined) {
+        c.groupCount = (c.groups && c.groups.length > 0) ? c.groups.length : 6;
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveClasses(classes);
+      console.log('[Store] groupCount 마이그레이션 완료');
+    }
+  }
+
   // === 마이그레이션: 기존 앱 데이터 가져오기 ===
   function migrateFromLegacy() {
     // 기존 class-group-manager 데이터
@@ -217,6 +261,9 @@ const Store = (() => {
       _set(KEYS.TAG_GAME, legacyTag);
       console.log('[Store] tagGameData 마이그레이션 완료');
     }
+
+    // groupCount 마이그레이션
+    migrateGroupCount();
   }
 
   // Public API
@@ -228,6 +275,11 @@ const Store = (() => {
     updateClass,
     deleteClass,
     getClassById,
+    // 선택된 학급
+    getSelectedClassId,
+    setSelectedClassId,
+    clearSelectedClass,
+    getSelectedClass,
     // 술래뽑기
     getTagGameData,
     saveTagGameData,

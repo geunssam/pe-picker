@@ -29,11 +29,6 @@ const GroupManager = (() => {
     document.getElementById('gm-gender-modal-cancel')?.addEventListener('click', () => UI.hideModal('gm-gender-modal'));
     document.getElementById('gm-gender-modal-confirm')?.addEventListener('click', confirmGenderInput);
 
-    // 학급 불러오기 모달
-    document.getElementById('gm-class-modal-close')?.addEventListener('click', () => UI.hideModal('gm-class-select-modal'));
-    document.getElementById('gm-class-modal-cancel')?.addEventListener('click', () => UI.hideModal('gm-class-select-modal'));
-    document.getElementById('gm-class-modal-confirm')?.addEventListener('click', confirmClassSelect);
-
     // 모둠 이름 방식 변경
     document.getElementById('gm-naming-mode')?.addEventListener('change', handleNamingModeChange);
     document.getElementById('gm-class-name-select')?.addEventListener('change', handleClassNameSelectChange);
@@ -89,9 +84,26 @@ const GroupManager = (() => {
   }
 
   function onPageEnter() {
+    // 선택된 학급에서 학생 자동 로딩 (카드가 비어있을 때만)
+    const container = document.getElementById('gm-student-cards');
+    if (container && container.children.length === 0) {
+      autoLoadFromSelectedClass();
+    }
     updateCalcInfo();
     updateGmUI();
     populateClassNameSelect();
+  }
+
+  function autoLoadFromSelectedClass() {
+    const cls = Store.getSelectedClass();
+    if (!cls) return;
+    const students = ClassManager.getStudentNames(cls.id);
+    if (students.length === 0) return;
+    const container = document.getElementById('gm-student-cards');
+    if (!container) return;
+    container.innerHTML = '';
+    students.forEach(name => createStudentCard(container, name));
+    document.getElementById('gm-student-count').value = students.length;
   }
 
   // === Phase UI 전환 ===
@@ -239,22 +251,22 @@ const GroupManager = (() => {
     UI.showToast(`${count}명 카드 생성 완료`, 'success');
   }
 
-  // === 학급 불러오기 모달 ===
+  // === 학급 불러오기 (선택된 학급에서 즉시 로드) ===
   function openClassSelectModal() {
-    ClassManager.populateSelect('gm-class-modal-select');
-    UI.showModal('gm-class-select-modal');
-  }
-
-  function confirmClassSelect() {
-    const classId = document.getElementById('gm-class-modal-select')?.value;
-    if (!classId) { UI.showToast('학급을 선택하세요', 'error'); return; }
-    const students = ClassManager.getStudentNames(classId);
-    if (students.length === 0) { UI.showToast('학생이 없습니다', 'error'); return; }
+    const cls = Store.getSelectedClass();
+    if (!cls) {
+      UI.showToast('선택된 학급이 없습니다', 'error');
+      return;
+    }
+    const students = ClassManager.getStudentNames(cls.id);
+    if (students.length === 0) {
+      UI.showToast('학생이 없습니다', 'error');
+      return;
+    }
     const container = document.getElementById('gm-student-cards');
     container.innerHTML = '';
     students.forEach(name => createStudentCard(container, name));
     document.getElementById('gm-student-count').value = students.length;
-    UI.hideModal('gm-class-select-modal');
     updateCalcInfo();
     UI.showToast(`${students.length}명 불러오기 완료`, 'success');
   }
@@ -299,6 +311,17 @@ const GroupManager = (() => {
     const groupCount = parseInt(document.getElementById('gm-group-count')?.value) || 5;
     const needed = groupSize * groupCount;
 
+    // 고정 모둠 사용 여부 확인
+    const namingMode = document.getElementById('gm-naming-mode')?.value;
+    const isFixedGroups = (namingMode === 'class' && document.getElementById('gm-use-fixed-groups')?.checked);
+
+    if (isFixedGroups) {
+      // 고정 모둠 모드: 인원수 체크(부족/남음) 무시하고 바로 실행
+      // (각 모둠별 인원이 다를 수 있으므로)
+      await executeGroupPick(students, groupSize, groupCount);
+      return;
+    }
+
     if (students.length < groupCount) {
       UI.showToast(`학생 수(${students.length}명)가 모둠 수(${groupCount})보다 적습니다`, 'error');
       return;
@@ -320,114 +343,84 @@ const GroupManager = (() => {
     await executeGroupPick(students, groupSize, groupCount);
   }
 
-  // === 학생 부족 모달 ===
-  function openShortageModal(students, groupSize, groupCount) {
-    const total = students.length;
-    const needed = groupSize * groupCount;
-    const shortage = needed - total;
-    const altGroupCount = Math.floor(total / groupSize);
-
-    pendingPickData = { students, groupSize, groupCount, altGroupCount };
-
-    const msgEl = document.getElementById('shortage-message');
-    if (msgEl) {
-      msgEl.textContent = `${total}명을 ${groupSize}명×${groupCount}모둠으로 나누려면 ${needed}명이 필요합니다 (${shortage}명 부족). 그래도 진행하시겠습니까?`;
-    }
-
-    // "그래도 N모둠으로 진행" 버튼
-    const proceedBtn = document.getElementById('shortage-proceed');
-    if (proceedBtn) {
-      const base = Math.floor(total / groupCount);
-      const rem = total % groupCount;
-      proceedBtn.textContent = rem > 0
-        ? `그래도 ${groupCount}모둠으로 진행 (${base}~${base + 1}명씩)`
-        : `그래도 ${groupCount}모둠으로 진행 (${base}명씩)`;
-    }
-
-    // 대안 버튼
-    const altBtn = document.getElementById('shortage-alt');
-    if (altBtn) {
-      if (altGroupCount >= 1) {
-        const altRemaining = total - (altGroupCount * groupSize);
-        let text = `${altGroupCount}모둠으로 줄여서 진행`;
-        if (altRemaining > 0) text += ` (${altRemaining}명 자동 분배)`;
-        altBtn.textContent = text;
-        altBtn.style.display = '';
-      } else {
-        altBtn.style.display = 'none';
-      }
-    }
-
-    UI.showModal('shortage-modal');
-  }
-
-  async function onShortageProceed() {
-    if (!pendingPickData) return;
-    const { students, groupCount } = pendingPickData;
-    const effectiveSize = Math.floor(students.length / groupCount);
-    pendingPickData = null;
-    UI.hideModal('shortage-modal');
-    await executeGroupPick(students, effectiveSize, groupCount);
-  }
-
-  async function onShortageAlt() {
-    if (!pendingPickData) return;
-    const { students, groupSize, altGroupCount } = pendingPickData;
-    pendingPickData = null;
-    UI.hideModal('shortage-modal');
-    await executeGroupPick(students, groupSize, altGroupCount);
-  }
-
-  // === 남는 학생 확인 모달 ===
-  function openOverflowModal(students, groupSize, groupCount, remainCount) {
-    pendingPickData = { students, groupSize, groupCount };
-
-    const msgEl = document.getElementById('overflow-message');
-    if (msgEl) {
-      msgEl.textContent = `남는 ${remainCount}명은 랜덤으로 모둠에 분배됩니다!`;
-    }
-
-    UI.showModal('overflow-modal');
-  }
-
-  async function onOverflowConfirm() {
-    if (!pendingPickData) return;
-    const { students, groupSize, groupCount } = pendingPickData;
-    pendingPickData = null;
-    UI.hideModal('overflow-modal');
-    await executeGroupPick(students, groupSize, groupCount);
-  }
-
   // === 모둠 구성 실행 ===
   async function executeGroupPick(students, groupSize, groupCount) {
     UI.showPickingOverlay('🎲', '모둠을 구성하는 중...');
     Sound.playClick();
     await UI.sleep(1200);
 
-    const shuffled = UI.shuffleArray(students);
+    // 고정 모둠 모드 확인
+    const namingMode = document.getElementById('gm-naming-mode')?.value;
+    const isFixedGroups = (namingMode === 'class' && document.getElementById('gm-use-fixed-groups')?.checked);
+    const classId = document.getElementById('gm-class-name-select')?.value || Store.getSelectedClassId();
+    const cls = Store.getClassById(classId);
 
     // 모둠 이름 가져오기
-    const groupNames = getGroupNames(groupCount);
+    const groupNames = getGroupNames(groupCount); // 내부에서 랜덤 이름 처리됨
 
-    // 모둠 구성 (정원만큼)
     currentGroups = [];
-    for (let i = 0; i < groupCount; i++) {
-      const start = i * groupSize;
-      currentGroups.push({
-        id: i + 1,
-        name: groupNames[i] || `${i + 1}모둠`,
-        members: shuffled.slice(start, start + groupSize),
-        cookies: 0,
-      });
-    }
 
-    // 남는 학생 → 랜덤 모둠에 분배
-    const remaining = shuffled.slice(groupCount * groupSize);
-    if (remaining.length > 0) {
-      const randomIndices = UI.shuffleArray([...Array(groupCount).keys()]);
-      remaining.forEach((name, i) => {
-        currentGroups[randomIndices[i % groupCount]].members.push(name);
-      });
+    if (isFixedGroups && cls && cls.groups) {
+      // === 고정 모둠 로직 ===
+      // 현재 존재하는 학생(students)만 필터링해서 고정 모둠 형태로 배치
+
+      // students 배열을 Set으로 변환하여 검색 속도 향상
+      const studentSet = new Set(students);
+
+      for (let i = 0; i < groupCount; i++) {
+        // 저장된 모둠원 중 현재 '참가자 카드'에 있는 학생만 필터링 (결석 처리)
+        // cls.groups[i]가 없을 수도 있음
+        const savedMembers = cls.groups[i] || [];
+
+        // 문자열 또는 객체 처리
+        const activeMembers = savedMembers.filter(m => {
+          const name = (typeof m === 'string') ? m : m.name;
+          return studentSet.has(name);
+        });
+
+        // 리더 표시 (첫 번째 학생에게 ⭐)
+        const formattedMembers = activeMembers.map((m, idx) => {
+          const name = (typeof m === 'string') ? m : m.name;
+          return (idx === 0) ? `⭐ ${name}` : name;
+        });
+
+        currentGroups.push({
+          id: i + 1,
+          name: groupNames[i] || `${i + 1}모둠`,
+          members: formattedMembers,
+          cookies: 0,
+        });
+      }
+
+      // 고정 모둠에 속하지 않은 학생 찾기 (오류 방지용)
+      // (학급 설정에는 없는데 카드에는 있는 경우 -> "미배정" 또는 랜덤 배정?)
+      // 현재 로직상 학급에서 불러오면 카드가 생성되므로, 보통은 다 포함됨.
+      // 만약 수동으로 추가한 카드가 있다면? -> 이들은 제외될 수 있음.
+      // 일단은 제외하는 것으로 처리 (고정 모둠의 맹점)
+
+    } else {
+      // === 기존 랜덤 섞기 로직 ===
+      const shuffled = UI.shuffleArray(students);
+
+      // 모둠 구성 (정원만큼)
+      for (let i = 0; i < groupCount; i++) {
+        const start = i * groupSize;
+        currentGroups.push({
+          id: i + 1,
+          name: groupNames[i] || `${i + 1}모둠`,
+          members: shuffled.slice(start, start + groupSize),
+          cookies: 0,
+        });
+      }
+
+      // 남는 학생 → 랜덤 모둠에 분배
+      const remaining = shuffled.slice(groupCount * groupSize);
+      if (remaining.length > 0) {
+        const randomIndices = UI.shuffleArray([...Array(groupCount).keys()]);
+        remaining.forEach((name, i) => {
+          currentGroups[randomIndices[i % groupCount]].members.push(name);
+        });
+      }
     }
 
     UI.hidePickingOverlay();
@@ -440,10 +433,16 @@ const GroupManager = (() => {
     await GroupManagerUI.renderGroupsWithAnimation(currentGroups);
     Store.saveCurrentGroups(currentGroups);
 
-    if (remaining.length > 0) {
-      UI.showToast(`모둠 구성 완료! (${remaining.length}명 자동 분배)`, 'success');
+    if (!isFixedGroups) {
+      // 랜덤 모드일 때만 안내 (고정 모둠은 항상 불균형할 수 있음)
+      const totalCapacity = groupCount * groupSize;
+      if (totalCapacity < students.length) {
+        UI.showToast(`모둠 구성 완료! (${students.length - totalCapacity}명 자동 분배)`, 'success');
+      } else {
+        UI.showToast('모둠 구성 완료!', 'success');
+      }
     } else {
-      UI.showToast('모둠 구성 완료!', 'success');
+      UI.showToast('고정 모둠 구성 완료!', 'success');
     }
   }
 
@@ -597,16 +596,29 @@ const GroupManager = (() => {
       // 숫자순
       return Array.from({ length: count }, (_, i) => `${i + 1}모둠`);
     } else if (mode === 'class') {
-      // 학급 설정 이름
-      const classId = document.getElementById('gm-class-name-select')?.value;
+      // 학급 설정 이름 — 드롭다운 또는 선택된 학급에서
+      const classId = document.getElementById('gm-class-name-select')?.value || Store.getSelectedClassId();
+      const isRandom = document.getElementById('gm-random-names')?.checked;
+
       if (classId) {
         const cls = Store.getClassById(classId);
         if (cls && cls.groupNames) {
-          return cls.groupNames.slice(0, count);
+          let availableNames = [...cls.groupNames];
+
+          if (isRandom) {
+            // 랜덤 섞기
+            availableNames = UI.shuffleArray(availableNames);
+          }
+
+          return availableNames.slice(0, count);
         }
       }
       // 학급이 선택되지 않았으면 기본값
-      return ['하나', '믿음', '우정', '희망', '협력', '사랑'].slice(0, count);
+      let defaultNames = Store.getDefaultGroupNames();
+      if (isRandom) {
+        defaultNames = UI.shuffleArray(defaultNames);
+      }
+      return defaultNames.slice(0, count);
     } else if (mode === 'custom') {
       // 즉석 커스텀
       const inputs = document.querySelectorAll('.gm-custom-name');
