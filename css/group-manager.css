@@ -192,7 +192,7 @@
 
 /* 학생 카드 영역 (5×4 그리드) */
 .gm-compact-student-cards {
-  max-height: 280px;
+  max-height: 220px;
   overflow-y: auto;
   padding: var(--space-sm);
   display: grid;
@@ -206,14 +206,16 @@
 /* 학생 카드 고정 크기 */
 .gm-compact-student-cards .tag-student-card {
   width: 100%;
-  height: 56px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--space-xs) var(--space-sm);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
+  font-weight: 600;
   box-sizing: border-box;
   position: relative;
+  border-radius: 9999px;
 }
 
 .gm-compact-student-cards .tag-student-card span {
