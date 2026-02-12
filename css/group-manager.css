@@ -146,3 +146,215 @@
   color: var(--text-white) !important;
   border-color: transparent !important;
 }
+
+/* ===== 컴팩트 모둠뽑기 UI ===== */
+
+/* 컴팩트 카드 */
+.gm-compact-card {
+  padding: var(--space-md); /* 기존 --space-lg(16px)에서 축소 */
+}
+
+/* 컴팩트 행 (flexbox 레이아웃) */
+.gm-compact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm); /* 8px */
+}
+
+.gm-compact-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 인라인 라벨 (고정폭) */
+.gm-inline-label {
+  min-width: 90px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-top: var(--space-xs); /* 입력 필드와 수직 정렬 */
+  flex-shrink: 0;
+}
+
+/* 컴팩트 버튼 그리드 */
+.gm-compact-buttons {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.gm-compact-buttons .btn {
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-xs);
+  white-space: nowrap;
+}
+
+/* 학생 카드 영역 (5×4 그리드) */
+.gm-compact-student-cards {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--space-sm);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-sm);
+  background: rgba(124, 158, 245, 0.03);
+  border-radius: var(--radius-sm);
+  width: 100%;
+}
+
+/* 학생 카드 고정 크기 */
+.gm-compact-student-cards .tag-student-card {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.gm-compact-student-cards .tag-student-card span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.gm-compact-student-cards .tag-student-card .tag-card-remove {
+  position: absolute;
+  right: var(--space-xs);
+}
+
+.gm-compact-student-cards .tag-student-card .tag-card-remove {
+  flex-shrink: 0;
+  margin-left: var(--space-xs);
+}
+
+/* 모둠 설정 그리드 */
+.gm-settings-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.gm-compact-setting {
+  margin: 0; /* 기존 마진 제거 */
+}
+
+/* 라디오 버튼 인라인 */
+.gm-radio-row {
+  align-items: center;
+}
+
+.gm-radio-inline {
+  display: flex;
+  gap: var(--space-lg);
+  flex: 1;
+}
+
+.gm-radio-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.gm-radio-compact input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* 컴팩트 select */
+.gm-compact-select {
+  flex: 1;
+}
+
+/* 체크박스 컴팩트 */
+.gm-checkbox-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.gm-checkbox-compact input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+/* 커스텀 이름 그리드 */
+.gm-custom-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+/* 정보 박스 */
+.gm-info-box {
+  margin: calc(-1 * var(--space-sm)) 0 var(--space-sm) 90px; /* 라벨 너비만큼 왼쪽 마진 */
+  padding: var(--space-sm);
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 계산 정보 컴팩트 */
+.gm-calc-compact {
+  margin-top: var(--space-sm);
+  margin-bottom: 0;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm);
+}
+
+/* 작은 입력 필드 */
+.input-sm {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  height: auto;
+}
+
+/* 반응형: 모바일 */
+@media (max-width: 480px) {
+  .gm-compact-row {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .gm-inline-label {
+    min-width: auto;
+    padding-top: 0;
+  }
+
+  .gm-info-box {
+    margin-left: 0;
+  }
+
+  .gm-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 모바일에서 학생 카드 3열로 축소 */
+  .gm-compact-student-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 반응형: 태블릿 (481px ~ 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .gm-compact-student-cards {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

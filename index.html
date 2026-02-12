@@ -175,11 +175,11 @@
             <!-- 학생 수 (hidden, JS에서 참조용) -->
             <input type="hidden" id="tag-student-count" value="20">
 
-            <!-- 3개 버튼: 번호순 생성 / 성별 구분 / 학급 불러오기 -->
+            <!-- 3개 버튼: 학급 불러오기 / 번호순 생성 / 성별 구분 -->
             <div class="tag-student-gen-buttons">
+              <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">📝 번호순 생성</button>
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">👫 성별 구분</button>
-              <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
             </div>
 
             <!-- 학생 카드 영역 -->
@@ -291,100 +291,117 @@
       <!-- ============ Phase 1: 설정 화면 ============ -->
       <div id="gm-phase1">
 
-        <!-- 뽑을 학생 설정 -->
+        <!-- ============ 통합 설정 섹션 ============ -->
         <div class="section">
-          <div class="section-title">📋 뽑을 학생 설정</div>
-          <div class="glass-card" style="padding: var(--space-lg);">
+          <div class="section-title">⚙️ 모둠뽑기 설정</div>
+
+          <div class="glass-card gm-compact-card">
             <input type="hidden" id="gm-student-count" value="20">
-            <div class="tag-student-gen-buttons">
-              <button class="btn btn-secondary btn-sm" id="gm-gen-by-number">📝 번호순 생성</button>
-              <button class="btn btn-secondary btn-sm" id="gm-gen-by-gender">👫 성별 구분</button>
-              <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급 불러오기</button>
-            </div>
-            <div id="gm-student-cards" class="tag-student-cards"></div>
-          </div>
-        </div>
 
-        <!-- 모둠 설정 -->
-        <div class="section">
-          <div class="section-title">⚙️ 모둠 설정</div>
-          <div class="glass-card" style="padding: var(--space-lg);">
-            <div class="tag-settings-4col">
-              <div class="tag-setting-item">
-                <div class="setting-label">모둠당 인원</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="gm-group-size" data-dir="down">−</button>
-                  <input type="number" id="gm-group-size" value="4" min="2" max="10">
-                  <button class="stepper-btn" data-target="gm-group-size" data-dir="up">+</button>
-                </div>
-              </div>
-              <div class="tag-setting-item">
-                <div class="setting-label">모둠 개수</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="gm-group-count" data-dir="down">−</button>
-                  <input type="number" id="gm-group-count" value="5" min="1" max="12">
-                  <button class="stepper-btn" data-target="gm-group-count" data-dir="up">+</button>
-                </div>
+            <!-- 1. 학생 설정 버튼 -->
+            <div class="gm-compact-row">
+              <label class="gm-inline-label">📋 학생 설정</label>
+              <div class="tag-student-gen-buttons gm-compact-buttons">
+                <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급</button>
+                <button class="btn btn-secondary btn-sm" id="gm-gen-by-number">📝 번호</button>
+                <button class="btn btn-secondary btn-sm" id="gm-gen-by-gender">👫 성별</button>
               </div>
             </div>
-            <div id="gm-calc-info" class="student-info" style="margin-top: var(--space-md);"></div>
-          </div>
-        </div>
 
-        <!-- 모둠 이름 설정 -->
-        <div class="section">
-          <div class="section-title">🏷️ 모둠 이름 설정</div>
-          <div class="glass-card" style="padding: var(--space-lg);">
-            <div style="margin-bottom: var(--space-md);">
-              <label
-                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">이름
-                방식</label>
-              <select id="gm-naming-mode" class="input" style="width: 100%;">
-                <option value="number">숫자순 (1모둠, 2모둠, 3모둠...)</option>
+            <!-- 2. 학생 카드 영역 (조건부) -->
+            <div id="gm-student-cards-wrapper" class="gm-compact-row" style="display: none;">
+              <div id="gm-student-cards" class="tag-student-cards gm-compact-student-cards"></div>
+            </div>
+
+            <!-- 3. 모둠 설정 + 구성 방식 -->
+            <div class="gm-compact-row">
+              <div class="gm-settings-grid">
+                <!-- 모둠당 인원 -->
+                <div class="tag-setting-item gm-compact-setting">
+                  <div class="setting-label">모둠당 인원</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="gm-group-size" data-dir="down">−</button>
+                    <input type="number" id="gm-group-size" value="4" min="2" max="10">
+                    <button class="stepper-btn" data-target="gm-group-size" data-dir="up">+</button>
+                  </div>
+                </div>
+                <!-- 모둠 개수 -->
+                <div class="tag-setting-item gm-compact-setting">
+                  <div class="setting-label">모둠 개수</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="gm-group-count" data-dir="down">−</button>
+                    <input type="number" id="gm-group-count" value="5" min="1" max="12">
+                    <button class="stepper-btn" data-target="gm-group-count" data-dir="up">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. 모둠 구성 방식 (라디오 인라인) -->
+            <div class="gm-compact-row gm-radio-row">
+              <label class="gm-inline-label">🎲 구성 방식</label>
+              <div class="gm-radio-inline">
+                <label class="gm-radio-compact">
+                  <input type="radio" name="gm-composition-mode" id="gm-mode-random" value="random" checked>
+                  <span>🔀 랜덤</span>
+                </label>
+                <label class="gm-radio-compact">
+                  <input type="radio" name="gm-composition-mode" id="gm-mode-fixed" value="fixed">
+                  <span>📌 고정</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 고정 모드 안내 (조건부) -->
+            <div id="gm-fixed-mode-info" class="gm-info-box" style="display: none;">
+              💡 고정 모둠 모드: 학급 설정의 모둠 구성을 그대로 사용합니다.
+            </div>
+
+            <!-- 5. 모둠 이름 설정 -->
+            <div class="gm-compact-row">
+              <label class="gm-inline-label">🏷️ 모둠 이름</label>
+              <select id="gm-naming-mode" class="input input-sm gm-compact-select">
+                <option value="number">숫자순 (1모둠, 2모둠...)</option>
                 <option value="class">학급 설정 이름 사용</option>
                 <option value="custom">즉석 커스텀</option>
               </select>
             </div>
 
-            <!-- 학급 선택 (학급 설정 이름 모드일 때만) -->
-            <div id="gm-class-name-select-container" style="display: none; margin-bottom: var(--space-md);">
-              <label
-                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">학급
-                선택</label>
-              <select id="gm-class-name-select" class="input" style="width: 100%;">
-                <option value="">학급 선택...</option>
-              </select>
-              <div style="margin-top: var(--space-sm); display: flex; flex-direction: column; gap: var(--space-xs);">
-                <div style="display: flex; align-items: center; gap: var(--space-xs);">
-                  <input type="checkbox" id="gm-use-fixed-groups" style="width: 16px; height: 16px;" checked>
-                  <label for="gm-use-fixed-groups"
-                    style="font-size: var(--font-size-sm); cursor: pointer; font-weight: 600; color: var(--primary-color);">📌
-                    고정 모둠 그대로 사용</label>
-                </div>
-                <div style="display: flex; align-items: center; gap: var(--space-xs);">
-                  <input type="checkbox" id="gm-random-names" style="width: 16px; height: 16px;">
-                  <label for="gm-random-names" style="font-size: var(--font-size-sm); cursor: pointer;">(이름만) 랜덤
-                    섞기</label>
-                </div>
+            <!-- 학급 이름 랜덤 섞기 옵션 (조건부) -->
+            <div id="gm-class-name-select-container" class="gm-compact-row" style="display: none;">
+              <label class="gm-inline-label"></label>
+              <div style="flex: 1;">
+                <!-- 숨겨진 요소들 (하위 호환성) -->
+                <select id="gm-class-name-select" class="input input-sm" style="display: none;">
+                  <option value="">학급 선택...</option>
+                </select>
+                <input type="checkbox" id="gm-use-fixed-groups" style="display: none;">
+
+                <label class="gm-checkbox-compact">
+                  <input type="checkbox" id="gm-random-names">
+                  <span>(이름만) 랜덤 섞기</span>
+                </label>
               </div>
             </div>
 
-            <!-- 즉석 커스텀 입력 -->
-            <div id="gm-custom-names-container" style="display: none;">
-              <label
-                style="font-size: var(--font-size-sm); font-weight: 600; display: block; margin-bottom: var(--space-sm);">모둠
-                이름 입력</label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
-                <input class="input gm-custom-name" type="text" placeholder="1번 모둠" maxlength="10">
-                <input class="input gm-custom-name" type="text" placeholder="2번 모둠" maxlength="10">
-                <input class="input gm-custom-name" type="text" placeholder="3번 모둠" maxlength="10">
-                <input class="input gm-custom-name" type="text" placeholder="4번 모둠" maxlength="10">
-                <input class="input gm-custom-name" type="text" placeholder="5번 모둠" maxlength="10">
-                <input class="input gm-custom-name" type="text" placeholder="6번 모둠" maxlength="10">
+            <!-- 커스텀 이름 입력 (조건부) -->
+            <div id="gm-custom-names-container" class="gm-compact-row" style="display: none;">
+              <label class="gm-inline-label"></label>
+              <div class="gm-custom-grid">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="1모둠" maxlength="10">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="2모둠" maxlength="10">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="3모둠" maxlength="10">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="4모둠" maxlength="10">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="5모둠" maxlength="10">
+                <input class="input input-sm gm-custom-name" type="text" placeholder="6모둠" maxlength="10">
               </div>
             </div>
-          </div>
-        </div>
+
+            <!-- 6. 계산 정보 -->
+            <div id="gm-calc-info" class="student-info gm-calc-compact"></div>
+
+          </div> <!-- end glass-card -->
+        </div> <!-- end section -->
 
         <!-- 모둠 뽑기 버튼 -->
         <button class="btn btn-primary btn-lg" id="gm-pick-btn" style="width: 100%; margin-bottom: var(--space-xl);">

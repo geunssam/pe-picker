@@ -29,6 +29,21 @@ const GroupManager = (() => {
     document.getElementById('gm-gender-modal-cancel')?.addEventListener('click', () => UI.hideModal('gm-gender-modal'));
     document.getElementById('gm-gender-modal-confirm')?.addEventListener('click', confirmGenderInput);
 
+    // 모둠 구성 방식 라디오 버튼 이벤트
+    document.getElementById('gm-mode-random')?.addEventListener('change', function() {
+      if (this.checked) {
+        document.getElementById('gm-use-fixed-groups').checked = false;
+        document.getElementById('gm-fixed-mode-info').style.display = 'none';
+      }
+    });
+
+    document.getElementById('gm-mode-fixed')?.addEventListener('change', function() {
+      if (this.checked) {
+        document.getElementById('gm-use-fixed-groups').checked = true;
+        document.getElementById('gm-fixed-mode-info').style.display = 'block';
+      }
+    });
+
     // 모둠 이름 방식 변경
     document.getElementById('gm-naming-mode')?.addEventListener('change', handleNamingModeChange);
     document.getElementById('gm-class-name-select')?.addEventListener('change', handleClassNameSelectChange);
@@ -188,6 +203,14 @@ const GroupManager = (() => {
     container.appendChild(card);
   }
 
+  // 학생 카드 생성 후 wrapper 표시
+  function showStudentCardsWrapper() {
+    const wrapper = document.getElementById('gm-student-cards-wrapper');
+    if (wrapper && document.querySelectorAll('#gm-student-cards .tag-student-card').length > 0) {
+      wrapper.style.display = 'flex';
+    }
+  }
+
   function toggleStudentCard(button) {
     const card = button.closest('.tag-student-card');
     if (!card) return;
@@ -223,6 +246,7 @@ const GroupManager = (() => {
     document.getElementById('gm-student-count').value = count;
     UI.hideModal('gm-number-modal');
     updateCalcInfo();
+    showStudentCardsWrapper();
     UI.showToast(`${count}명 카드 생성 완료 (${start}번~${end}번)`, 'success');
   }
 
@@ -248,6 +272,7 @@ const GroupManager = (() => {
     document.getElementById('gm-student-count').value = count;
     UI.hideModal('gm-gender-modal');
     updateCalcInfo();
+    showStudentCardsWrapper();
     UI.showToast(`${count}명 카드 생성 완료`, 'success');
   }
 
@@ -268,6 +293,7 @@ const GroupManager = (() => {
     students.forEach(name => createStudentCard(container, name));
     document.getElementById('gm-student-count').value = students.length;
     updateCalcInfo();
+    showStudentCardsWrapper();
     UI.showToast(`${students.length}명 불러오기 완료`, 'success');
   }
 
@@ -282,8 +308,9 @@ const GroupManager = (() => {
 
     if (!calcEl) return;
     if (total === 0) {
-      calcEl.innerHTML = '학생 카드를 먼저 생성하세요';
-      calcEl.style.background = '';
+      calcEl.innerHTML = '👆 위의 버튼으로 학생을 먼저 설정하세요';
+      calcEl.style.background = 'rgba(124, 158, 245, 0.05)';
+      calcEl.style.color = 'var(--text-tertiary)';
       return;
     }
     const diff = total - needed;
@@ -341,6 +368,84 @@ const GroupManager = (() => {
     }
 
     await executeGroupPick(students, groupSize, groupCount);
+  }
+
+  // === 학생 부족 모달 ===
+  function openShortageModal(students, groupSize, groupCount) {
+    const needed = groupSize * groupCount;
+    const shortage = needed - students.length;
+
+    const messageEl = document.getElementById('shortage-message');
+    const proceedBtn = document.getElementById('shortage-proceed');
+    const altBtn = document.getElementById('shortage-alt');
+
+    if (messageEl) {
+      messageEl.innerHTML = `
+        현재 학생: <strong>${students.length}명</strong><br>
+        필요 인원: <strong>${needed}명</strong> (${groupCount}모둠 × ${groupSize}명)<br>
+        <span style="color: var(--color-danger); font-weight: 700;">${shortage}명 부족</span>
+      `;
+    }
+
+    // 옵션 1: 모둠당 인원 줄이기
+    const newSize = Math.floor(students.length / groupCount);
+    if (proceedBtn && newSize >= 2) {
+      proceedBtn.textContent = `모둠당 ${newSize}명으로 조정 (${groupCount}모둠 유지)`;
+      proceedBtn.style.display = '';
+    } else if (proceedBtn) {
+      proceedBtn.style.display = 'none';
+    }
+
+    // 옵션 2: 모둠 개수 줄이기
+    const newCount = Math.floor(students.length / groupSize);
+    if (altBtn && newCount >= 1) {
+      altBtn.textContent = `${newCount}모둠으로 조정 (${groupSize}명 유지)`;
+      altBtn.style.display = '';
+    } else if (altBtn) {
+      altBtn.style.display = 'none';
+    }
+
+    pendingPickData = { students, groupSize, groupCount, newSize, newCount };
+    UI.showModal('shortage-modal');
+  }
+
+  function onShortageProceed() {
+    if (!pendingPickData) return;
+    const { students, groupCount, newSize } = pendingPickData;
+    UI.hideModal('shortage-modal');
+    pendingPickData = null;
+    executeGroupPick(students, newSize, groupCount);
+  }
+
+  function onShortageAlt() {
+    if (!pendingPickData) return;
+    const { students, groupSize, newCount } = pendingPickData;
+    UI.hideModal('shortage-modal');
+    pendingPickData = null;
+    executeGroupPick(students, groupSize, newCount);
+  }
+
+  // === 남는 학생 모달 ===
+  function openOverflowModal(students, groupSize, groupCount, remainCount) {
+    const messageEl = document.getElementById('overflow-message');
+    if (messageEl) {
+      messageEl.innerHTML = `
+        총 <strong>${students.length}명</strong> 중 <strong>${groupSize * groupCount}명</strong>만 배치되고
+        <span style="color: var(--color-warning); font-weight: 700;">${remainCount}명이 남습니다.</span><br><br>
+        계속 진행하시겠습니까?
+      `;
+    }
+
+    pendingPickData = { students, groupSize, groupCount };
+    UI.showModal('overflow-modal');
+  }
+
+  function onOverflowConfirm() {
+    if (!pendingPickData) return;
+    const { students, groupSize, groupCount } = pendingPickData;
+    UI.hideModal('overflow-modal');
+    pendingPickData = null;
+    executeGroupPick(students, groupSize, groupCount);
   }
 
   // === 모둠 구성 실행 ===
@@ -428,6 +533,13 @@ const GroupManager = (() => {
 
     currentPhase = 2;
     timerVisible = false;
+
+    // 결과 화면 타이틀 업데이트 (랜덤/고정 모드 표시)
+    const resultTitle = document.querySelector('#gm-result-section .section-title');
+    if (resultTitle) {
+      resultTitle.textContent = isFixedGroups ? '🎯 고정 모둠 구성 결과 (📌 고정)' : '🎯 랜덤 모둠 뽑기 결과 (🔀 섞음)';
+    }
+
     updateGmUI();
 
     await GroupManagerUI.renderGroupsWithAnimation(currentGroups);
@@ -564,14 +676,27 @@ const GroupManager = (() => {
     const customContainer = document.getElementById('gm-custom-names-container');
 
     if (mode === 'class') {
-      classContainer.style.display = '';
+      classContainer.style.display = 'flex';
       customContainer.style.display = 'none';
-    } else if (mode === 'custom') {
-      classContainer.style.display = 'none';
-      customContainer.style.display = '';
+
+      // 고정 모둠 라디오 버튼 상태 확인
+      const isFixed = document.getElementById('gm-mode-fixed')?.checked;
+      if (isFixed) {
+        document.getElementById('gm-use-fixed-groups').checked = true;
+        document.getElementById('gm-fixed-mode-info').style.display = 'block';
+      }
     } else {
       classContainer.style.display = 'none';
       customContainer.style.display = 'none';
+
+      if (mode === 'custom') {
+        customContainer.style.display = 'flex';
+      }
+
+      // 학급 설정이 아닐 때는 고정 모둠 모드 해제
+      document.getElementById('gm-use-fixed-groups').checked = false;
+      document.getElementById('gm-mode-random').checked = true;
+      document.getElementById('gm-fixed-mode-info').style.display = 'none';
     }
   }
 
@@ -638,6 +763,7 @@ const GroupManager = (() => {
     init,
     onPageEnter,
     pickGroups,
+    pickAgain,
     addCookie,
     removeCookie,
     toggleStudentCard,
