@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PePick! 학급 설정</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/wizard.css">
+</head>
+<body>
+  <div class="wizard-container">
+    <div class="wizard-header">
+      <div class="wizard-logo">🎯 PePick!</div>
+      <div class="wizard-title">학급 설정을 시작할게요</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="wizard-progress">
+      <div class="wizard-progress-track">
+        <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+      </div>
+      <div class="wizard-step-indicator">Step <span id="wizard-current-step">1</span> / 5</div>
+    </div>
+
+    <!-- Step 1: 학교급 선택 -->
+    <div class="wizard-step active" id="wizard-step-1">
+      <h2 class="wizard-step-title">어떤 학교에서 근무하시나요?</h2>
+      <div class="wizard-options wizard-options-3col">
+        <button class="wizard-option-btn" data-value="elementary">
+          <span class="wizard-option-icon">🏫</span>
+          <span class="wizard-option-label">초등학교</span>
+        </button>
+        <button class="wizard-option-btn" data-value="middle">
+          <span class="wizard-option-icon">🏢</span>
+          <span class="wizard-option-label">중학교</span>
+        </button>
+        <button class="wizard-option-btn" data-value="high">
+          <span class="wizard-option-icon">🎓</span>
+          <span class="wizard-option-label">고등학교</span>
+        </button>
+      </div>
+      <button class="btn btn-primary btn-lg wizard-next-btn" id="wizard-step1-next" disabled>다음</button>
+    </div>
+
+    <!-- Step 2: 담당 학년 복수 선택 -->
+    <div class="wizard-step" id="wizard-step-2">
+      <h2 class="wizard-step-title">담당 학년을 선택해주세요</h2>
+      <p class="wizard-hint-top">복수 선택 가능합니다</p>
+      <div class="wizard-options" id="wizard-grade-options">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+      <div class="wizard-nav-buttons">
+        <button class="btn btn-secondary btn-lg" id="wizard-step2-back">이전</button>
+        <button class="btn btn-primary btn-lg" id="wizard-step2-next" disabled>다음</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 학년별 반 수 설정 -->
+    <div class="wizard-step" id="wizard-step-3">
+      <h2 class="wizard-step-title">학년별 반 수를 설정해주세요</h2>
+      <div class="wizard-list" id="wizard-class-count-list">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+      <div class="wizard-nav-buttons">
+        <button class="btn btn-secondary btn-lg" id="wizard-step3-back">이전</button>
+        <button class="btn btn-primary btn-lg" id="wizard-step3-next">다음</button>
+      </div>
+    </div>
+
+    <!-- Step 4: 학급별 학생 수 -->
+    <div class="wizard-step" id="wizard-step-4">
+      <h2 class="wizard-step-title">학급별 학생 수를 조정해주세요</h2>
+      <p class="wizard-hint-top">기본값은 20명입니다</p>
+
+      <div class="wizard-scroll-area">
+        <div class="wizard-list" id="wizard-student-count-list">
+          <!-- JavaScript로 동적 생성 -->
+        </div>
+      </div>
+
+      <div class="wizard-nav-buttons">
+        <button class="btn btn-secondary btn-lg" id="wizard-step4-back">이전</button>
+        <button class="btn btn-primary btn-lg" id="wizard-step4-next">다음</button>
+      </div>
+    </div>
+
+    <!-- Step 5: 교사 이름 입력 -->
+    <div class="wizard-step" id="wizard-step-5">
+      <h2 class="wizard-step-title">어떻게 불러드릴까요?</h2>
+      <div class="wizard-input-group">
+        <input type="text" id="wizard-teacher-name" class="wizard-input" placeholder="본명 또는 닉네임을 입력하세요" maxlength="20">
+        <p class="wizard-hint">앱에서 표시될 이름입니다 (예: 김체육, 홍길동 선생님)</p>
+        <p class="wizard-hint">선택사항입니다. 건너뛰려면 바로 완료를 눌러주세요</p>
+      </div>
+      <div class="wizard-nav-buttons">
+        <button class="btn btn-secondary btn-lg" id="wizard-step5-back">이전</button>
+        <button class="btn btn-primary btn-lg" id="wizard-step5-complete">완료</button>
+      </div>
+    </div>
+
+    <!-- 로딩 오버레이 -->
+    <div class="wizard-loading" id="wizard-loading" style="display: none;">
+      <div class="wizard-loading-content">
+        <div class="wizard-loading-spinner"></div>
+        <p id="wizard-loading-text">학급을 생성하는 중...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/shared/store.js"></script>
+  <script src="js/wizard.js"></script>
+</body>
+</html>

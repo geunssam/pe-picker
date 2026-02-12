@@ -33,6 +33,8 @@ const TagGame = (() => {
     loadFromStorage();
     setupEventListeners();
     updateUI();
+    // 초기 wrapper 상태 설정
+    showStudentCardsWrapper();
   }
 
   function onPageEnter() {
@@ -41,19 +43,35 @@ const TagGame = (() => {
     if (container && container.children.length === 0) {
       autoLoadFromSelectedClass();
     }
+    // 초기 wrapper 상태 설정
+    showStudentCardsWrapper();
   }
 
   function autoLoadFromSelectedClass() {
     const cls = Store.getSelectedClass();
-    if (!cls) return;
+    if (!cls) {
+      showStudentCardsWrapper();
+      return;
+    }
     const students = ClassManager.getStudentNames(cls.id);
-    if (students.length === 0) return;
+
+    // 빈 이름 필터링
+    const validStudents = students.filter(name => name && name.trim() !== '');
+
     const container = $('tag-student-cards');
     if (!container) return;
+
+    if (validStudents.length === 0) {
+      container.innerHTML = '';
+      showStudentCardsWrapper();
+      return;
+    }
+
     container.innerHTML = '';
-    students.forEach(name => createStudentCard(container, name));
-    $('tag-student-count').value = students.length;
-    gameSettings.studentCount = students.length;
+    validStudents.forEach(name => createStudentCard(container, name));
+    $('tag-student-count').value = validStudents.length;
+    gameSettings.studentCount = validStudents.length;
+    showStudentCardsWrapper();
   }
 
   // ========== 이벤트 리스너 ==========
@@ -101,6 +119,12 @@ const TagGame = (() => {
     $('manual-input-close')?.addEventListener('click', () => UI.hideModal('manual-input-modal'));
     $('manual-input-cancel')?.addEventListener('click', () => UI.hideModal('manual-input-modal'));
     $('manual-input-confirm')?.addEventListener('click', confirmManualInput);
+
+    // 빈 학생 안내 모달
+    $('empty-students-confirm')?.addEventListener('click', () => {
+      UI.hideModal('empty-students-modal');
+      App.navigateTo('settings');
+    });
 
     // Phase 2 타이머 시작 버튼
     $('tag-timer-start-btn')?.addEventListener('click', startTimerGame);
@@ -183,6 +207,7 @@ const TagGame = (() => {
     }
     $('tag-student-count').value = count;
     gameSettings.studentCount = count;
+    showStudentCardsWrapper();
     UI.hideModal('tag-number-modal');
     UI.showToast(`${count}명 카드 생성 완료 (${start}번~${end}번)`, 'success');
   }
@@ -227,6 +252,7 @@ const TagGame = (() => {
     gameSettings.studentCount = count;
     UI.hideModal('tag-gender-modal');
     UI.showToast(`${count}명 카드 생성 완료 (남 ${maleEnd - maleStart + 1}명, 여 ${femaleEnd - femaleStart + 1}명)`, 'success');
+    showStudentCardsWrapper();
   }
 
   // 버튼 3: 학급 불러오기 (선택된 학급에서 즉시 로드)
@@ -237,16 +263,26 @@ const TagGame = (() => {
       return;
     }
     const students = ClassManager.getStudentNames(cls.id);
-    if (students.length === 0) {
-      UI.showToast('학생이 없습니다', 'error');
+
+    // 빈 이름 필터링 추가
+    const validStudents = students.filter(name => name && name.trim() !== '');
+
+    const container = $('tag-student-cards');
+    if (!container) return;
+
+    if (validStudents.length === 0) {
+      container.innerHTML = '';
+      showStudentCardsWrapper();
+      UI.showModal('empty-students-modal');
       return;
     }
-    const container = $('tag-student-cards');
+
     container.innerHTML = '';
-    students.forEach(name => createStudentCard(container, name));
-    $('tag-student-count').value = students.length;
-    gameSettings.studentCount = students.length;
-    UI.showToast(`${students.length}명 불러오기 완료`, 'success');
+    validStudents.forEach(name => createStudentCard(container, name));
+    $('tag-student-count').value = validStudents.length;
+    gameSettings.studentCount = validStudents.length;
+    UI.showToast(`${validStudents.length}명 불러오기 완료`, 'success');
+    showStudentCardsWrapper();
   }
 
   // 수동 입력 확인 (기존 유지)
@@ -263,6 +299,7 @@ const TagGame = (() => {
     gameSettings.studentCount = students.length;
     UI.hideModal('manual-input-modal');
     UI.showToast(`${students.length}명 카드 생성 완료`, 'success');
+    showStudentCardsWrapper();
   }
 
   function createStudentCard(container, name, isExcluded = false, gender = null) {
@@ -274,6 +311,21 @@ const TagGame = (() => {
     card.className = cls;
     card.innerHTML = `<span>${name}</span><button class="tag-card-remove" onclick="TagGame.toggleStudentCard(this)">×</button>`;
     container.appendChild(card);
+  }
+
+  // 학생 카드 생성 후 wrapper 표시
+  function showStudentCardsWrapper() {
+    const wrapper = $('tag-student-cards-wrapper');
+    const message = $('tag-no-students-message');
+    const cardsContainer = $('tag-student-cards');
+
+    if (cardsContainer && cardsContainer.children.length > 0) {
+      if (wrapper) wrapper.style.display = 'block';
+      if (message) message.style.display = 'none';
+    } else {
+      if (wrapper) wrapper.style.display = 'none';
+      if (message) message.style.display = 'block';
+    }
   }
 
   function toggleStudentCard(button) {

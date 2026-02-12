@@ -14,6 +14,7 @@ const Store = (() => {
     SETTINGS: `${PREFIX}settings`,
     COOKIE_HISTORY: `${PREFIX}cookie_history`,
     SELECTED_CLASS: `${PREFIX}selected_class`,
+    TEACHER_PROFILE: `${PREFIX}teacher_profile`,
   };
 
   // --- Helpers ---
@@ -231,6 +232,78 @@ const Store = (() => {
     }
   }
 
+  // === ID 생성 헬퍼 ===
+  function generateId() {
+    return `stu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // === 학생 데이터 마이그레이션 ===
+  function migrateStudentData() {
+    const classes = getClasses();
+    let changed = false;
+
+    classes.forEach(cls => {
+      cls.students = cls.students.map(student => {
+        // 문자열인 경우 (레거시)
+        if (typeof student === 'string') {
+          changed = true;
+          return {
+            id: generateId(),
+            name: student,
+            number: 0, // 추후 설정
+            gender: '',
+            sportsAbility: '',
+            tags: [],
+            note: ''
+          };
+        }
+
+        // 기존 객체에 신규 필드 추가
+        if (!student.id) {
+          changed = true;
+          return {
+            id: generateId(),
+            sportsAbility: '',
+            tags: [],
+            note: '',
+            ...student
+          };
+        }
+
+        // 이미 확장된 구조인 경우 기본값 보장
+        return {
+          sportsAbility: '',
+          tags: [],
+          note: '',
+          ...student
+        };
+      });
+    });
+
+    if (changed) {
+      saveClasses(classes);
+      console.log('[Store] 학생 데이터 마이그레이션 완료');
+    }
+  }
+
+  // === 교사 프로필 관리 ===
+  function getTeacherProfile() {
+    return _get(KEYS.TEACHER_PROFILE) || null;
+  }
+
+  function saveTeacherProfile(profile) {
+    _set(KEYS.TEACHER_PROFILE, {
+      ...profile,
+      isOnboarded: true,
+      onboardedAt: new Date().toISOString()
+    });
+  }
+
+  function isTeacherOnboarded() {
+    const profile = getTeacherProfile();
+    return profile && profile.isOnboarded;
+  }
+
   // === 마이그레이션: 기존 앱 데이터 가져오기 ===
   function migrateFromLegacy() {
     // 기존 class-group-manager 데이터
@@ -264,6 +337,9 @@ const Store = (() => {
 
     // groupCount 마이그레이션
     migrateGroupCount();
+
+    // 학생 데이터 마이그레이션
+    migrateStudentData();
   }
 
   // Public API
@@ -299,6 +375,10 @@ const Store = (() => {
     getCookieHistoryByClass,
     getCookieStats,
     clearCookieHistory,
+    // 교사 프로필
+    getTeacherProfile,
+    saveTeacherProfile,
+    isTeacherOnboarded,
     // 마이그레이션
     migrateFromLegacy,
   };

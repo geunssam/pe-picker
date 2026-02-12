@@ -901,3 +901,61 @@
     font-size: 18px;
   }
 }
+
+/* ============================================
+   커스텀 Alert 모달
+   ============================================ */
+.modal-alert {
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: var(--space-3xl);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+}
+
+.modal-alert-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xl);
+}
+
+.modal-alert-message {
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.modal-alert-message br {
+  display: block;
+  content: "";
+  margin-top: var(--space-sm);
+}
+
+.btn-alert-confirm {
+  width: 100%;
+  padding: var(--space-lg) var(--space-2xl);
+  background: linear-gradient(135deg, #BAE6FD, #7DD3FC);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 16px rgba(125, 211, 252, 0.3);
+}
+
+.btn-alert-confirm:hover {
+  background: linear-gradient(135deg, #7DD3FC, #38BDF8);
+  box-shadow: 0 6px 24px rgba(125, 211, 252, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-alert-confirm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(125, 211, 252, 0.3);
+}

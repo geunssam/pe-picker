@@ -21,6 +21,10 @@
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/tag-game.css">
   <link rel="stylesheet" href="css/group-manager.css">
+
+  <!-- Firebase SDK (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 
 <body>
@@ -100,7 +104,7 @@
     <div id="page-class-selector" class="page-view">
       <div class="landing-header">
         <div class="landing-logo">🎰</div>
-        <h1 class="landing-title">만능 뽑기</h1>
+        <h1 class="landing-title">PePick!</h1>
         <p class="landing-subtitle">학급을 선택하여 시작하세요</p>
       </div>
       <div id="landing-class-list" class="landing-class-list">
@@ -190,15 +194,24 @@
             <!-- 학생 수 (hidden, JS에서 참조용) -->
             <input type="hidden" id="tag-student-count" value="20">
 
-            <!-- 3개 버튼: 학급 불러오기 / 번호순 생성 / 성별 구분 -->
+            <!-- 3개 버튼: 번호순 생성 / 학급 불러오기 / 성별 구분 -->
             <div class="tag-student-gen-buttons">
-              <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">📝 번호순 생성</button>
+              <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
               <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">👫 성별 구분</button>
             </div>
 
-            <!-- 학생 카드 영역 -->
-            <div id="tag-student-cards" class="tag-student-cards"></div>
+            <!-- 학생 카드 영역 (조건부 표시) -->
+            <div id="tag-student-cards-wrapper" style="display: none;">
+              <div id="tag-student-cards" class="tag-student-cards"></div>
+            </div>
+
+            <!-- 학생 없을 때 안내 -->
+            <div id="tag-no-students-message" class="tag-empty-message">
+              <p style="font-size: var(--font-size-sm); color: var(--text-tertiary); text-align: center; padding: var(--space-lg);">
+                위 버튼으로 학생을 추가해주세요
+              </p>
+            </div>
           </div>
         </div>
 
@@ -317,8 +330,8 @@
             <div class="gm-compact-row">
               <label class="gm-inline-label">📋 학생 설정</label>
               <div class="tag-student-gen-buttons gm-compact-buttons">
-                <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급</button>
                 <button class="btn btn-secondary btn-sm" id="gm-gen-by-number">📝 번호</button>
+                <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급</button>
                 <button class="btn btn-secondary btn-sm" id="gm-gen-by-gender">👫 성별</button>
               </div>
             </div>
@@ -732,6 +745,20 @@
     </div>
   </div>
 
+  <!-- 빈 학생 안내 모달 -->
+  <div id="empty-students-modal" class="modal-overlay">
+    <div class="modal modal-alert">
+      <div class="modal-alert-body">
+        <div class="modal-alert-message">
+          선택한 학급에 입력된 학생이 없습니다.
+          <br>
+          학급 관리에서 학생을 추가해주세요!
+        </div>
+        <button class="btn-alert-confirm" id="empty-students-confirm">학급 관리로 이동 →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 번호순 생성 모달 (모둠뽑기) -->
   <div id="gm-number-modal" class="modal-overlay">
     <div class="modal">
@@ -817,6 +844,8 @@
   <script src="js/tag-game/tag-game-ui.js"></script>
   <script src="js/group-manager/group-manager.js"></script>
   <script src="js/group-manager/group-manager-ui.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth-manager.js"></script>
   <script src="js/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

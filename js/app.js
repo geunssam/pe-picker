@@ -18,8 +18,26 @@ const App = (() => {
   let currentRoute = null;
 
   function init() {
+    // 인증 체크 (AuthManager가 정의되어 있으면)
+    if (typeof AuthManager !== 'undefined') {
+      AuthManager.init();
+
+      // 로그인되지 않았으면 로그인 페이지로
+      if (!AuthManager.isAuthenticated()) {
+        window.location.href = 'login.html';
+        return;
+      }
+    }
+
     // 레거시 데이터 마이그레이션
     Store.migrateFromLegacy();
+
+    // 온보딩 체크 (로컬/Google 모두 적용, 단 기존 학급이 있으면 스킵)
+    const classes = Store.getClasses();
+    if (classes.length === 0 && !Store.isTeacherOnboarded()) {
+      window.location.href = 'wizard.html';
+      return;
+    }
 
     // 라우트 이벤트
     window.addEventListener('hashchange', handleRouteChange);
@@ -43,7 +61,11 @@ const App = (() => {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
         if (confirm('로그아웃 하시겠습니까?')) {
-          goBackToLanding();
+          if (typeof AuthManager !== 'undefined') {
+            AuthManager.logout();
+          } else {
+            goBackToLanding();
+          }
         }
       });
     }

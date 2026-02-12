@@ -114,11 +114,16 @@ const GroupManager = (() => {
     if (!cls) return;
     const students = ClassManager.getStudentNames(cls.id);
     if (students.length === 0) return;
+
+    // 빈 이름 필터링
+    const validStudents = students.filter(name => name && name.trim() !== '');
+    if (validStudents.length === 0) return;
+
     const container = document.getElementById('gm-student-cards');
     if (!container) return;
     container.innerHTML = '';
-    students.forEach(name => createStudentCard(container, name));
-    document.getElementById('gm-student-count').value = students.length;
+    validStudents.forEach(name => createStudentCard(container, name));
+    document.getElementById('gm-student-count').value = validStudents.length;
   }
 
   // === Phase UI 전환 ===
@@ -284,17 +289,26 @@ const GroupManager = (() => {
       return;
     }
     const students = ClassManager.getStudentNames(cls.id);
-    if (students.length === 0) {
-      UI.showToast('학생이 없습니다', 'error');
+
+    // 빈 이름 필터링
+    const validStudents = students.filter(name => name && name.trim() !== '');
+
+    const container = document.getElementById('gm-student-cards');
+    if (!container) return;
+
+    if (validStudents.length === 0) {
+      container.innerHTML = '';
+      showStudentCardsWrapper();
+      UI.showModal('empty-students-modal');
       return;
     }
-    const container = document.getElementById('gm-student-cards');
+
     container.innerHTML = '';
-    students.forEach(name => createStudentCard(container, name));
-    document.getElementById('gm-student-count').value = students.length;
+    validStudents.forEach(name => createStudentCard(container, name));
+    document.getElementById('gm-student-count').value = validStudents.length;
     updateCalcInfo();
     showStudentCardsWrapper();
-    UI.showToast(`${students.length}명 불러오기 완료`, 'success');
+    UI.showToast(`${validStudents.length}명 불러오기 완료`, 'success');
   }
 
   // === 계산 정보 업데이트 ===
