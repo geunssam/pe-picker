@@ -17,7 +17,7 @@ const App = (() => {
 
   let currentRoute = null;
 
-  function init() {
+  async function init() {
     // 인증 체크 (AuthManager가 정의되어 있으면)
     if (typeof AuthManager !== 'undefined') {
       AuthManager.init();
@@ -35,25 +35,30 @@ const App = (() => {
     // Google 로그인인 경우 Firestore 데이터 로드
     const user = AuthManager.getCurrentUser();
     if (user && user.mode === 'google') {
-      loadUserDataFromFirestore(user.uid).then((userData) => {
+      try {
+        // 데이터 로드 완료 대기
+        const userData = await loadUserDataFromFirestore(user.uid);
+
+        // 데이터 로드 완료 후 초기화 계속
         continueInit(userData);
 
-        // 실시간 동기화 시작 (FirestoreSync가 정의되어 있으면)
+        // 마지막으로 실시간 동기화 시작
         if (typeof FirestoreSync !== 'undefined') {
           console.log('🔄 실시간 동기화 활성화 준비');
           FirestoreSync.start(user.uid);
         }
-      }).catch(error => {
-        console.error('Firestore 데이터 로드 실패:', error);
-        continueInit(null); // 실패해도 localStorage로 계속 진행
-      });
+      } catch (error) {
+        console.error('❌ Firestore 데이터 로드 실패:', error);
+        // 실패 시 wizard로 이동
+        window.location.href = 'wizard.html';
+      }
       return;
     }
 
     continueInit(null);
   }
 
-  async function continueInit(userData) {
+  function continueInit(userData) {
     // 온보딩 체크
     const user = AuthManager.getCurrentUser();
     const isGoogleMode = user && user.mode === 'google';
@@ -248,8 +253,20 @@ const App = (() => {
       // 1. 사용자 문서 로드 (타임아웃 10초)
       const userDoc = await withTimeout(db.collection('users').doc(uid).get());
       if (!userDoc.exists) {
-        console.log('사용자 문서가 없습니다.');
-        return null;
+        console.warn('⚠️ 사용자 문서가 없습니다. 잠시 후 재시도합니다...');
+
+        // 1초 대기 후 재시도 (auth-manager.js의 문서 생성 대기)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const retryDoc = await withTimeout(db.collection('users').doc(uid).get());
+        if (!retryDoc.exists) {
+          console.error('❌ 재시도 후에도 사용자 문서가 없습니다. wizard로 이동합니다.');
+          window.location.href = 'wizard.html';
+          return null;
+        }
+
+        console.log('✅ 재시도 성공 - 사용자 문서 확인');
+        return retryDoc.data();
       }
 
       const userData = userDoc.data();
