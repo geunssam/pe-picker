@@ -237,8 +237,16 @@ const App = (() => {
 
       console.log('Firestore에서 데이터 로드 중...');
 
-      // 1. 사용자 문서 로드
-      const userDoc = await db.collection('users').doc(uid).get();
+      // 타임아웃 헬퍼 (10초)
+      const withTimeout = (promise, ms = 10000) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms))
+        ]);
+      };
+
+      // 1. 사용자 문서 로드 (타임아웃 10초)
+      const userDoc = await withTimeout(db.collection('users').doc(uid).get());
       if (!userDoc.exists) {
         console.log('사용자 문서가 없습니다.');
         return null;
@@ -256,20 +264,24 @@ const App = (() => {
         localStorage.setItem('pet_selectedClass', userData.selectedClassId);
       }
 
-      // 4. 학급 목록 로드
-      const classesSnapshot = await db.collection('users').doc(uid).collection('classes').get();
+      // 4. 학급 목록 로드 (타임아웃 10초)
+      const classesSnapshot = await withTimeout(
+        db.collection('users').doc(uid).collection('classes').get()
+      );
 
       const classes = [];
       for (const classDoc of classesSnapshot.docs) {
         const classData = classDoc.data();
         const classId = classDoc.id;
 
-        // 5. 학생 로드
-        const studentsSnapshot = await db.collection('users').doc(uid)
-          .collection('classes').doc(classId)
-          .collection('students')
-          .orderBy('number')
-          .get();
+        // 5. 학생 로드 (타임아웃 10초)
+        const studentsSnapshot = await withTimeout(
+          db.collection('users').doc(uid)
+            .collection('classes').doc(classId)
+            .collection('students')
+            .orderBy('number')
+            .get()
+        );
 
         const students = studentsSnapshot.docs.map(doc => doc.data().name);
 
@@ -293,7 +305,11 @@ const App = (() => {
       // 8. userData 반환 (온보딩 체크용)
       return userData;
     } catch (error) {
-      console.error('Firestore 데이터 로드 실패:', error);
+      if (error.message === 'TIMEOUT') {
+        console.error('⏱ Firestore 데이터 로드 타임아웃 (10초)');
+      } else {
+        console.error('❌ Firestore 데이터 로드 실패:', error);
+      }
       throw error;
     }
   }

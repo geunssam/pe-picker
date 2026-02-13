@@ -431,15 +431,29 @@ const WizardManager = (() => {
       });
 
       console.log('💾 batch.commit() 시작...');
-      await batch.commit();
+
+      // 타임아웃 추가 (30초 - 배치 작업이므로 더 긴 시간 허용)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT')), 30000);
+      });
+
+      await Promise.race([
+        batch.commit(),
+        timeoutPromise
+      ]);
+
       console.log(`✅ Firestore 저장 완료! ${createdClasses.length}개 학급`);
 
     } catch (error) {
-      console.error('❌ Firestore 저장 실패:', {
-        error: error.message,
-        code: error.code,
-        stack: error.stack
-      });
+      if (error.message === 'TIMEOUT') {
+        console.error('⏱ Firestore 저장 타임아웃 (30초)');
+      } else {
+        console.error('❌ Firestore 저장 실패:', {
+          error: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+      }
       throw error; // 에러를 다시 throw하여 재시도 로직에서 처리
     }
   }

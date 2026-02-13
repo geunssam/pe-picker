@@ -190,7 +190,16 @@ const AuthManager = (() => {
       console.log('✅ Firestore 연결 확인');
 
       const userRef = db.collection('users').doc(user.uid);
-      const userDoc = await userRef.get();
+
+      // 타임아웃 추가 (10초)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT')), 10000);
+      });
+
+      const userDoc = await Promise.race([
+        userRef.get(),
+        timeoutPromise
+      ]);
 
       if (!userDoc.exists) {
         console.log('📝 신규 사용자 - 문서 생성 중...');
@@ -243,8 +252,14 @@ const AuthManager = (() => {
     } catch (error) {
       console.error('❌ Firestore 사용자 확인 실패:', error);
 
-      // 에러 발생해도 wizard로 이동 (로컬 저장소로 fallback)
-      alert('클라우드 연결에 실패했습니다. 로컬 모드로 진행합니다.');
+      // 타임아웃 또는 연결 실패 시 wizard로 이동
+      if (error.message === 'TIMEOUT') {
+        console.warn('⏱ Firestore 연결 타임아웃 (10초) - wizard로 이동');
+        alert('서버 연결이 느립니다. 로컬 모드로 진행합니다.\n온보딩을 완료하면 다음부터는 정상 작동합니다.');
+      } else {
+        alert('클라우드 연결에 실패했습니다. 로컬 모드로 진행합니다.');
+      }
+
       if (window.location.pathname.includes('login.html')) {
         window.location.href = 'wizard.html';
       }
