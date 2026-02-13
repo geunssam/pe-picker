@@ -129,5 +129,25 @@
   <script src="js/storage/teacher-repo.js"></script>
   <script src="js/shared/store.js"></script>
   <script src="js/wizard.js"></script>
+
+  <!-- Initialize AuthManager -->
+  <script>
+    // AuthManager 초기화 (Google 로그인 상태 확인용)
+    if (typeof AuthManager !== 'undefined') {
+      AuthManager.init();
+      console.log('✅ wizard.html: AuthManager 초기화 완료');
+
+      const user = AuthManager.getCurrentUser();
+      if (user) {
+        console.log('👤 wizard.html: 현재 사용자:', {
+          mode: user.mode,
+          uid: user.uid,
+          displayName: user.displayName
+        });
+      } else {
+        console.log('⚠️ wizard.html: 로그인된 사용자 없음 (로컬 모드)');
+      }
+    }
+  </script>
 </body>
 </html>

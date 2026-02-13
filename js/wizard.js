@@ -290,9 +290,22 @@ const WizardManager = (() => {
 
     console.log(`✅ localStorage에 ${createdClasses.length}개 학급 저장 완료`);
 
+    // 온보딩 완료 플래그 설정 (Google 모드가 아니어도 설정)
+    Store.saveTeacherProfile({
+      ...Store.getTeacherProfile(),
+      isOnboarded: true
+    });
+    console.log('✅ localStorage 온보딩 완료 플래그 설정');
+
     // Google 로그인인 경우 Firestore에 저장
     const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
-    console.log('👤 현재 사용자:', user);
+    console.log('👤 현재 사용자 확인:', {
+      authManagerDefined: typeof AuthManager !== 'undefined',
+      userExists: !!user,
+      uid: user?.uid,
+      mode: user?.mode,
+      displayName: user?.displayName
+    });
 
     if (user && user.mode === 'google') {
       console.log('✅ Google 모드 확인 - Firestore 저장 시작');
@@ -313,7 +326,7 @@ const WizardManager = (() => {
         }
       }
     } else {
-      console.warn('❌ Firestore 저장 조건 불만족:', {
+      console.warn('⚠️ Firestore 저장 건너뜀 (로컬 모드 또는 사용자 없음):', {
         userExists: !!user,
         mode: user?.mode,
         authManagerDefined: typeof AuthManager !== 'undefined'
@@ -464,6 +477,21 @@ const WizardManager = (() => {
       console.log('🔍 Firestore 저장 검증 시작...');
       const db = FirebaseConfig.getFirestore();
 
+      // 1. users 문서의 isOnboarded 플래그 확인
+      const userDoc = await db.collection('users').doc(uid).get();
+      if (!userDoc.exists) {
+        console.error('❌ 검증 실패: 사용자 문서 미존재');
+        return false;
+      }
+
+      const userData = userDoc.data();
+      if (userData.isOnboarded !== true) {
+        console.error('❌ 검증 실패: isOnboarded 플래그가 true가 아님');
+        return false;
+      }
+      console.log('✅ users 문서 isOnboarded: true 확인');
+
+      // 2. 학급 문서 확인
       for (const classId of classIds) {
         const classDoc = await db.collection('users').doc(uid)
           .collection('classes').doc(classId).get();
@@ -474,7 +502,7 @@ const WizardManager = (() => {
         }
       }
 
-      console.log('✅ Firestore 저장 검증 완료');
+      console.log('✅ Firestore 저장 검증 완료 (users + classes)');
       return true;
     } catch (error) {
       console.error('❌ 검증 오류:', error);
