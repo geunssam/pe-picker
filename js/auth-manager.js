@@ -215,24 +215,23 @@ const AuthManager = (() => {
           window.location.href = 'wizard.html';
         }
       } else {
-        // 기존 사용자 → isOnboarded 플래그 확인
+        // 기존 사용자 → 문서가 있다는 것은 이미 온보딩을 거쳤다는 의미
         const userData = userDoc.data();
-        const isOnboarded = userData && userData.isOnboarded === true;
 
-        if (isOnboarded) {
-          console.log('✅ 기존 사용자 (온보딩 완료) → index.html로 이동');
+        // isOnboarded 플래그가 없는 기존 사용자는 자동으로 true 설정
+        if (userData.isOnboarded !== true) {
+          console.log('🔧 기존 사용자 isOnboarded 플래그 자동 설정');
+          await userRef.update({
+            isOnboarded: true,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
 
-          // 온보딩 완료된 사용자 → index.html로 이동
-          if (window.location.pathname.includes('login.html')) {
-            window.location.href = 'index.html';
-          }
-        } else {
-          console.log('📝 기존 사용자 (온보딩 미완료) → wizard.html로 이동');
+        console.log('✅ 기존 사용자 확인 완료 → index.html로 이동');
 
-          // 온보딩 미완료 사용자 → wizard.html로 이동
-          if (window.location.pathname.includes('login.html')) {
-            window.location.href = 'wizard.html';
-          }
+        // 기존 사용자 → index.html로 이동
+        if (window.location.pathname.includes('login.html')) {
+          window.location.href = 'index.html';
         }
       }
     } catch (error) {
