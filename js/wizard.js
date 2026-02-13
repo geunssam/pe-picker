@@ -333,11 +333,17 @@ const WizardManager = (() => {
       });
     }
 
-    console.log('🚀 index.html로 이동 예정');
+    console.log('🚀 학급 선택 화면으로 이동');
 
     // UX를 위한 약간의 지연
     setTimeout(() => {
-      window.location.href = 'index.html';
+      if (typeof App !== 'undefined') {
+        // SPA 모드: 라우트 이동
+        App.navigateTo('class-selector');
+      } else {
+        // 독립 페이지 모드: 페이지 이동 (fallback)
+        window.location.href = 'index.html';
+      }
     }, 1000);
   }
 

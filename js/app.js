@@ -6,6 +6,7 @@
 
 const App = (() => {
   const ROUTES = {
+    'wizard':         { label: '학급 설정', icon: '🎯', requiresClass: false },
     'class-selector': { label: '학급 선택', icon: '🏠', requiresClass: false },
     'tag-game':       { label: '술래뽑기',  icon: '🎯', requiresClass: true },
     'group-manager':  { label: '모둠뽑기',  icon: '👥', requiresClass: true },
@@ -50,7 +51,7 @@ const App = (() => {
       } catch (error) {
         console.error('❌ Firestore 데이터 로드 실패:', error);
         // 실패 시 wizard로 이동
-        window.location.href = 'wizard.html';
+        App.navigateTo('wizard');
       }
       return;
     }
@@ -66,8 +67,8 @@ const App = (() => {
     if (isGoogleMode && userData) {
       // Google 로그인: 이미 로드된 userData의 isOnboarded 플래그 확인 (중복 조회 방지)
       if (!userData.isOnboarded) {
-        console.log('📝 온보딩 미완료 → wizard.html로 이동');
-        window.location.href = 'wizard.html';
+        console.log('📝 온보딩 미완료 → wizard로 이동');
+        activateRoute('wizard');
         return;
       }
 
@@ -76,7 +77,7 @@ const App = (() => {
       // 로컬 모드: localStorage의 온보딩 상태 확인 (기존 학급이 있으면 스킵)
       const classes = Store.getClasses();
       if (classes.length === 0 && !Store.isTeacherOnboarded()) {
-        window.location.href = 'wizard.html';
+        activateRoute('wizard');
         return;
       }
     }
@@ -173,14 +174,19 @@ const App = (() => {
     const navbar = document.getElementById('top-navbar');
     const container = document.querySelector('.app-container');
 
-    if (route === 'class-selector') {
-      // 랜딩: 네비바 숨기기
+    if (route === 'wizard' || route === 'class-selector') {
+      // wizard 또는 랜딩: 네비바 숨기기
       if (navbar) navbar.style.display = 'none';
       if (container) container.classList.add('no-navbar');
 
       // 랜딩 페이지 렌더링
-      if (typeof ClassManager !== 'undefined') {
+      if (route === 'class-selector' && typeof ClassManager !== 'undefined') {
         ClassManager.renderLandingClassList();
+      }
+
+      // wizard 페이지 진입 시 초기화
+      if (route === 'wizard' && typeof WizardManager !== 'undefined') {
+        WizardManager.init();
       }
     } else {
       // 학급 내부: 네비바 표시 + 학급명 세팅
@@ -261,7 +267,7 @@ const App = (() => {
         const retryDoc = await withTimeout(db.collection('users').doc(uid).get());
         if (!retryDoc.exists) {
           console.error('❌ 재시도 후에도 사용자 문서가 없습니다. wizard로 이동합니다.');
-          window.location.href = 'wizard.html';
+          App.navigateTo('wizard');
           return null;
         }
 

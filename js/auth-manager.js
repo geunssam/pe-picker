@@ -223,11 +223,11 @@ const AuthManager = (() => {
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log('✅ 신규 사용자 문서 생성 완료 → wizard.html로 이동');
+        console.log('✅ 신규 사용자 문서 생성 완료 → wizard로 이동');
 
         // 온보딩 페이지로 이동 (login.html에서만)
         if (window.location.pathname.includes('login.html')) {
-          window.location.href = 'wizard.html';
+          window.location.href = 'index.html#wizard';
         }
       } else {
         // 기존 사용자 → 문서가 있다는 것은 이미 온보딩을 거쳤다는 의미
@@ -261,7 +261,7 @@ const AuthManager = (() => {
       }
 
       if (window.location.pathname.includes('login.html')) {
-        window.location.href = 'wizard.html';
+        window.location.href = 'index.html#wizard';
       }
     }
   }
