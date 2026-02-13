@@ -37,6 +37,12 @@ const App = (() => {
     if (user && user.mode === 'google') {
       loadUserDataFromFirestore(user.uid).then((userData) => {
         continueInit(userData);
+
+        // 실시간 동기화 시작 (FirestoreSync가 정의되어 있으면)
+        if (typeof FirestoreSync !== 'undefined') {
+          console.log('🔄 실시간 동기화 활성화 준비');
+          FirestoreSync.start(user.uid);
+        }
       }).catch(error => {
         console.error('Firestore 데이터 로드 실패:', error);
         continueInit(null); // 실패해도 localStorage로 계속 진행
@@ -65,7 +71,7 @@ const App = (() => {
       // 로컬 모드: localStorage의 온보딩 상태 확인 (기존 학급이 있으면 스킵)
       const classes = Store.getClasses();
       if (classes.length === 0 && !Store.isTeacherOnboarded()) {
-        window.location.href = 'onboarding.html';
+        window.location.href = 'wizard.html';
         return;
       }
     }

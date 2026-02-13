@@ -111,6 +111,12 @@ const AuthManager = (() => {
   }
 
   async function logout() {
+    // 실시간 동기화 중지 (FirestoreSync가 정의되어 있으면)
+    if (typeof FirestoreSync !== 'undefined' && FirestoreSync.isEnabled()) {
+      console.log('🛑 실시간 동기화 중지');
+      FirestoreSync.stop();
+    }
+
     if (authMode === 'google') {
       const auth = FirebaseConfig.getAuth();
       if (auth) {

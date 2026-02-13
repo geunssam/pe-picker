@@ -241,6 +241,8 @@ const WizardManager = (() => {
 
   // ===== 완료 처리 =====
   async function handleComplete() {
+    console.log('🎯 handleComplete 시작');
+
     // 로딩 표시
     const loadingEl = document.getElementById('wizard-loading');
     const loadingText = document.getElementById('wizard-loading-text');
@@ -286,11 +288,39 @@ const WizardManager = (() => {
       }
     });
 
+    console.log(`✅ localStorage에 ${createdClasses.length}개 학급 저장 완료`);
+
     // Google 로그인인 경우 Firestore에 저장
     const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
+    console.log('👤 현재 사용자:', user);
+
     if (user && user.mode === 'google') {
-      await saveToFirestore(user.uid, createdClasses);
+      console.log('✅ Google 모드 확인 - Firestore 저장 시작');
+      loadingText.textContent = '클라우드에 저장 중... 잠시만 기다려주세요';
+
+      const success = await saveToFirestoreWithRetry(user.uid, createdClasses);
+
+      if (!success) {
+        const shouldContinue = confirm(
+          '⚠️ 클라우드 저장에 실패했습니다.\n\n' +
+          '로컬에는 저장되었지만, 다른 기기에서는 접근할 수 없습니다.\n\n' +
+          '계속 진행하시겠습니까? (취소하면 다시 시도)'
+        );
+
+        if (!shouldContinue) {
+          loadingEl.style.display = 'none';
+          return; // 완료 중단
+        }
+      }
+    } else {
+      console.warn('❌ Firestore 저장 조건 불만족:', {
+        userExists: !!user,
+        mode: user?.mode,
+        authManagerDefined: typeof AuthManager !== 'undefined'
+      });
     }
+
+    console.log('🚀 index.html로 이동 예정');
 
     // UX를 위한 약간의 지연
     setTimeout(() => {
@@ -298,15 +328,49 @@ const WizardManager = (() => {
     }, 1000);
   }
 
+  // ===== Firestore 저장 (재시도 로직 포함) =====
+  async function saveToFirestoreWithRetry(uid, createdClasses, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Firestore 저장 시도 ${attempt}/${maxRetries}`);
+        await saveToFirestore(uid, createdClasses);
+
+        // 저장 검증
+        const verified = await verifyFirestoreSave(uid, createdClasses.map(c => c.classId));
+        if (verified) {
+          return true; // 성공
+        } else {
+          throw new Error('저장 검증 실패');
+        }
+      } catch (error) {
+        console.error(`❌ 시도 ${attempt} 실패:`, error);
+
+        if (attempt === maxRetries) {
+          // 최종 실패
+          return false;
+        }
+
+        // 1초 대기 후 재시도
+        console.log('⏳ 1초 후 재시도...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
+
   // ===== Firestore 저장 =====
   async function saveToFirestore(uid, createdClasses) {
     try {
-      console.log('🔥 Firestore 저장 시작:', uid, createdClasses.length, '개 학급');
+      console.log('🔥 Firestore 저장 시작:', {
+        uid,
+        classCount: createdClasses.length,
+        classes: createdClasses.map(c => c.className)
+      });
 
       const db = typeof FirebaseConfig !== 'undefined' ? FirebaseConfig.getFirestore() : null;
       if (!db) {
-        console.warn('Firestore가 초기화되지 않았습니다.');
-        return;
+        const errorMsg = '⚠️ Firestore가 초기화되지 않았습니다.';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       console.log('✅ Firestore 연결 확인');
@@ -314,6 +378,12 @@ const WizardManager = (() => {
 
       // 사용자 문서 업데이트 (merge: true로 안전하게)
       const userRef = db.collection('users').doc(uid);
+      console.log('📝 users 문서 업데이트:', {
+        uid,
+        isOnboarded: true,
+        selectedClassId: createdClasses[0]?.classId
+      });
+
       batch.set(userRef, {
         displayName: wizardData.teacherName || AuthManager.getCurrentUser().displayName,
         schoolLevel: wizardData.schoolLevel,
@@ -324,6 +394,8 @@ const WizardManager = (() => {
 
       // 각 학급 및 학생 생성
       createdClasses.forEach(({ classId, className, students, grade }) => {
+        console.log(`📚 학급 생성: ${className} (${students.length}명)`);
+
         // 학급 문서 생성
         const classRef = db.collection('users').doc(uid).collection('classes').doc(classId);
         batch.set(classRef, {
@@ -358,11 +430,41 @@ const WizardManager = (() => {
         });
       });
 
+      console.log('💾 batch.commit() 시작...');
       await batch.commit();
-      console.log('Firestore 저장 완료:', createdClasses.length, '개 학급');
+      console.log(`✅ Firestore 저장 완료! ${createdClasses.length}개 학급`);
+
     } catch (error) {
-      console.error('Firestore 저장 실패:', error);
-      alert('Firestore 저장에 실패했습니다. 로컬에는 저장되었습니다.');
+      console.error('❌ Firestore 저장 실패:', {
+        error: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      throw error; // 에러를 다시 throw하여 재시도 로직에서 처리
+    }
+  }
+
+  // ===== Firestore 저장 검증 =====
+  async function verifyFirestoreSave(uid, classIds) {
+    try {
+      console.log('🔍 Firestore 저장 검증 시작...');
+      const db = FirebaseConfig.getFirestore();
+
+      for (const classId of classIds) {
+        const classDoc = await db.collection('users').doc(uid)
+          .collection('classes').doc(classId).get();
+
+        if (!classDoc.exists) {
+          console.error(`❌ 검증 실패: 학급 ${classId} 미존재`);
+          return false;
+        }
+      }
+
+      console.log('✅ Firestore 저장 검증 완료');
+      return true;
+    } catch (error) {
+      console.error('❌ 검증 오류:', error);
+      return false;
     }
   }
 

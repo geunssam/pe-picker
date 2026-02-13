@@ -21,12 +21,17 @@ let db = null;
 
 function initFirebase() {
   // Firebase가 이미 초기화되었는지 확인
-  if (firebaseApp) return;
+  if (firebaseApp) {
+    console.log('✅ Firebase 이미 초기화됨');
+    return;
+  }
 
   try {
+    console.log('🔥 Firebase 초기화 시작...');
+
     // Firebase SDK가 로드되었는지 확인
     if (typeof firebase === 'undefined') {
-      console.warn('Firebase SDK가 로드되지 않았습니다.');
+      console.error('❌ Firebase SDK가 로드되지 않았습니다.');
       return;
     }
 
@@ -35,19 +40,32 @@ function initFirebase() {
     auth = firebase.auth();
     db = firebase.firestore();
 
+    console.log('✅ Firebase App 초기화 성공');
+    console.log('✅ Firebase Auth 초기화 성공');
+    console.log('✅ Firestore 초기화 성공');
+
     // Firestore 오프라인 지속성 활성화
     db.enablePersistence({ synchronizeTabs: true })
+      .then(() => {
+        console.log('✅ Firestore 오프라인 지속성 활성화');
+      })
       .catch((err) => {
         if (err.code === 'failed-precondition') {
-          console.warn('여러 탭이 열려 있어 오프라인 지속성을 활성화할 수 없습니다.');
+          console.warn('⚠️ 여러 탭이 열려 있어 오프라인 지속성을 활성화할 수 없습니다.');
         } else if (err.code === 'unimplemented') {
-          console.warn('브라우저가 오프라인 지속성을 지원하지 않습니다.');
+          console.warn('⚠️ 브라우저가 오프라인 지속성을 지원하지 않습니다.');
+        } else {
+          console.warn('⚠️ Firestore 오프라인 지속성 활성화 실패:', err);
         }
       });
 
-    console.log('Firebase 초기화 완료');
+    console.log('✅ Firebase 초기화 완료');
   } catch (error) {
-    console.error('Firebase 초기화 실패:', error);
+    console.error('❌ Firebase 초기화 실패:', {
+      error: error.message,
+      code: error.code,
+      stack: error.stack
+    });
   }
 }
 
