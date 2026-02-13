@@ -32,11 +32,42 @@ const App = (() => {
     // 레거시 데이터 마이그레이션
     Store.migrateFromLegacy();
 
-    // 온보딩 체크 (로컬/Google 모두 적용, 단 기존 학급이 있으면 스킵)
-    const classes = Store.getClasses();
-    if (classes.length === 0 && !Store.isTeacherOnboarded()) {
-      window.location.href = 'wizard.html';
+    // Google 로그인인 경우 Firestore 데이터 로드
+    const user = AuthManager.getCurrentUser();
+    if (user && user.mode === 'google') {
+      loadUserDataFromFirestore(user.uid).then((userData) => {
+        continueInit(userData);
+      }).catch(error => {
+        console.error('Firestore 데이터 로드 실패:', error);
+        continueInit(null); // 실패해도 localStorage로 계속 진행
+      });
       return;
+    }
+
+    continueInit(null);
+  }
+
+  async function continueInit(userData) {
+    // 온보딩 체크
+    const user = AuthManager.getCurrentUser();
+    const isGoogleMode = user && user.mode === 'google';
+
+    if (isGoogleMode && userData) {
+      // Google 로그인: 이미 로드된 userData의 isOnboarded 플래그 확인 (중복 조회 방지)
+      if (!userData.isOnboarded) {
+        console.log('📝 온보딩 미완료 → wizard.html로 이동');
+        window.location.href = 'wizard.html';
+        return;
+      }
+
+      console.log('✅ 온보딩 완료 확인');
+    } else if (!isGoogleMode) {
+      // 로컬 모드: localStorage의 온보딩 상태 확인 (기존 학급이 있으면 스킵)
+      const classes = Store.getClasses();
+      if (classes.length === 0 && !Store.isTeacherOnboarded()) {
+        window.location.href = 'onboarding.html';
+        return;
+      }
     }
 
     // 라우트 이벤트
@@ -188,6 +219,77 @@ const App = (() => {
 
   function getCurrentRoute() {
     return currentRoute;
+  }
+
+  async function loadUserDataFromFirestore(uid) {
+    try {
+      const db = FirebaseConfig.getFirestore();
+      if (!db) {
+        console.warn('Firestore가 초기화되지 않았습니다.');
+        return null;
+      }
+
+      console.log('Firestore에서 데이터 로드 중...');
+
+      // 1. 사용자 문서 로드
+      const userDoc = await db.collection('users').doc(uid).get();
+      if (!userDoc.exists) {
+        console.log('사용자 문서가 없습니다.');
+        return null;
+      }
+
+      const userData = userDoc.data();
+
+      // 2. 설정 동기화
+      if (userData.settings) {
+        localStorage.setItem('pet_settings', JSON.stringify(userData.settings));
+      }
+
+      // 3. 선택된 학급 ID
+      if (userData.selectedClassId) {
+        localStorage.setItem('pet_selectedClass', userData.selectedClassId);
+      }
+
+      // 4. 학급 목록 로드
+      const classesSnapshot = await db.collection('users').doc(uid).collection('classes').get();
+
+      const classes = [];
+      for (const classDoc of classesSnapshot.docs) {
+        const classData = classDoc.data();
+        const classId = classDoc.id;
+
+        // 5. 학생 로드
+        const studentsSnapshot = await db.collection('users').doc(uid)
+          .collection('classes').doc(classId)
+          .collection('students')
+          .orderBy('number')
+          .get();
+
+        const students = studentsSnapshot.docs.map(doc => doc.data().name);
+
+        // 6. 학급 객체 생성
+        classes.push({
+          id: classId,
+          name: classData.name,
+          students: students,
+          groupNames: classData.groupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'],
+          groups: classData.groups || [],
+          groupCount: classData.groupCount || 6,
+          createdAt: classData.createdAt ? classData.createdAt.toDate().toISOString() : new Date().toISOString()
+        });
+      }
+
+      // 7. localStorage에 저장
+      localStorage.setItem('pet_classes', JSON.stringify(classes));
+
+      console.log(`Firestore에서 ${classes.length}개 학급 로드 완료`);
+
+      // 8. userData 반환 (온보딩 체크용)
+      return userData;
+    } catch (error) {
+      console.error('Firestore 데이터 로드 실패:', error);
+      throw error;
+    }
   }
 
   return { init, navigateTo, getCurrentRoute, onClassSelected, goBackToLanding };

@@ -156,6 +156,18 @@
   color: var(--text-primary);
 }
 
+/* Compact 버튼 (학년 선택용) */
+.wizard-option-btn-compact {
+  flex-direction: row;
+  justify-content: center;
+  padding: var(--space-md);
+  min-height: auto;
+}
+
+.wizard-option-btn-compact .wizard-option-label {
+  font-size: var(--font-size-lg);
+}
+
 /* ===== List & Counter ===== */
 .wizard-list {
   display: flex;

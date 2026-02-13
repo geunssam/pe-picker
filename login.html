@@ -7,7 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#FFF9F0">
-  <title>PePick! - 로그인</title>
+  <title>PEPick! - 로그인</title>
+  <link rel="icon" type="image/png" href="assets/logo.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
   <link rel="manifest" href="manifest.json">
 
   <!-- Fonts -->
@@ -22,6 +24,7 @@
   <!-- Firebase SDK (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
@@ -78,10 +81,22 @@
   <!-- Scripts -->
   <script src="js/firebase-config.js"></script>
   <script src="js/auth-manager.js"></script>
-  <script src="js/store.js"></script>
+  <!-- Type Definitions -->
+  <script src="js/types.js"></script>
+  <!-- Storage Layer -->
+  <script src="js/storage/base-repo.js"></script>
+  <script src="js/storage/settings-repo.js"></script>
+  <script src="js/storage/class-repo.js"></script>
+  <script src="js/storage/tag-game-repo.js"></script>
+  <script src="js/storage/group-manager-repo.js"></script>
+  <script src="js/storage/teacher-repo.js"></script>
+  <script src="js/shared/store.js"></script>
   <script>
     // 로그인 페이지 스크립트
     document.addEventListener('DOMContentLoaded', () => {
+      // AuthManager 초기화
+      AuthManager.init();
+
       const googleLoginBtn = document.getElementById('google-login-btn');
       const localLoginBtn = document.getElementById('local-login-btn');
 
@@ -97,9 +112,8 @@
         googleLoginBtn.innerHTML = '<span>로그인 중...</span>';
 
         const success = await AuthManager.loginWithGoogle();
-        if (success) {
-          window.location.href = 'index.html';
-        } else {
+        if (!success) {
+          // 로그인 실패 시에만 버튼 복구
           googleLoginBtn.disabled = false;
           googleLoginBtn.innerHTML = `
             <svg class="login-icon" viewBox="0 0 24 24">
@@ -111,12 +125,19 @@
             <span>Google로 로그인</span>
           `;
         }
+        // 로그인 성공 시 페이지 이동은 AuthManager.checkFirestoreUser()에서 처리
       });
 
       // 로컬 모드
       localLoginBtn.addEventListener('click', () => {
         AuthManager.loginAsLocal();
-        window.location.href = 'index.html';
+
+        // 온보딩 확인
+        if (!TeacherRepo.isOnboarded()) {
+          window.location.href = 'onboarding.html';
+        } else {
+          window.location.href = 'index.html';
+        }
       });
     });
   </script>

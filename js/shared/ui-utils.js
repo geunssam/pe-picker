@@ -76,6 +76,14 @@ const UI = (() => {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // === HTML Escape (XSS 방지) ===
+  function escapeHtml(text) {
+    if (typeof text !== 'string') return text;
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // === Number Stepper 바인딩 ===
   function initSteppers() {
     document.querySelectorAll('.stepper-btn').forEach(btn => {
@@ -176,5 +184,6 @@ const UI = (() => {
     formatTime,
     sleep,
     initSteppers,
+    escapeHtml,
   };
 })();

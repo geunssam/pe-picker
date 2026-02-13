@@ -35,7 +35,7 @@ const AuthManager = (() => {
     updateNavigation();
   }
 
-  function handleAuthStateChanged(user) {
+  async function handleAuthStateChanged(user) {
     if (user) {
       // 로그인됨
       currentUser = {
@@ -48,6 +48,11 @@ const AuthManager = (() => {
       localStorage.setItem('current-user', JSON.stringify(currentUser));
       localStorage.setItem('auth-mode', 'google');
       updateNavigation();
+
+      // Firestore 사용자 문서 확인 (로그인 페이지가 아닌 경우만)
+      if (!window.location.pathname.includes('login.html')) {
+        await checkFirestoreUser(user);
+      }
     } else {
       // 로그아웃됨
       if (authMode === 'google') {
@@ -85,6 +90,9 @@ const AuthManager = (() => {
       authMode = 'google';
       localStorage.setItem('current-user', JSON.stringify(currentUser));
       localStorage.setItem('auth-mode', 'google');
+
+      // Firestore 사용자 문서 확인
+      await checkFirestoreUser(user);
 
       return true;
     } catch (error) {
@@ -159,6 +167,85 @@ const AuthManager = (() => {
     return authMode;
   }
 
+  async function checkFirestoreUser(user) {
+    try {
+      console.log('🔍 Firestore 사용자 확인 시작:', user.uid);
+
+      const db = FirebaseConfig.getFirestore();
+      if (!db) {
+        console.warn('⚠️ Firestore가 초기화되지 않았습니다. wizard로 이동합니다.');
+        // Firestore 실패해도 wizard로 이동
+        if (window.location.pathname.includes('login.html')) {
+          window.location.href = 'wizard.html';
+        }
+        return;
+      }
+
+      console.log('✅ Firestore 연결 확인');
+
+      const userRef = db.collection('users').doc(user.uid);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        console.log('📝 신규 사용자 - 문서 생성 중...');
+
+        // 신규 사용자 → Firestore에 사용자 문서 생성
+        await userRef.set({
+          email: user.email,
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          selectedClassId: null,
+          isOnboarded: false,  // ✅ 온보딩 미완료 상태로 시작
+          settings: {
+            cookieMode: 'session',
+            timerMode: 'global',
+            defaultTime: 300,
+            timerAlert: 'soundAndVisual',
+            animationEnabled: true,
+            defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑']
+          },
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log('✅ 신규 사용자 문서 생성 완료 → wizard.html로 이동');
+
+        // 온보딩 페이지로 이동 (login.html에서만)
+        if (window.location.pathname.includes('login.html')) {
+          window.location.href = 'wizard.html';
+        }
+      } else {
+        // 기존 사용자 → isOnboarded 플래그 확인
+        const userData = userDoc.data();
+        const isOnboarded = userData && userData.isOnboarded === true;
+
+        if (isOnboarded) {
+          console.log('✅ 기존 사용자 (온보딩 완료) → index.html로 이동');
+
+          // 온보딩 완료된 사용자 → index.html로 이동
+          if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'index.html';
+          }
+        } else {
+          console.log('📝 기존 사용자 (온보딩 미완료) → wizard.html로 이동');
+
+          // 온보딩 미완료 사용자 → wizard.html로 이동
+          if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'wizard.html';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Firestore 사용자 확인 실패:', error);
+
+      // 에러 발생해도 wizard로 이동 (로컬 저장소로 fallback)
+      alert('클라우드 연결에 실패했습니다. 로컬 모드로 진행합니다.');
+      if (window.location.pathname.includes('login.html')) {
+        window.location.href = 'wizard.html';
+      }
+    }
+  }
+
   return {
     init,
     loginWithGoogle,
@@ -167,6 +254,7 @@ const AuthManager = (() => {
     isAuthenticated,
     getCurrentUser,
     getAuthMode,
-    updateNavigation
+    updateNavigation,
+    checkFirestoreUser
   };
 })();

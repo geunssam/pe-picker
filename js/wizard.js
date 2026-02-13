@@ -65,8 +65,7 @@ const WizardManager = (() => {
     const schoolInfo = SCHOOL_LEVELS[wizardData.schoolLevel];
 
     container.innerHTML = schoolInfo.grades.map(grade => `
-      <button class="wizard-option-btn" data-grade="${grade}">
-        <span class="wizard-option-icon">${grade}</span>
+      <button class="wizard-option-btn wizard-option-btn-compact" data-grade="${grade}">
         <span class="wizard-option-label">${grade}학년</span>
       </button>
     `).join('');
@@ -241,7 +240,7 @@ const WizardManager = (() => {
   }
 
   // ===== 완료 처리 =====
-  function handleComplete() {
+  async function handleComplete() {
     // 로딩 표시
     const loadingEl = document.getElementById('wizard-loading');
     const loadingText = document.getElementById('wizard-loading-text');
@@ -255,14 +254,15 @@ const WizardManager = (() => {
 
     loadingText.textContent = `${totalClasses}개 학급을 생성하는 중...`;
 
-    // 교사 프로필 저장
+    // 교사 프로필 저장 (localStorage)
     Store.saveTeacherProfile({
       schoolLevel: wizardData.schoolLevel,
       grades: wizardData.selectedGrades,
       teacherName: wizardData.teacherName || '체육 선생님'
     });
 
-    // 모든 학급 생성
+    // 모든 학급 생성 (localStorage)
+    const createdClasses = [];
     wizardData.selectedGrades.forEach(grade => {
       const count = wizardData.classCount[grade];
       for (let i = 1; i <= count; i++) {
@@ -281,14 +281,89 @@ const WizardManager = (() => {
           note: ''
         }));
 
-        Store.addClass(className, students);
+        const newClass = Store.addClass(className, students);
+        createdClasses.push({ classId: newClass.id, className, students, grade });
       }
     });
+
+    // Google 로그인인 경우 Firestore에 저장
+    const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
+    if (user && user.mode === 'google') {
+      await saveToFirestore(user.uid, createdClasses);
+    }
 
     // UX를 위한 약간의 지연
     setTimeout(() => {
       window.location.href = 'index.html';
     }, 1000);
+  }
+
+  // ===== Firestore 저장 =====
+  async function saveToFirestore(uid, createdClasses) {
+    try {
+      console.log('🔥 Firestore 저장 시작:', uid, createdClasses.length, '개 학급');
+
+      const db = typeof FirebaseConfig !== 'undefined' ? FirebaseConfig.getFirestore() : null;
+      if (!db) {
+        console.warn('Firestore가 초기화되지 않았습니다.');
+        return;
+      }
+
+      console.log('✅ Firestore 연결 확인');
+      const batch = db.batch();
+
+      // 사용자 문서 업데이트 (merge: true로 안전하게)
+      const userRef = db.collection('users').doc(uid);
+      batch.set(userRef, {
+        displayName: wizardData.teacherName || AuthManager.getCurrentUser().displayName,
+        schoolLevel: wizardData.schoolLevel,
+        selectedClassId: createdClasses.length > 0 ? createdClasses[0].classId : null,
+        isOnboarded: true,  // ✅ 온보딩 완료 플래그 추가
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // 각 학급 및 학생 생성
+      createdClasses.forEach(({ classId, className, students, grade }) => {
+        // 학급 문서 생성
+        const classRef = db.collection('users').doc(uid).collection('classes').doc(classId);
+        batch.set(classRef, {
+          name: className,
+          year: new Date().getFullYear(),
+          grade: grade.toString(),
+          studentCount: students.length,
+          groupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑'],
+          groups: [],
+          groupCount: 6,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 학생 서브컬렉션 생성
+        students.forEach((student, index) => {
+          const studentId = `student-${Date.now()}-${classId}-${index}`;
+          const studentRef = db.collection('users').doc(uid)
+            .collection('classes').doc(classId)
+            .collection('students').doc(studentId);
+
+          batch.set(studentRef, {
+            name: student.name || '',
+            number: student.number,
+            gender: student.gender || '',
+            sportsAbility: student.sportsAbility || '',
+            tags: student.tags || [],
+            note: student.note || '',
+            groupIndex: -1,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      });
+
+      await batch.commit();
+      console.log('Firestore 저장 완료:', createdClasses.length, '개 학급');
+    } catch (error) {
+      console.error('Firestore 저장 실패:', error);
+      alert('Firestore 저장에 실패했습니다. 로컬에는 저장되었습니다.');
+    }
   }
 
   // ===== 단계 이동 =====

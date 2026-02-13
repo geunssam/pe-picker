@@ -1,6 +1,6 @@
 {
-  "name": "체육 수업 도우미",
-  "short_name": "PE도우미",
+  "name": "PEPick!",
+  "short_name": "PEPick!",
   "description": "술래뽑기 + 모둠뽑기 통합 체육 수업 도우미",
   "start_url": "./index.html",
   "display": "standalone",

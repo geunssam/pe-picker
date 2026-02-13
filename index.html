@@ -7,7 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#FFF9F0">
-  <title>체육 수업 도우미</title>
+  <title>PEPick!</title>
+  <link rel="icon" type="image/png" href="assets/logo.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
   <link rel="manifest" href="manifest.json">
 
   <!-- Fonts -->
@@ -33,6 +35,7 @@
   <header id="top-navbar" class="top-navbar" style="display: none;">
     <!-- 좌측: 로고 -->
     <div class="navbar-left">
+      <img src="assets/logo.svg" alt="PEPick Logo" style="height: 32px; margin-right: 8px;">
       <h1 class="navbar-logo">PePick!</h1>
     </div>
 
@@ -103,7 +106,9 @@
          =================================================================== -->
     <div id="page-class-selector" class="page-view">
       <div class="landing-header">
-        <div class="landing-logo">🎰</div>
+        <div class="landing-logo">
+          <img src="assets/logo.svg" alt="PEPick Logo" style="width: 120px; height: 120px; object-fit: contain;">
+        </div>
         <h1 class="landing-title">PePick!</h1>
         <p class="landing-subtitle">학급을 선택하여 시작하세요</p>
       </div>
@@ -834,7 +839,20 @@
   </div>
 
   <!-- Scripts -->
+  <!-- Type Definitions -->
+  <script src="js/types.js"></script>
+  <!-- Storage Layer -->
+  <script src="js/storage/base-repo.js"></script>
+  <script src="js/storage/settings-repo.js"></script>
+  <script src="js/storage/class-repo.js"></script>
+  <script src="js/storage/tag-game-repo.js"></script>
+  <script src="js/storage/group-manager-repo.js"></script>
+  <script src="js/storage/teacher-repo.js"></script>
   <script src="js/shared/store.js"></script>
+  <!-- Core Logic -->
+  <script src="js/core/tag-picker.js"></script>
+  <script src="js/core/group-picker.js"></script>
+  <!-- UI & Utils -->
   <script src="js/shared/sound.js"></script>
   <script src="js/shared/ui-utils.js"></script>
   <script src="js/shared/timer.js"></script>

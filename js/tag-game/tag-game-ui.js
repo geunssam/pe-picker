@@ -18,7 +18,7 @@ const TagGameUI = (() => {
           <div class="result-role role-it">🏃 술래</div>
           <div class="result-names">
             ${its.map((name, i) =>
-              `<span class="result-name name-it" style="animation-delay: ${i * 0.1}s">🏃‍♂️ ${name}</span>`
+              `<span class="result-name name-it" style="animation-delay: ${i * 0.1}s">🏃‍♂️ ${UI.escapeHtml(name)}</span>`
             ).join('')}
           </div>
         </div>
@@ -31,7 +31,7 @@ const TagGameUI = (() => {
           <div class="result-role role-angel">😇 천사</div>
           <div class="result-names">
             ${angels.map((name, i) =>
-              `<span class="result-name name-angel" style="animation-delay: ${i * 0.1}s">😇 ${name}</span>`
+              `<span class="result-name name-angel" style="animation-delay: ${i * 0.1}s">😇 ${UI.escapeHtml(name)}</span>`
             ).join('')}
           </div>
         </div>
@@ -57,7 +57,7 @@ const TagGameUI = (() => {
     }
 
     container.innerHTML = candidates.map(name =>
-      `<span class="tag-candidate-tag type-${type}">${name}</span>`
+      `<span class="tag-candidate-tag type-${type}">${UI.escapeHtml(name)}</span>`
     ).join('');
   }
 
@@ -77,7 +77,7 @@ const TagGameUI = (() => {
     }
 
     container.innerHTML = history.map(name =>
-      `<span class="tag-candidate-tag type-history">${name}</span>`
+      `<span class="tag-candidate-tag type-history">${UI.escapeHtml(name)}</span>`
     ).join('');
   }
 

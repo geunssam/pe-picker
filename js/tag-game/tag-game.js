@@ -76,14 +76,6 @@ const TagGame = (() => {
 
   // ========== 이벤트 리스너 ==========
   function setupEventListeners() {
-    // 저장 버튼
-    $('tag-save-btn')?.addEventListener('click', () => {
-      saveToStorage();
-      UI.showToast('게임 상태가 저장되었습니다!', 'success');
-    });
-
-    // 설정 버튼 (Phase 2/3 헤더)
-    $('tag-settings-btn')?.addEventListener('click', showSettings);
 
     // 게임 시작 버튼
     $('tag-start-btn')?.addEventListener('click', startGame);
@@ -406,10 +398,20 @@ const TagGame = (() => {
   function pickParticipants() {
     currentRound++;
 
+    // "중복 제외" 옵션이 꺼져 있으면 매 라운드마다 풀 리셋
+    if (!gameSettings.excludePrevious && currentRound > 1) {
+      availableForIt = [...participants];
+      availableForAngel = [...participants];
+    }
+
     // 술래 뽑기
     const itResult = _pickGroup(gameSettings.itCount, availableForIt, participants);
     selectedIts = itResult.finalGroup;
-    availableForIt = availableForIt.filter(p => !itResult.newPicks.includes(p));
+
+    // "중복 제외" 옵션이 켜져 있으면 뽑힌 사람 제거
+    if (gameSettings.excludePrevious) {
+      availableForIt = availableForIt.filter(p => !itResult.newPicks.includes(p));
+    }
 
     // 천사 뽑기 (술래와 중복 방지)
     if (gameSettings.angelCount > 0) {
@@ -424,7 +426,11 @@ const TagGame = (() => {
 
       const angelResult = _pickGroup(gameSettings.angelCount, angelCandidatePool, fullAngelPlayerList);
       selectedAngels = angelResult.finalGroup;
-      availableForAngel = availableForAngel.filter(p => !angelResult.newPicks.includes(p));
+
+      // "중복 제외" 옵션이 켜져 있으면 뽑힌 사람 제거
+      if (gameSettings.excludePrevious) {
+        availableForAngel = availableForAngel.filter(p => !angelResult.newPicks.includes(p));
+      }
     } else {
       selectedAngels = [];
     }
@@ -686,8 +692,8 @@ const TagGame = (() => {
       availableForAngel,
       gameSettings,
       gameState,
-      allItsHistory: selectedIts.length > 0 ? [...allIts.filter(n => !selectedIts.includes(n) || allIts.indexOf(n) < allIts.length), ...selectedIts] : allIts,
-      allAngelsHistory: selectedAngels.length > 0 ? [...allAngels.filter(n => !selectedAngels.includes(n) || allAngels.indexOf(n) < allAngels.length), ...selectedAngels] : allAngels,
+      allItsHistory: [...new Set([...allIts, ...selectedIts])],
+      allAngelsHistory: [...new Set([...allAngels, ...selectedAngels])],
     });
   }
 

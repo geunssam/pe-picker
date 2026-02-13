@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PePick! 학급 설정</title>
+  <title>PEPick! - 학급 설정</title>
+  <link rel="icon" type="image/png" href="assets/logo.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/wizard.css">
@@ -108,6 +110,23 @@
     </div>
   </div>
 
+  <!-- Firebase SDK (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Config & Auth -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth-manager.js"></script>
+
+  <!-- Type Definitions -->
+  <script src="js/types.js"></script>
+
+  <!-- Storage Layer -->
+  <script src="js/storage/base-repo.js"></script>
+  <script src="js/storage/settings-repo.js"></script>
+  <script src="js/storage/class-repo.js"></script>
+  <script src="js/storage/teacher-repo.js"></script>
   <script src="js/shared/store.js"></script>
   <script src="js/wizard.js"></script>
 </body>

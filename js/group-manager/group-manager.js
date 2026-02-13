@@ -607,18 +607,14 @@ const GroupManager = (() => {
     document.getElementById('gm-timer-start')?.addEventListener('click', startTimer);
     document.getElementById('gm-timer-pause')?.addEventListener('click', pauseTimer);
     document.getElementById('gm-timer-reset')?.addEventListener('click', resetTimer);
-    document.getElementById('gm-timer-fullscreen')?.addEventListener('click', () => {
-      const remaining = timer ? timer.remainingSeconds : timerSeconds;
-      TimerModule.openFullscreen(remaining);
-    });
+    // 전체화면 타이머 (HTML 모달 없음 - 추후 구현 시 주석 해제)
+    // document.getElementById('gm-timer-fullscreen')?.addEventListener('click', () => {
+    //   const remaining = timer ? timer.remainingSeconds : timerSeconds;
+    //   TimerModule.openFullscreen(remaining);
+    // });
 
     // 초기 타이머 표시
     updateTimerDisplay(timerSeconds);
-  }
-
-  function showTimerSection() {
-    const section = document.getElementById('gm-timer-section');
-    if (section) section.style.display = '';
   }
 
   function startTimer() {

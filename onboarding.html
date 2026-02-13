@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#FFF9F0">
+  <title>PEPick! - 시작하기</title>
+  <link rel="icon" type="image/png" href="assets/logo.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/onboarding.css">
+
+  <!-- Firebase SDK (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+  <div class="onboarding-container">
+    <!-- 로고 섹션 -->
+    <div class="onboarding-header">
+      <h1 class="onboarding-logo">PePick!</h1>
+      <p class="onboarding-subtitle">시작하기 전에 간단한 설정을 해볼까요?</p>
+    </div>
+
+    <!-- 진행 표시기 -->
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-text" id="progress-text">1 / 4</div>
+
+    <!-- 온보딩 카드 -->
+    <div class="onboarding-card">
+
+      <!-- ============ Step 1: 환영 및 교사 정보 입력 ============ -->
+      <div class="wizard-step active" data-step="1">
+        <div class="step-header">
+          <div class="step-emoji">👋</div>
+          <h2 class="step-title">환영합니다!</h2>
+          <p class="step-description">PePick!을 시작하기 전에 몇 가지 정보를 입력해주세요</p>
+        </div>
+
+        <div class="step-body">
+          <div class="form-group">
+            <label class="form-label">이름 <span class="optional">(선택)</span></label>
+            <input type="text" id="teacher-name" class="input" placeholder="예: 홍길동">
+            <div class="form-hint">이름을 입력하지 않으면 '로컬 사용자'로 표시됩니다</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">학교명 <span class="optional">(선택)</span></label>
+            <input type="text" id="school-name" class="input" placeholder="예: ○○초등학교">
+            <div class="form-hint">나중에 설정에서 변경할 수 있습니다</div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-primary btn-lg btn-next" data-next="2">다음</button>
+        </div>
+      </div>
+
+      <!-- ============ Step 2: 첫 학급 생성 ============ -->
+      <div class="wizard-step" data-step="2">
+        <div class="step-header">
+          <div class="step-emoji">📚</div>
+          <h2 class="step-title">첫 학급을 만들어볼까요?</h2>
+          <p class="step-description">학급을 추가하면 학생 관리와 수업 활동을 시작할 수 있어요</p>
+        </div>
+
+        <div class="step-body">
+          <div class="form-group">
+            <label class="form-label">학급명 <span class="required">*</span></label>
+            <input type="text" id="class-name" class="input" placeholder="예: 5-1" required>
+            <div class="form-hint">예: 5-1, 6학년 3반, 체육반 등</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">학년도</label>
+              <input type="number" id="class-year" class="input" value="2025" min="2020" max="2030">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">학년</label>
+              <select id="class-grade" class="input">
+                <option value="">선택</option>
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+                <option value="4">4학년</option>
+                <option value="5" selected>5학년</option>
+                <option value="6">6학년</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-secondary btn-prev" data-prev="1">이전</button>
+          <button class="btn btn-primary btn-next" data-next="3">다음</button>
+        </div>
+        <div class="step-skip">
+          <button class="btn-text btn-skip" data-skip="3">나중에 하기</button>
+        </div>
+      </div>
+
+      <!-- ============ Step 3: 학생 추가 ============ -->
+      <div class="wizard-step" data-step="3">
+        <div class="step-header">
+          <div class="step-emoji">👥</div>
+          <h2 class="step-title">학생을 추가해볼까요?</h2>
+          <p class="step-description">학생을 추가하는 방법을 선택하세요</p>
+        </div>
+
+        <div class="step-body">
+          <!-- 탭 선택 -->
+          <div class="tabs">
+            <button class="tab active" data-tab="csv">CSV 업로드</button>
+            <button class="tab" data-tab="manual">직접 입력</button>
+          </div>
+
+          <!-- CSV 업로드 탭 -->
+          <div class="tab-content active" data-tab="csv">
+            <div class="upload-area" id="upload-area">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p class="upload-text">CSV 파일을 드래그하거나 클릭하여 선택하세요</p>
+              <p class="upload-hint">파일 형식: 한 줄에 한 명씩 이름 입력</p>
+              <input type="file" id="csv-file" accept=".csv,.txt" style="display: none;">
+              <button class="btn btn-secondary btn-sm" id="csv-select-btn">파일 선택</button>
+            </div>
+            <div id="csv-preview" class="csv-preview" style="display: none;">
+              <div class="preview-header">
+                <span id="csv-filename"></span>
+                <button class="btn-icon" id="csv-remove">✕</button>
+              </div>
+              <div class="preview-list" id="csv-preview-list"></div>
+            </div>
+          </div>
+
+          <!-- 직접 입력 탭 -->
+          <div class="tab-content" data-tab="manual">
+            <p class="input-hint">학생 이름을 줄바꿈으로 구분해서 입력하세요</p>
+            <textarea id="student-names" class="textarea" rows="12" placeholder="김철수
+이영희
+박민수
+최지훈
+정수진"></textarea>
+            <div class="input-info">
+              <span id="manual-count">0</span>명
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-secondary btn-prev" data-prev="2">이전</button>
+          <button class="btn btn-primary btn-next" data-next="4">완료</button>
+        </div>
+        <div class="step-skip">
+          <button class="btn-text btn-skip" data-skip="4">건너뛰기</button>
+        </div>
+      </div>
+
+      <!-- ============ Step 4: 완료 ============ -->
+      <div class="wizard-step" data-step="4">
+        <div class="step-header">
+          <div class="step-emoji">✅</div>
+          <h2 class="step-title">모든 준비가 끝났어요!</h2>
+          <p class="step-description">이제 PePick!으로 재미있는 수업을 시작해보세요</p>
+        </div>
+
+        <div class="step-body">
+          <div class="summary-card">
+            <h3 class="summary-title">설정 요약</h3>
+            <div class="summary-item">
+              <div class="summary-icon">👨‍🏫</div>
+              <div class="summary-content">
+                <div class="summary-label">교사</div>
+                <div class="summary-value" id="summary-teacher">로컬 사용자</div>
+              </div>
+            </div>
+            <div class="summary-item" id="summary-school-item" style="display: none;">
+              <div class="summary-icon">🏫</div>
+              <div class="summary-content">
+                <div class="summary-label">학교</div>
+                <div class="summary-value" id="summary-school"></div>
+              </div>
+            </div>
+            <div class="summary-item" id="summary-class-item" style="display: none;">
+              <div class="summary-icon">📚</div>
+              <div class="summary-content">
+                <div class="summary-label">학급</div>
+                <div class="summary-value" id="summary-class"></div>
+              </div>
+            </div>
+            <div class="summary-item" id="summary-students-item" style="display: none;">
+              <div class="summary-icon">👥</div>
+              <div class="summary-content">
+                <div class="summary-label">학생</div>
+                <div class="summary-value" id="summary-students">0명</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-primary btn-lg" id="btn-start">시작하기 🚀</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 푸터 -->
+    <div class="onboarding-footer">
+      <p>© 2025 PePick! All rights reserved.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth-manager.js"></script>
+  <!-- Type Definitions -->
+  <script src="js/types.js"></script>
+  <!-- Storage Layer -->
+  <script src="js/storage/base-repo.js"></script>
+  <script src="js/storage/settings-repo.js"></script>
+  <script src="js/storage/class-repo.js"></script>
+  <script src="js/storage/tag-game-repo.js"></script>
+  <script src="js/storage/group-manager-repo.js"></script>
+  <script src="js/storage/teacher-repo.js"></script>
+  <script src="js/shared/store.js"></script>
+  <script src="js/onboarding.js"></script>
+</body>
+
+</html>

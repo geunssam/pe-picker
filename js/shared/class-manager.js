@@ -47,7 +47,15 @@ const ClassManager = (() => {
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         if (confirm('모든 데이터를 초기화하시겠습니까?\n학급, 기록 등이 모두 삭제됩니다.')) {
-          localStorage.clear();
+          // 앱 전용 키만 삭제 (다른 사이트 데이터 보호)
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('pet_')) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
           location.reload();
         }
       });
@@ -598,7 +606,7 @@ const ClassManager = (() => {
       return `
         <div class="landing-class-card" onclick="App.onClassSelected('${c.id}')">
           <div class="landing-card-info">
-            <div class="landing-card-name">${c.name}</div>
+            <div class="landing-card-name">${UI.escapeHtml(c.name)}</div>
             <div class="landing-card-meta">
               <span>👤 ${c.students.length}명</span>
               <span>👥 ${gc}모둠</span>
@@ -641,7 +649,7 @@ const ClassManager = (() => {
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); text-align: center;">
           <div>
             <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--space-xs);">학급명</div>
-            <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">${cls.name}</div>
+            <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">${UI.escapeHtml(cls.name)}</div>
           </div>
           <div>
             <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--space-xs);">학생 수</div>
@@ -687,7 +695,7 @@ const ClassManager = (() => {
     let headerCells = '';
     for (let i = 0; i < gc; i++) {
       const groupName = (cls.groupNames && cls.groupNames[i]) || `${i + 1}모둠`;
-      headerCells += `<th>${groupName}</th>`;
+      headerCells += `<th>${UI.escapeHtml(groupName)}</th>`;
     }
 
     // 학생 행 (최소 6행 보장)
@@ -701,9 +709,9 @@ const ClassManager = (() => {
           const name = typeof m === 'string' ? m : m.name;
           if (row === 0) {
             // 모둠장: 별을 좌측 상단 코너에 배치
-            cells += `<td class="leader-cell"><span class="leader-badge">⭐</span>${name}</td>`;
+            cells += `<td class="leader-cell"><span class="leader-badge">⭐</span>${UI.escapeHtml(name)}</td>`;
           } else {
-            cells += `<td>${name}</td>`;
+            cells += `<td>${UI.escapeHtml(name)}</td>`;
           }
         } else {
           cells += `<td></td>`;

@@ -3,20 +3,21 @@
    Google OAuth 인증 설정
    ============================================ */
 
-// TODO: Firebase 프로젝트 설정 후 아래 값을 실제 값으로 교체하세요
-// Firebase Console: https://console.firebase.google.com/
+// Firebase 프로젝트 설정
+// Firebase Console: https://console.firebase.google.com/project/pepick-iwg/overview
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBR-wjw7ZptOyWhFpxTDTzrDBPjACZseIc",
+  authDomain: "pepick-iwg.firebaseapp.com",
+  projectId: "pepick-iwg",
+  storageBucket: "pepick-iwg.firebasestorage.app",
+  messagingSenderId: "490312923173",
+  appId: "1:490312923173:web:ce1fffe7931793dedb27cc"
 };
 
 // Firebase 초기화 여부 확인
 let firebaseApp = null;
 let auth = null;
+let db = null;
 
 function initFirebase() {
   // Firebase가 이미 초기화되었는지 확인
@@ -29,15 +30,20 @@ function initFirebase() {
       return;
     }
 
-    // 설정이 기본값인지 확인
-    if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
-      console.warn('Firebase 설정이 완료되지 않았습니다. firebase-config.js를 수정하세요.');
-      return;
-    }
-
     // Firebase 초기화
     firebaseApp = firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
+    db = firebase.firestore();
+
+    // Firestore 오프라인 지속성 활성화
+    db.enablePersistence({ synchronizeTabs: true })
+      .catch((err) => {
+        if (err.code === 'failed-precondition') {
+          console.warn('여러 탭이 열려 있어 오프라인 지속성을 활성화할 수 없습니다.');
+        } else if (err.code === 'unimplemented') {
+          console.warn('브라우저가 오프라인 지속성을 지원하지 않습니다.');
+        }
+      });
 
     console.log('Firebase 초기화 완료');
   } catch (error) {
@@ -58,6 +64,7 @@ function getGoogleProvider() {
 const FirebaseConfig = {
   initFirebase,
   getAuth: () => auth,
+  getFirestore: () => db,
   getGoogleProvider,
   isConfigured: () => firebaseConfig.apiKey !== 'YOUR_API_KEY'
 };
