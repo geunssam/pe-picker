@@ -10,7 +10,7 @@ import { decodeGroupsFromFirestore } from './shared/firestore-utils.js';
 import { AuthManager } from './auth-manager.js';
 import { FirebaseConfig } from './firebase-config.js';
 import { FirestoreSync } from './firestore-sync.js';
-import { ClassManager } from './shared/class-manager.js';
+import { ClassManager } from './class-management/index.js';
 import { TagGame } from './tag-game/tag-game.js';
 import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
