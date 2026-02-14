@@ -15,7 +15,7 @@ Vanilla JS + Firebase Auth/Firestore 기반의 PWA로, Netlify에 배포됩니�
 
 ```
 Presentation  →  index.html, login.html, css/
-Application   →  app.js, tag-game.js, group-manager.js, class-manager.js, wizard.js
+Application   →  app.js, tag-game/, group-manager/, class-management/, wizard.js
 Domain        →  core/tag-picker.js, core/group-picker.js (순수 알고리즘, 부수효과 없음)
 Infrastructure →  storage/*-repo.js → Store facade (shared/store.js)
 Firebase      →  firebase-config.js, auth-manager.js, firestore-sync.js
@@ -30,12 +30,12 @@ Firebase      →  firebase-config.js, auth-manager.js, firestore-sync.js
 
 ### 핵심 패턴
 
-| 패턴         | 위치                  | 설명                                  |
-| ------------ | --------------------- | ------------------------------------- |
-| Repository   | `storage/*-repo.js`   | localStorage CRUD 캡슐화              |
-| Facade       | `shared/store.js`     | 모든 Repo를 단일 API로 통합           |
-| Event Bus    | `shared/event-bus.js` | 모듈 간 느슨한 결합 (`emit`/`on`)     |
-| Fisher-Yates | `shared/ui-utils.js`  | 정확한 셔플 알고리즘 (유일한 shuffle) |
+| 패턴         | 위치                        | 설명                                  |
+| ------------ | --------------------------- | ------------------------------------- |
+| Repository   | `storage/*-repo.js`         | localStorage CRUD 캡슐화              |
+| Facade       | `shared/store.js`           | 모든 Repo를 단일 API로 통합           |
+| Shared State | `class-management/state.js` | 모듈 간 공유 상태 (참조로 import)     |
+| Fisher-Yates | `shared/ui-utils.js`        | 정확한 셔플 알고리즘 (유일한 shuffle) |
 
 ### 폴더 구조
 
@@ -44,11 +44,15 @@ js/
 ├── app.js                     # 메인 진입점 (라우팅, 초기화)
 ├── login-main.js              # 로그인 진입점
 ├── types.js                   # JSDoc 타입 정의
+├── firebase-config.js         # Firebase 초기화
+├── auth-manager.js            # 인증 관리
+├── firestore-sync.js          # Firestore 실시간 동기화
+├── wizard.js                  # 온보딩 마법사
 ├── core/                      # 순수 알고리즘 (DOM/Storage 접근 금지)
 │   ├── tag-picker.js
 │   └── group-picker.js
 ├── storage/                   # localStorage Repository
-│   ├── base-repo.js           # 공통: get/set/remove/generateId
+│   ├── base-repo.js           # 공통: get/set/remove/generateId(prefix)
 │   ├── class-repo.js
 │   ├── tag-game-repo.js
 │   ├── group-manager-repo.js
@@ -60,32 +64,25 @@ js/
 │   ├── sound.js
 │   ├── timer.js
 │   ├── ios-utils.js
-│   ├── event-bus.js           # 모듈 간 이벤트 통신
 │   ├── promise-utils.js       # withTimeout
 │   ├── firestore-utils.js     # decodeGroupsFromFirestore
 │   └── sw-boot.js
-├── firebase/                  # Firebase 관련
-│   ├── firebase-config.js
-│   ├── auth-manager.js
-│   └── firestore-sync.js
 ├── class-management/          # 학급관리 (구 class-manager.js 분리)
-│   ├── index.js               # Facade + init
-│   ├── helpers.js             # sanitize, normalize, sort
-│   ├── class-modal.js         # 학급 추가/편집 모달
-│   ├── student-editor.js      # 학생 카드 렌더링, 번호 정규화
-│   ├── drag-drop.js           # 드래그앤드롭
-│   ├── csv-import.js          # CSV/구글시트 가져오기
+│   ├── index.js               # Facade + init + 이벤트 바인딩
+│   ├── state.js               # 공유 상태 (modalStudents 등)
+│   ├── helpers.js             # sanitize, normalize, sort, createModalStudent
+│   ├── modal-editor.js        # 학생 카드 CRUD + 렌더링 + 드래그앤드롭
+│   ├── csv-import.js          # CSV/구글시트 + 일괄등록 모달
 │   ├── class-firestore.js     # Firestore 동기화
-│   ├── landing-page.js        # 학급 선택 랜딩
-│   └── settings-page.js       # 설정 UI
+│   ├── class-modal.js         # 학급 추가/편집 모달 열기/닫기/저장
+│   ├── landing-page.js        # 학급 선택 랜딩 페이지
+│   └── settings-page.js       # 설정 UI + 기본 모둠이름
 ├── tag-game/                  # 술래뽑기
 │   ├── tag-game.js
 │   └── tag-game-ui.js
-├── group-manager/             # 모둠뽑기
-│   ├── group-manager.js
-│   └── group-manager-ui.js
-└── wizard/                    # 온보딩 마법사
-    └── wizard.js
+└── group-manager/             # 모둠뽑기
+    ├── group-manager.js
+    └── group-manager-ui.js
 ```
 
 ## 개발 명령어
@@ -118,9 +115,9 @@ npm run deploy       # 빌드 + Netlify 배포
 // 1. 외부 라이브러리 (없음 — Firebase는 <script> 태그)
 // 2. shared 유틸리티
 import { withTimeout } from '../shared/promise-utils.js';
-import { escapeHtml, showToast } from '../shared/ui-utils.js';
+import { UI } from '../shared/ui-utils.js';
 // 3. storage / store
-import Store from '../shared/store.js';
+import { Store } from '../shared/store.js';
 // 4. 같은 폴더 내 모듈
 import { renderCards } from './tag-game-ui.js';
 ```
@@ -131,7 +128,7 @@ import { renderCards } from './tag-game-ui.js';
 - **함수/변수**: camelCase (`getClasses`, `selectedClassId`)
 - **상수**: UPPER_SNAKE_CASE (`KEYS.CLASSES`, `CACHE_VERSION`)
 - **localStorage 키**: `pet_` 접두사 (`pet_classes`, `pet_tag_game`)
-- **ID 생성**: `BaseRepo.generateId(prefix)` 사용 (`cls_abc123`, `stu_xyz789`)
+- **ID 생성**: `generateId(prefix)` from `base-repo.js` (`stu_1234_abc`, `student_1234_xyz`)
 
 ## 커밋 컨벤션
 
@@ -166,7 +163,7 @@ refactor: ClassManager → class-management/ 모듈 분리
 
 - `core/` 파일에서 DOM이나 localStorage 접근
 - `Math.random() - 0.5` 정렬 기반 셔플 사용 → `UI.shuffleArray()` (Fisher-Yates) 사용
-- `escapeAttr()` 같은 중복 이스케이프 함수 생성 → `UI.escapeHtml()` 하나만 사용
+- 중복 이스케이프 함수 생성 → `UI.escapeHtml()` 하나만 사용
 - `withTimeout()` 중복 정의 → `promise-utils.js`에서 import
 - `pet_` 접두사 없는 localStorage 키 사용
 - Firebase modular SDK (v9+) 사용 → compat SDK 유지 (전환 시 전체 코드 변경 필요)
@@ -177,6 +174,7 @@ refactor: ClassManager → class-management/ 모듈 분리
 - Service Worker(`sw.js`)는 ES Module이 아닌 일반 스크립트
 - Firestore 호출은 항상 `withTimeout`으로 감싸기 (오프라인 대비)
 - 로컬 모드(비로그인)에서는 Firestore 호출 완전 건너뛰기
+- `class-management/state.js`의 상태 객체는 참조로 공유 — 직접 변경 시 모든 모듈에 반영됨
 
 ## 테스트 체크리스트
 
