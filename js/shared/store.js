@@ -5,7 +5,6 @@
    ============================================ */
 
 const Store = (() => {
-
   // === 학급 관리 (ClassRepo) ===
   function getClasses() {
     return ClassRepo.getAll();
@@ -135,7 +134,7 @@ const Store = (() => {
 
     classes.forEach(c => {
       if (c.groupCount === undefined) {
-        c.groupCount = (c.groups && c.groups.length > 0) ? c.groups.length : 6;
+        c.groupCount = c.groups && c.groups.length > 0 ? c.groups.length : 6;
         changed = true;
       }
     });
@@ -165,7 +164,7 @@ const Store = (() => {
             gender: '',
             sportsAbility: '',
             tags: [],
-            note: ''
+            note: '',
           };
         }
 
@@ -177,7 +176,7 @@ const Store = (() => {
             sportsAbility: '',
             tags: [],
             note: '',
-            ...student
+            ...student,
           };
         }
 
@@ -186,7 +185,7 @@ const Store = (() => {
           sportsAbility: '',
           tags: [],
           note: '',
-          ...student
+          ...student,
         };
       });
     });
@@ -194,6 +193,45 @@ const Store = (() => {
     if (changed) {
       saveClasses(classes);
       console.log('[Store] 학생 데이터 마이그레이션 완료');
+    }
+  }
+
+  /**
+   * 학급 ID 마이그레이션 (중복/누락 ID 보정)
+   */
+  function migrateClassIds() {
+    const classes = getClasses();
+    const seenIds = new Set();
+    const selectedId = getSelectedClassId();
+    let selectedIdChanged = false;
+    let changed = false;
+
+    classes.forEach(cls => {
+      const currentId = cls.id;
+      const isInvalid = !currentId || seenIds.has(currentId);
+
+      if (isInvalid) {
+        const oldId = currentId;
+        let nextId = BaseRepo.generateId();
+        while (seenIds.has(nextId)) {
+          nextId = BaseRepo.generateId();
+        }
+
+        cls.id = nextId;
+        changed = true;
+
+        if (!selectedIdChanged && selectedId && selectedId === oldId) {
+          setSelectedClassId(nextId);
+          selectedIdChanged = true;
+        }
+      }
+
+      seenIds.add(cls.id);
+    });
+
+    if (changed) {
+      saveClasses(classes);
+      console.log('[Store] classId 마이그레이션 완료');
     }
   }
 
@@ -237,6 +275,9 @@ const Store = (() => {
 
     // 학생 데이터 마이그레이션
     migrateStudentData();
+
+    // 학급 ID 마이그레이션
+    migrateClassIds();
   }
 
   // Public API (기존 인터페이스 유지)

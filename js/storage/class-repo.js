@@ -37,7 +37,8 @@ const ClassRepo = (() => {
     const defaultNames = SettingsRepo.getDefaultGroupNames();
 
     const newClass = {
-      id: Date.now().toString(),
+      // Date.now() 단독 사용 시 같은 ms에 생성된 학급 ID가 충돌할 수 있음
+      id: BaseRepo.generateId(),
       name,
       students,
       groupNames: groupNames || defaultNames.slice(0, groupCount),

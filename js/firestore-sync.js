@@ -28,19 +28,24 @@ const FirestoreSync = (() => {
     }
 
     // 1. 학급 컬렉션 리스너
-    const classesListener = db.collection('users').doc(uid).collection('classes')
+    const classesListener = db
+      .collection('users')
+      .doc(uid)
+      .collection('classes')
       .onSnapshot(
-        (snapshot) => handleClassesSnapshot(snapshot, uid, db),
-        (error) => {
+        snapshot => handleClassesSnapshot(snapshot, uid, db),
+        error => {
           console.error('❌ 학급 리스너 오류:', error);
         }
       );
 
     // 2. 사용자 문서 리스너 (설정, 선택된 학급 등)
-    const userListener = db.collection('users').doc(uid)
+    const userListener = db
+      .collection('users')
+      .doc(uid)
       .onSnapshot(
-        (snapshot) => handleUserSnapshot(snapshot),
-        (error) => {
+        snapshot => handleUserSnapshot(snapshot),
+        error => {
           console.error('❌ 사용자 리스너 오류:', error);
         }
       );
@@ -148,8 +153,11 @@ const FirestoreSync = (() => {
    */
   async function loadStudents(uid, classId, db) {
     try {
-      const studentsSnapshot = await db.collection('users').doc(uid)
-        .collection('classes').doc(classId)
+      const studentsSnapshot = await db
+        .collection('users')
+        .doc(uid)
+        .collection('classes')
+        .doc(classId)
         .collection('students')
         .orderBy('number')
         .get();
@@ -164,7 +172,7 @@ const FirestoreSync = (() => {
           sportsAbility: data.sportsAbility || '',
           tags: data.tags || [],
           note: data.note || '',
-          groupIndex: data.groupIndex || -1
+          groupIndex: data.groupIndex || -1,
         };
       });
     } catch (error) {
@@ -177,14 +185,45 @@ const FirestoreSync = (() => {
    * Firestore 데이터를 로컬 형식으로 변환
    */
   function convertToLocalClass(classId, classData, students) {
+    const decodeGroupsFromFirestore = (rawGroups, groupCount = 6) => {
+      if (Array.isArray(rawGroups)) return rawGroups;
+      if (!rawGroups || typeof rawGroups !== 'object') {
+        return Array.from({ length: groupCount }, () => []);
+      }
+
+      const entries = Object.entries(rawGroups);
+      if (entries.length === 0) {
+        return Array.from({ length: groupCount }, () => []);
+      }
+
+      const ordered = entries
+        .map(([key, members]) => {
+          const numeric = parseInt(String(key).replace(/\D/g, ''), 10);
+          return {
+            index: Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER,
+            members: Array.isArray(members) ? members : [],
+          };
+        })
+        .sort((a, b) => a.index - b.index);
+
+      const groups = ordered.map(item => item.members);
+      while (groups.length < groupCount) {
+        groups.push([]);
+      }
+      return groups;
+    };
+
+    const groupCount = classData.groupCount || 6;
     return {
       id: classId,
       name: classData.name,
       students: students,
       groupNames: classData.groupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'],
-      groups: classData.groups || [],
-      groupCount: classData.groupCount || 6,
-      createdAt: classData.createdAt ? classData.createdAt.toDate().toISOString() : new Date().toISOString()
+      groups: decodeGroupsFromFirestore(classData.groups, groupCount),
+      groupCount,
+      createdAt: classData.createdAt
+        ? classData.createdAt.toDate().toISOString()
+        : new Date().toISOString(),
     };
   }
 
@@ -261,6 +300,6 @@ const FirestoreSync = (() => {
   return {
     start,
     stop,
-    isEnabled
+    isEnabled,
   };
 })();

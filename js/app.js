@@ -6,11 +6,11 @@
 
 const App = (() => {
   const ROUTES = {
-    'wizard':         { label: '학급 설정', icon: '🎯', requiresClass: false },
+    wizard: { label: '학급 설정', icon: '🎯', requiresClass: false },
     'class-selector': { label: '학급 선택', icon: '🏠', requiresClass: false },
-    'tag-game':       { label: '술래뽑기',  icon: '🎯', requiresClass: true },
-    'group-manager':  { label: '모둠뽑기',  icon: '👥', requiresClass: true },
-    'settings':       { label: '설정',      icon: '⚙️', requiresClass: true },
+    'tag-game': { label: '술래뽑기', icon: '🎯', requiresClass: true },
+    'group-manager': { label: '모둠뽑기', icon: '👥', requiresClass: true },
+    settings: { label: '설정', icon: '⚙️', requiresClass: true },
   };
 
   const DEFAULT_ROUTE = 'class-selector';
@@ -22,6 +22,9 @@ const App = (() => {
     // 인증 체크 (AuthManager가 정의되어 있으면)
     if (typeof AuthManager !== 'undefined') {
       AuthManager.init();
+
+      // onAuthStateChanged() 콜백이 완료될 때까지 대기 (100ms)
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // 로그인되지 않았으면 로그인 페이지로
       if (!AuthManager.isAuthenticated()) {
@@ -40,11 +43,19 @@ const App = (() => {
         // 데이터 로드 완료 대기
         const userData = await loadUserDataFromFirestore(user.uid);
 
+        // userData가 null이면 신규/지연 상태로 보고 wizard로 진입
+        if (userData === null) {
+          console.warn('⚠️ Firestore 사용자 데이터가 없어 wizard로 이동합니다.');
+          window.location.hash = '#wizard';
+          activateRoute('wizard');
+          return;
+        }
+
         // 데이터 로드 완료 후 초기화 계속
         continueInit(userData);
 
-        // 마지막으로 실시간 동기화 시작
-        if (typeof FirestoreSync !== 'undefined') {
+        // 온보딩 완료 사용자만 실시간 동기화 시작 (wizard 진행 중 간섭 방지)
+        if (userData.isOnboarded === true && typeof FirestoreSync !== 'undefined') {
           console.log('🔄 실시간 동기화 활성화 준비');
           FirestoreSync.start(user.uid);
         }
@@ -68,6 +79,7 @@ const App = (() => {
       // Google 로그인: 이미 로드된 userData의 isOnboarded 플래그 확인 (중복 조회 방지)
       if (!userData.isOnboarded) {
         console.log('📝 온보딩 미완료 → wizard로 이동');
+        window.location.hash = '#wizard';
         activateRoute('wizard');
         return;
       }
@@ -147,7 +159,8 @@ const App = (() => {
       route = DEFAULT_ROUTE;
     }
 
-    window.location.hash = route;
+    // 이벤트 리스너가 아직 등록되지 않은 초기 상태에서도 즉시 라우팅되도록 보장
+    activateRoute(route);
   }
 
   function handleRouteChange() {
@@ -252,22 +265,35 @@ const App = (() => {
       const withTimeout = (promise, ms = 10000) => {
         return Promise.race([
           promise,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms)),
         ]);
       };
 
+      // 온보딩 판정용 users 문서는 서버 우선 조회, 실패 시 캐시 fallback
+      const getUserDocPreferServer = async () => {
+        try {
+          return await withTimeout(db.collection('users').doc(uid).get({ source: 'server' }));
+        } catch (serverError) {
+          if (serverError.message === 'TIMEOUT') throw serverError;
+          console.warn(
+            '⚠️ users 문서 서버 조회 실패, 캐시로 재시도:',
+            serverError.code || serverError.message
+          );
+          return withTimeout(db.collection('users').doc(uid).get());
+        }
+      };
+
       // 1. 사용자 문서 로드 (타임아웃 10초)
-      const userDoc = await withTimeout(db.collection('users').doc(uid).get());
+      const userDoc = await getUserDocPreferServer();
       if (!userDoc.exists) {
         console.warn('⚠️ 사용자 문서가 없습니다. 잠시 후 재시도합니다...');
 
-        // 1초 대기 후 재시도 (auth-manager.js의 문서 생성 대기)
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // 3초 대기 후 재시도 (auth-manager.js의 문서 생성 대기)
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const retryDoc = await withTimeout(db.collection('users').doc(uid).get());
+        const retryDoc = await getUserDocPreferServer();
         if (!retryDoc.exists) {
-          console.error('❌ 재시도 후에도 사용자 문서가 없습니다. wizard로 이동합니다.');
-          App.navigateTo('wizard');
+          console.error('❌ 재시도 후에도 사용자 문서가 없습니다.');
           return null;
         }
 
@@ -292,6 +318,34 @@ const App = (() => {
         db.collection('users').doc(uid).collection('classes').get()
       );
 
+      const decodeGroupsFromFirestore = (rawGroups, groupCount = 6) => {
+        if (Array.isArray(rawGroups)) return rawGroups;
+        if (!rawGroups || typeof rawGroups !== 'object') {
+          return Array.from({ length: groupCount }, () => []);
+        }
+
+        const entries = Object.entries(rawGroups);
+        if (entries.length === 0) {
+          return Array.from({ length: groupCount }, () => []);
+        }
+
+        const ordered = entries
+          .map(([key, members]) => {
+            const numeric = parseInt(String(key).replace(/\D/g, ''), 10);
+            return {
+              index: Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER,
+              members: Array.isArray(members) ? members : [],
+            };
+          })
+          .sort((a, b) => a.index - b.index);
+
+        const groups = ordered.map(item => item.members);
+        while (groups.length < groupCount) {
+          groups.push([]);
+        }
+        return groups;
+      };
+
       const classes = [];
       for (const classDoc of classesSnapshot.docs) {
         const classData = classDoc.data();
@@ -299,24 +353,42 @@ const App = (() => {
 
         // 5. 학생 로드 (타임아웃 10초)
         const studentsSnapshot = await withTimeout(
-          db.collection('users').doc(uid)
-            .collection('classes').doc(classId)
+          db
+            .collection('users')
+            .doc(uid)
+            .collection('classes')
+            .doc(classId)
             .collection('students')
             .orderBy('number')
             .get()
         );
 
-        const students = studentsSnapshot.docs.map(doc => doc.data().name);
+        const students = studentsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || '',
+            number: data.number || 0,
+            gender: data.gender || '',
+            sportsAbility: data.sportsAbility || '',
+            tags: data.tags || [],
+            note: data.note || '',
+            groupIndex: data.groupIndex || -1,
+          };
+        });
 
         // 6. 학급 객체 생성
+        const groupCount = classData.groupCount || 6;
         classes.push({
           id: classId,
           name: classData.name,
           students: students,
           groupNames: classData.groupNames || ['하나', '믿음', '우정', '희망', '협력', '사랑'],
-          groups: classData.groups || [],
-          groupCount: classData.groupCount || 6,
-          createdAt: classData.createdAt ? classData.createdAt.toDate().toISOString() : new Date().toISOString()
+          groups: decodeGroupsFromFirestore(classData.groups, groupCount),
+          groupCount,
+          createdAt: classData.createdAt
+            ? classData.createdAt.toDate().toISOString()
+            : new Date().toISOString(),
         });
       }
 

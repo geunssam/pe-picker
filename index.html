@@ -1,984 +1,1374 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FFF9F0" />
+    <title>PEPick!</title>
+    <link rel="icon" type="image/png" href="assets/logo.svg" />
+    <link rel="apple-touch-icon" href="assets/logo.svg" />
+    <link rel="manifest" href="manifest.json" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#FFF9F0">
-  <title>PEPick!</title>
-  <link rel="icon" type="image/png" href="assets/logo.svg">
-  <link rel="apple-touch-icon" href="assets/logo.svg">
-  <link rel="manifest" href="manifest.json">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/design-system.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/wizard.css" />
+    <link rel="stylesheet" href="css/tag-game.css" />
+    <link rel="stylesheet" href="css/group-manager.css" />
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/design-system.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/wizard.css">
-  <link rel="stylesheet" href="css/tag-game.css">
-  <link rel="stylesheet" href="css/group-manager.css">
+    <!-- Firebase SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  </head>
 
-  <!-- Firebase SDK (v9 compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-</head>
+  <body>
+    <!-- 상단 네비바 (학급 내부에서만 표시) -->
+    <header id="top-navbar" class="top-navbar" style="display: none">
+      <!-- 좌측: 로고 -->
+      <div class="navbar-left">
+        <img src="assets/logo.svg" alt="PEPick Logo" style="height: 32px; margin-right: 8px" />
+        <h1 class="navbar-logo">PePick!</h1>
+      </div>
 
-<body>
+      <!-- 중앙: 탭 메뉴 -->
+      <nav class="navbar-tabs">
+        <button data-route="tag-game" class="navbar-tab active">
+          <svg
+            class="nav-icon"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="10" cy="7" r="3" />
+            <path d="M4 18c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5" />
+          </svg>
+          <span>술래뽑기</span>
+        </button>
+        <button data-route="group-manager" class="navbar-tab">
+          <svg
+            class="nav-icon"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="7" cy="7" r="2.5" />
+            <circle cx="13" cy="7" r="2.5" />
+            <path d="M2 16.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" />
+            <path d="M12 12c2.5 0 4.5 1.8 4.5 4" />
+          </svg>
+          <span>모둠뽑기</span>
+        </button>
+        <button data-route="settings" class="navbar-tab">
+          <svg
+            class="nav-icon"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="2" width="14" height="16" rx="2" />
+            <line x1="7" y1="6" x2="13" y2="6" />
+            <line x1="7" y1="10" x2="13" y2="10" />
+            <line x1="7" y1="14" x2="10" y2="14" />
+          </svg>
+          <span>학급관리</span>
+        </button>
+      </nav>
 
-  <!-- 상단 네비바 (학급 내부에서만 표시) -->
-  <header id="top-navbar" class="top-navbar" style="display: none;">
-    <!-- 좌측: 로고 -->
-    <div class="navbar-left">
-      <img src="assets/logo.svg" alt="PEPick Logo" style="height: 32px; margin-right: 8px;">
-      <h1 class="navbar-logo">PePick!</h1>
+      <!-- 우측: 학급정보 + 버튼들 -->
+      <div class="navbar-right">
+        <span id="navbar-class-name" class="navbar-class-info">학급명</span>
+        <button id="navbar-back-btn" class="navbar-btn" title="학급 목록으로">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+        <button id="navbar-logout-btn" class="navbar-btn navbar-btn-logout" title="로그아웃">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 3H4a1 1 0 00-1 1v12a1 1 0 001 1h5" />
+            <path d="M16 10l-4-4m4 4l-4 4m4-4H9" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Picking Overlay -->
+    <div id="picking-overlay" class="picking-overlay">
+      <div class="picking-emoji" id="picking-emoji">🎲</div>
+      <div class="picking-text" id="picking-text">뽑는 중...</div>
     </div>
 
-    <!-- 중앙: 탭 메뉴 -->
-    <nav class="navbar-tabs">
-      <button data-route="tag-game" class="navbar-tab active">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="10" cy="7" r="3" />
-          <path d="M4 18c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5" />
-        </svg>
-        <span>술래뽑기</span>
-      </button>
-      <button data-route="group-manager" class="navbar-tab">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="7" cy="7" r="2.5" />
-          <circle cx="13" cy="7" r="2.5" />
-          <path d="M2 16.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" />
-          <path d="M12 12c2.5 0 4.5 1.8 4.5 4" />
-        </svg>
-        <span>모둠뽑기</span>
-      </button>
-      <button data-route="settings" class="navbar-tab">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="2" width="14" height="16" rx="2" />
-          <line x1="7" y1="6" x2="13" y2="6" />
-          <line x1="7" y1="10" x2="13" y2="10" />
-          <line x1="7" y1="14" x2="10" y2="14" />
-        </svg>
-        <span>학급관리</span>
-      </button>
-    </nav>
-
-    <!-- 우측: 학급정보 + 버튼들 -->
-    <div class="navbar-right">
-      <span id="navbar-class-name" class="navbar-class-info">학급명</span>
-      <button id="navbar-back-btn" class="navbar-btn" title="학급 목록으로">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-          <path d="M3 3v5h5"/>
-        </svg>
-      </button>
-      <button id="navbar-logout-btn" class="navbar-btn navbar-btn-logout" title="로그아웃">
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 3H4a1 1 0 00-1 1v12a1 1 0 001 1h5"/>
-          <path d="M16 10l-4-4m4 4l-4 4m4-4H9"/>
-        </svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- Toast Container -->
-  <div id="toast-container" class="toast-container"></div>
-
-  <!-- Picking Overlay -->
-  <div id="picking-overlay" class="picking-overlay">
-    <div class="picking-emoji" id="picking-emoji">🎲</div>
-    <div class="picking-text" id="picking-text">뽑는 중...</div>
-  </div>
-
-  <!-- App Container -->
-  <div class="app-container">
-
-    <!-- ===================================================================
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- ===================================================================
          ==================== 랜딩 페이지 (학급 선택) ====================
          =================================================================== -->
-    <div id="page-class-selector" class="page-view">
-      <div class="landing-header">
-        <div class="landing-logo">
-          <img src="assets/logo.svg" alt="PEPick Logo" style="width: 120px; height: 120px; object-fit: contain;">
+      <div id="page-class-selector" class="page-view">
+        <div class="landing-header">
+          <div class="landing-logo">
+            <img
+              src="assets/logo.svg"
+              alt="PEPick Logo"
+              style="width: 120px; height: 120px; object-fit: contain"
+            />
+          </div>
+          <h1 class="landing-title">PePick!</h1>
+          <p class="landing-subtitle">학급을 선택하여 시작하세요</p>
         </div>
-        <h1 class="landing-title">PePick!</h1>
-        <p class="landing-subtitle">학급을 선택하여 시작하세요</p>
+        <div id="landing-class-list" class="landing-class-list">
+          <!-- JS에서 동적 생성 -->
+        </div>
+        <button class="btn btn-primary btn-lg landing-add-btn" id="landing-add-class">
+          + 새 학급 만들기
+        </button>
       </div>
-      <div id="landing-class-list" class="landing-class-list">
-        <!-- JS에서 동적 생성 -->
-      </div>
-      <button class="btn btn-primary btn-lg landing-add-btn" id="landing-add-class">
-        + 새 학급 만들기
-      </button>
-    </div>
 
-    <!-- ===================================================================
+      <!-- ===================================================================
          ==================== 술래뽑기 페이지 ====================
          =================================================================== -->
-    <div id="page-tag-game" class="page-view">
-
-      <!-- 헤더 -->
-      <div class="page-header">
-        <div>
-          <div class="page-title">술래뽑기</div>
-          <div class="page-subtitle">술래와 천사를 랜덤으로 뽑습니다</div>
-        </div>
-      </div>
-
-      <!-- 라운드 표시 (Phase 2/3) -->
-      <div id="tag-round-display" class="tag-round-display" style="display:none;">ROUND 1</div>
-
-      <!-- ============ Phase 1: 설정 화면 ============ -->
-      <div id="tag-phase1">
-
-        <!-- 뽑기 설정 카드 -->
-        <div class="section">
-          <div class="section-title" style="justify-content: space-between;">
-            <span>⚙️ 뽑기 설정</span>
-            <div style="display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0;">
-              <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 500;">중복 제외</span>
-              <label class="toggle">
-                <input type="checkbox" id="tag-exclude-prev">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
+      <div id="page-tag-game" class="page-view">
+        <!-- 헤더 -->
+        <div class="page-header">
+          <div>
+            <div class="page-title">술래뽑기</div>
+            <div class="page-subtitle">술래와 천사를 랜덤으로 뽑습니다</div>
           </div>
-          <div class="glass-card" style="padding: var(--space-lg);">
+        </div>
 
-            <!-- 술래 수 / 천사 수 / 분 / 초 (2×2) -->
-            <div class="tag-settings-4col">
-              <div class="tag-setting-item">
-                <div class="setting-label">술래 수</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="tag-it-count" data-dir="down">−</button>
-                  <input type="number" id="tag-it-count" value="1" min="0" max="10">
-                  <button class="stepper-btn" data-target="tag-it-count" data-dir="up">+</button>
-                </div>
-              </div>
-              <div class="tag-setting-item">
-                <div class="setting-label">천사 수</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="tag-angel-count" data-dir="down">−</button>
-                  <input type="number" id="tag-angel-count" value="0" min="0" max="10">
-                  <button class="stepper-btn" data-target="tag-angel-count" data-dir="up">+</button>
-                </div>
-              </div>
-              <div class="tag-setting-item">
-                <div class="setting-label">분</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="tag-timer-min" data-dir="down">−</button>
-                  <input type="number" id="tag-timer-min" value="0" min="0" max="10">
-                  <button class="stepper-btn" data-target="tag-timer-min" data-dir="up">+</button>
-                </div>
-              </div>
-              <div class="tag-setting-item">
-                <div class="setting-label">초</div>
-                <div class="number-stepper">
-                  <button class="stepper-btn" data-target="tag-timer-sec" data-dir="down">−</button>
-                  <input type="number" id="tag-timer-sec" value="30" min="0" max="59">
-                  <button class="stepper-btn" data-target="tag-timer-sec" data-dir="up">+</button>
-                </div>
+        <!-- 라운드 표시 (Phase 2/3) -->
+        <div id="tag-round-display" class="tag-round-display" style="display: none">ROUND 1</div>
+
+        <!-- ============ Phase 1: 설정 화면 ============ -->
+        <div id="tag-phase1">
+          <!-- 뽑기 설정 카드 -->
+          <div class="section">
+            <div class="section-title" style="justify-content: space-between">
+              <span>⚙️ 뽑기 설정</span>
+              <div style="display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0">
+                <span
+                  style="
+                    font-size: var(--font-size-sm);
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                  "
+                  >중복 제외</span
+                >
+                <label class="toggle">
+                  <input type="checkbox" id="tag-exclude-prev" />
+                  <span class="toggle-slider"></span>
+                </label>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- 뽑을 학생 설정 카드 -->
-        <div class="section">
-          <div class="section-title">📋 뽑을 학생 설정</div>
-          <div class="glass-card" style="padding: var(--space-lg);">
-
-            <!-- 학생 수 (hidden, JS에서 참조용) -->
-            <input type="hidden" id="tag-student-count" value="20">
-
-            <!-- 3개 버튼: 번호순 생성 / 학급 불러오기 / 성별 구분 -->
-            <div class="tag-student-gen-buttons">
-              <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">📝 번호순 생성</button>
-              <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
-              <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">👫 성별 구분</button>
+            <div class="glass-card" style="padding: var(--space-lg)">
+              <!-- 술래 수 / 천사 수 / 분 / 초 (2×2) -->
+              <div class="tag-settings-4col">
+                <div class="tag-setting-item">
+                  <div class="setting-label">술래 수</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="tag-it-count" data-dir="down">
+                      −
+                    </button>
+                    <input type="number" id="tag-it-count" value="1" min="0" max="10" />
+                    <button class="stepper-btn" data-target="tag-it-count" data-dir="up">+</button>
+                  </div>
+                </div>
+                <div class="tag-setting-item">
+                  <div class="setting-label">천사 수</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="tag-angel-count" data-dir="down">
+                      −
+                    </button>
+                    <input type="number" id="tag-angel-count" value="0" min="0" max="10" />
+                    <button class="stepper-btn" data-target="tag-angel-count" data-dir="up">
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div class="tag-setting-item">
+                  <div class="setting-label">분</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="tag-timer-min" data-dir="down">
+                      −
+                    </button>
+                    <input type="number" id="tag-timer-min" value="0" min="0" max="10" />
+                    <button class="stepper-btn" data-target="tag-timer-min" data-dir="up">+</button>
+                  </div>
+                </div>
+                <div class="tag-setting-item">
+                  <div class="setting-label">초</div>
+                  <div class="number-stepper">
+                    <button class="stepper-btn" data-target="tag-timer-sec" data-dir="down">
+                      −
+                    </button>
+                    <input type="number" id="tag-timer-sec" value="30" min="0" max="59" />
+                    <button class="stepper-btn" data-target="tag-timer-sec" data-dir="up">+</button>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <!-- 학생 카드 영역 (조건부 표시) -->
-            <div id="tag-student-cards-wrapper" style="display: none;">
-              <div id="tag-student-cards" class="tag-student-cards"></div>
+          <!-- 뽑을 학생 설정 카드 -->
+          <div class="section">
+            <div class="section-title">📋 뽑을 학생 설정</div>
+            <div class="glass-card" style="padding: var(--space-lg)">
+              <!-- 학생 수 (hidden, JS에서 참조용) -->
+              <input type="hidden" id="tag-student-count" value="20" />
+
+              <!-- 3개 버튼: 번호순 생성 / 학급 불러오기 / 성별 구분 -->
+              <div class="tag-student-gen-buttons">
+                <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">
+                  📝 번호순 생성
+                </button>
+                <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">
+                  📋 학급 불러오기
+                </button>
+                <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">
+                  👫 성별 구분
+                </button>
+              </div>
+
+              <!-- 학생 카드 영역 (조건부 표시) -->
+              <div id="tag-student-cards-wrapper" style="display: none">
+                <div id="tag-student-cards" class="tag-student-cards"></div>
+              </div>
+
+              <!-- 학생 없을 때 안내 -->
+              <div id="tag-no-students-message" class="tag-empty-message">
+                <p
+                  style="
+                    font-size: var(--font-size-sm);
+                    color: var(--text-tertiary);
+                    text-align: center;
+                    padding: var(--space-lg);
+                  "
+                >
+                  위 버튼으로 학생을 추가해주세요
+                </p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <!-- 학생 없을 때 안내 -->
-            <div id="tag-no-students-message" class="tag-empty-message">
-              <p style="font-size: var(--font-size-sm); color: var(--text-tertiary); text-align: center; padding: var(--space-lg);">
-                위 버튼으로 학생을 추가해주세요
-              </p>
+        <!-- Phase 1 전용 버튼 -->
+        <div id="tag-phase1-actions" class="tag-action-buttons">
+          <button class="btn btn-primary btn-lg" id="tag-start-btn" style="width: 100%">
+            🎮 술래 뽑기!
+          </button>
+          <button
+            class="btn btn-secondary"
+            id="tag-back-to-result-btn"
+            style="width: 100%; display: none"
+          >
+            📊 결과로 돌아가기
+          </button>
+          <button
+            class="btn btn-danger btn-sm"
+            id="tag-reset-from-settings-btn"
+            style="width: 100%; display: none"
+          >
+            🧹 새 게임 (이력 초기화)
+          </button>
+        </div>
+
+        <!-- ============ Phase 2: 결과 섹션 ============ -->
+        <div id="tag-result-section" style="display: none">
+          <div class="section">
+            <div class="section-title">🎯 뽑힌 결과</div>
+            <div id="tag-result-container" class="tag-result-container"></div>
+          </div>
+        </div>
+
+        <!-- ============ Phase 2: 후보/이력 (폴딩식) ============ -->
+        <div id="tag-phase2-content" style="display: none">
+          <!-- 후보 섹션 -->
+          <div class="section">
+            <div class="tag-collapsible">
+              <button class="tag-collapse-toggle" data-target="tag-next-its">
+                <span>🏃 다음 술래 후보 (<span id="tag-next-its-count">0</span>명)</span>
+                <span class="collapse-arrow">▼</span>
+              </button>
+              <div id="tag-next-its" class="tag-collapse-content" style="display: none"></div>
+            </div>
+            <div class="tag-collapsible">
+              <button class="tag-collapse-toggle" data-target="tag-next-angels">
+                <span>😇 다음 천사 후보 (<span id="tag-next-angels-count">0</span>명)</span>
+                <span class="collapse-arrow">▼</span>
+              </button>
+              <div id="tag-next-angels" class="tag-collapse-content" style="display: none"></div>
+            </div>
+          </div>
+
+          <!-- 이력 섹션 -->
+          <div class="section">
+            <div class="tag-collapsible">
+              <button class="tag-collapse-toggle" data-target="tag-history-its">
+                <span>📜 지난 술래 (<span id="tag-history-its-count">0</span>명)</span>
+                <span class="collapse-arrow">▼</span>
+              </button>
+              <div id="tag-history-its" class="tag-collapse-content" style="display: none"></div>
+            </div>
+            <div class="tag-collapsible">
+              <button class="tag-collapse-toggle" data-target="tag-history-angels">
+                <span>📜 지난 천사 (<span id="tag-history-angels-count">0</span>명)</span>
+                <span class="collapse-arrow">▼</span>
+              </button>
+              <div id="tag-history-angels" class="tag-collapse-content" style="display: none"></div>
             </div>
           </div>
         </div>
 
-      </div>
-
-      <!-- Phase 1 전용 버튼 -->
-      <div id="tag-phase1-actions" class="tag-action-buttons">
-        <button class="btn btn-primary btn-lg" id="tag-start-btn" style="width: 100%;">
-          🎮 술래 뽑기!
-        </button>
-        <button class="btn btn-secondary" id="tag-back-to-result-btn" style="width: 100%; display: none;">
-          📊 결과로 돌아가기
-        </button>
-        <button class="btn btn-danger btn-sm" id="tag-reset-from-settings-btn" style="width: 100%; display: none;">
-          🧹 새 게임 (이력 초기화)
-        </button>
-      </div>
-
-      <!-- ============ Phase 2: 결과 섹션 ============ -->
-      <div id="tag-result-section" style="display: none;">
-        <div class="section">
-          <div class="section-title">🎯 뽑힌 결과</div>
-          <div id="tag-result-container" class="tag-result-container"></div>
-        </div>
-      </div>
-
-      <!-- ============ Phase 2: 후보/이력 (폴딩식) ============ -->
-      <div id="tag-phase2-content" style="display: none;">
-        <!-- 후보 섹션 -->
-        <div class="section">
-          <div class="tag-collapsible">
-            <button class="tag-collapse-toggle" data-target="tag-next-its">
-              <span>🏃 다음 술래 후보 (<span id="tag-next-its-count">0</span>명)</span>
-              <span class="collapse-arrow">▼</span>
-            </button>
-            <div id="tag-next-its" class="tag-collapse-content" style="display: none;"></div>
-          </div>
-          <div class="tag-collapsible">
-            <button class="tag-collapse-toggle" data-target="tag-next-angels">
-              <span>😇 다음 천사 후보 (<span id="tag-next-angels-count">0</span>명)</span>
-              <span class="collapse-arrow">▼</span>
-            </button>
-            <div id="tag-next-angels" class="tag-collapse-content" style="display: none;"></div>
-          </div>
+        <!-- Phase 2 전용 버튼 -->
+        <div id="tag-phase2-actions" class="tag-phase2-grid" style="display: none">
+          <button class="btn btn-primary" id="tag-timer-start-btn">🎮 게임 시작</button>
+          <button class="btn btn-secondary" id="tag-pick-again-btn">🎲 다시뽑기</button>
+          <button class="btn btn-secondary" id="tag-modify-btn">✏️ 설정</button>
+          <button class="btn btn-danger" id="tag-new-game-btn">🧹 초기화</button>
         </div>
 
-        <!-- 이력 섹션 -->
-        <div class="section">
-          <div class="tag-collapsible">
-            <button class="tag-collapse-toggle" data-target="tag-history-its">
-              <span>📜 지난 술래 (<span id="tag-history-its-count">0</span>명)</span>
-              <span class="collapse-arrow">▼</span>
-            </button>
-            <div id="tag-history-its" class="tag-collapse-content" style="display: none;"></div>
+        <!-- ============ Phase 3: 타이머 ============ -->
+        <div id="tag-timer-phase" class="tag-timer-phase" style="display: none">
+          <div class="tag-timer-display-wrapper">
+            <div class="tag-timer-label">남은 시간</div>
+            <div id="tag-timer-display" class="tag-timer-display timer-normal">00:00</div>
           </div>
-          <div class="tag-collapsible">
-            <button class="tag-collapse-toggle" data-target="tag-history-angels">
-              <span>📜 지난 천사 (<span id="tag-history-angels-count">0</span>명)</span>
-              <span class="collapse-arrow">▼</span>
-            </button>
-            <div id="tag-history-angels" class="tag-collapse-content" style="display: none;"></div>
+          <div class="tag-timer-controls">
+            <button class="btn btn-secondary" id="tag-timer-pause">⏸️ 일시정지</button>
+          </div>
+          <div class="tag-timer-sub-controls">
+            <button class="btn btn-sm btn-secondary" id="tag-timer-minimize">축소</button>
+            <button class="btn btn-sm btn-secondary" id="tag-timer-maximize">전체화면</button>
+            <button class="btn btn-sm btn-secondary" id="tag-timer-back-result">결과보기</button>
+            <button class="btn btn-sm btn-secondary" id="tag-timer-back-setup">설정</button>
+            <button class="btn btn-sm btn-danger" id="tag-timer-new-game">초기화</button>
           </div>
         </div>
       </div>
 
-      <!-- Phase 2 전용 버튼 -->
-      <div id="tag-phase2-actions" class="tag-phase2-grid" style="display: none;">
-        <button class="btn btn-primary" id="tag-timer-start-btn">🎮 게임 시작</button>
-        <button class="btn btn-secondary" id="tag-pick-again-btn">🎲 다시뽑기</button>
-        <button class="btn btn-secondary" id="tag-modify-btn">✏️ 설정</button>
-        <button class="btn btn-danger" id="tag-new-game-btn">🧹 초기화</button>
-      </div>
-
-      <!-- ============ Phase 3: 타이머 ============ -->
-      <div id="tag-timer-phase" class="tag-timer-phase" style="display: none;">
-        <div class="tag-timer-display-wrapper">
-          <div class="tag-timer-label">남은 시간</div>
-          <div id="tag-timer-display" class="tag-timer-display timer-normal">00:00</div>
-        </div>
-        <div class="tag-timer-controls">
-          <button class="btn btn-secondary" id="tag-timer-pause">⏸️ 일시정지</button>
-        </div>
-        <div class="tag-timer-sub-controls">
-          <button class="btn btn-sm btn-secondary" id="tag-timer-minimize">축소</button>
-          <button class="btn btn-sm btn-secondary" id="tag-timer-maximize">전체화면</button>
-          <button class="btn btn-sm btn-secondary" id="tag-timer-back-result">결과보기</button>
-          <button class="btn btn-sm btn-secondary" id="tag-timer-back-setup">설정</button>
-          <button class="btn btn-sm btn-danger" id="tag-timer-new-game">초기화</button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ===================================================================
+      <!-- ===================================================================
          ==================== 모둠뽑기 페이지 ====================
          =================================================================== -->
-    <div id="page-group-manager" class="page-view">
-      <div class="page-header">
-        <div>
-          <div class="page-title">모둠뽑기</div>
-          <div class="page-subtitle">학생들을 모둠으로 랜덤 배정합니다</div>
+      <div id="page-group-manager" class="page-view">
+        <div class="page-header">
+          <div>
+            <div class="page-title">모둠뽑기</div>
+            <div class="page-subtitle">학생들을 모둠으로 랜덤 배정합니다</div>
+          </div>
         </div>
-      </div>
 
-      <!-- ============ Phase 1: 설정 화면 ============ -->
-      <div id="gm-phase1">
+        <!-- ============ Phase 1: 설정 화면 ============ -->
+        <div id="gm-phase1">
+          <!-- ============ 통합 설정 섹션 ============ -->
+          <div class="section">
+            <div class="section-title">⚙️ 모둠뽑기 설정</div>
 
-        <!-- ============ 통합 설정 섹션 ============ -->
-        <div class="section">
-          <div class="section-title">⚙️ 모둠뽑기 설정</div>
+            <div class="glass-card gm-compact-card">
+              <input type="hidden" id="gm-student-count" value="20" />
 
-          <div class="glass-card gm-compact-card">
-            <input type="hidden" id="gm-student-count" value="20">
-
-            <!-- 1. 학생 설정 버튼 -->
-            <div class="gm-compact-row">
-              <label class="gm-inline-label">📋 학생 설정</label>
-              <div class="tag-student-gen-buttons gm-compact-buttons">
-                <button class="btn btn-secondary btn-sm" id="gm-gen-by-number">📝 번호</button>
-                <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급</button>
-                <button class="btn btn-secondary btn-sm" id="gm-gen-by-gender">👫 성별</button>
-              </div>
-            </div>
-
-            <!-- 2. 학생 카드 영역 (조건부) -->
-            <div id="gm-student-cards-wrapper" class="gm-compact-row" style="display: none;">
-              <div id="gm-student-cards" class="tag-student-cards gm-compact-student-cards"></div>
-            </div>
-
-            <!-- 3. 모둠 설정 + 구성 방식 -->
-            <div class="gm-compact-row">
-              <div class="gm-settings-grid">
-                <!-- 모둠당 인원 -->
-                <div class="tag-setting-item gm-compact-setting">
-                  <div class="setting-label">모둠당 인원</div>
-                  <div class="number-stepper">
-                    <button class="stepper-btn" data-target="gm-group-size" data-dir="down">−</button>
-                    <input type="number" id="gm-group-size" value="4" min="2" max="10">
-                    <button class="stepper-btn" data-target="gm-group-size" data-dir="up">+</button>
-                  </div>
-                </div>
-                <!-- 모둠 개수 -->
-                <div class="tag-setting-item gm-compact-setting">
-                  <div class="setting-label">모둠 개수</div>
-                  <div class="number-stepper">
-                    <button class="stepper-btn" data-target="gm-group-count" data-dir="down">−</button>
-                    <input type="number" id="gm-group-count" value="5" min="1" max="12">
-                    <button class="stepper-btn" data-target="gm-group-count" data-dir="up">+</button>
-                  </div>
+              <!-- 1. 학생 설정 버튼 -->
+              <div class="gm-compact-row">
+                <label class="gm-inline-label">📋 학생 설정</label>
+                <div class="tag-student-gen-buttons gm-compact-buttons">
+                  <button class="btn btn-secondary btn-sm" id="gm-gen-by-number">📝 번호</button>
+                  <button class="btn btn-secondary btn-sm" id="gm-gen-by-class">📋 학급</button>
+                  <button class="btn btn-secondary btn-sm" id="gm-gen-by-gender">👫 성별</button>
                 </div>
               </div>
-            </div>
 
-            <!-- 4. 모둠 구성 방식 (라디오 인라인) -->
-            <div class="gm-compact-row gm-radio-row">
-              <label class="gm-inline-label">🎲 구성 방식</label>
-              <div class="gm-radio-inline">
-                <label class="gm-radio-compact">
-                  <input type="radio" name="gm-composition-mode" id="gm-mode-random" value="random" checked>
-                  <span>🔀 랜덤</span>
-                </label>
-                <label class="gm-radio-compact">
-                  <input type="radio" name="gm-composition-mode" id="gm-mode-fixed" value="fixed">
-                  <span>📌 고정</span>
-                </label>
+              <!-- 2. 학생 카드 영역 (조건부) -->
+              <div id="gm-student-cards-wrapper" class="gm-compact-row" style="display: none">
+                <div id="gm-student-cards" class="tag-student-cards gm-compact-student-cards"></div>
               </div>
-            </div>
 
-            <!-- 고정 모드 안내 (조건부) -->
-            <div id="gm-fixed-mode-info" class="gm-info-box" style="display: none;">
-              💡 고정 모둠 모드: 학급 설정의 모둠 구성을 그대로 사용합니다.
-            </div>
+              <!-- 3. 모둠 설정 + 구성 방식 -->
+              <div class="gm-compact-row">
+                <div class="gm-settings-grid">
+                  <!-- 모둠당 인원 -->
+                  <div class="tag-setting-item gm-compact-setting">
+                    <div class="setting-label">모둠당 인원</div>
+                    <div class="number-stepper">
+                      <button class="stepper-btn" data-target="gm-group-size" data-dir="down">
+                        −
+                      </button>
+                      <input type="number" id="gm-group-size" value="4" min="2" max="10" />
+                      <button class="stepper-btn" data-target="gm-group-size" data-dir="up">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <!-- 모둠 개수 -->
+                  <div class="tag-setting-item gm-compact-setting">
+                    <div class="setting-label">모둠 개수</div>
+                    <div class="number-stepper">
+                      <button class="stepper-btn" data-target="gm-group-count" data-dir="down">
+                        −
+                      </button>
+                      <input type="number" id="gm-group-count" value="5" min="1" max="12" />
+                      <button class="stepper-btn" data-target="gm-group-count" data-dir="up">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <!-- 5. 모둠 이름 설정 -->
-            <div class="gm-compact-row">
-              <label class="gm-inline-label">🏷️ 모둠 이름</label>
-              <select id="gm-naming-mode" class="input input-sm gm-compact-select">
-                <option value="number">숫자순 (1모둠, 2모둠...)</option>
-                <option value="class">학급 설정 이름 사용</option>
-                <option value="custom">즉석 커스텀</option>
-              </select>
-            </div>
+              <!-- 4. 모둠 구성 방식 (라디오 인라인) -->
+              <div class="gm-compact-row gm-radio-row">
+                <label class="gm-inline-label">🎲 구성 방식</label>
+                <div class="gm-radio-inline">
+                  <label class="gm-radio-compact">
+                    <input
+                      type="radio"
+                      name="gm-composition-mode"
+                      id="gm-mode-random"
+                      value="random"
+                      checked
+                    />
+                    <span>🔀 랜덤</span>
+                  </label>
+                  <label class="gm-radio-compact">
+                    <input
+                      type="radio"
+                      name="gm-composition-mode"
+                      id="gm-mode-fixed"
+                      value="fixed"
+                    />
+                    <span>📌 고정</span>
+                  </label>
+                </div>
+              </div>
 
-            <!-- 학급 이름 랜덤 섞기 옵션 (조건부) -->
-            <div id="gm-class-name-select-container" class="gm-compact-row" style="display: none;">
-              <label class="gm-inline-label"></label>
-              <div style="flex: 1;">
-                <!-- 숨겨진 요소들 (하위 호환성) -->
-                <select id="gm-class-name-select" class="input input-sm" style="display: none;">
-                  <option value="">학급 선택...</option>
+              <!-- 고정 모드 안내 (조건부) -->
+              <div id="gm-fixed-mode-info" class="gm-info-box" style="display: none">
+                💡 고정 모둠 모드: 학급 설정의 모둠 구성을 그대로 사용합니다.
+              </div>
+
+              <!-- 5. 모둠 이름 설정 -->
+              <div class="gm-compact-row">
+                <label class="gm-inline-label">🏷️ 모둠 이름</label>
+                <select id="gm-naming-mode" class="input input-sm gm-compact-select">
+                  <option value="number">숫자순 (1모둠, 2모둠...)</option>
+                  <option value="class">학급 설정 이름 사용</option>
+                  <option value="custom">즉석 커스텀</option>
                 </select>
-                <input type="checkbox" id="gm-use-fixed-groups" style="display: none;">
+              </div>
 
-                <label class="gm-checkbox-compact">
-                  <input type="checkbox" id="gm-random-names">
-                  <span>(이름만) 랜덤 섞기</span>
-                </label>
+              <!-- 학급 이름 랜덤 섞기 옵션 (조건부) -->
+              <div id="gm-class-name-select-container" class="gm-compact-row" style="display: none">
+                <label class="gm-inline-label"></label>
+                <div style="flex: 1">
+                  <!-- 숨겨진 요소들 (하위 호환성) -->
+                  <select id="gm-class-name-select" class="input input-sm" style="display: none">
+                    <option value="">학급 선택...</option>
+                  </select>
+                  <input type="checkbox" id="gm-use-fixed-groups" style="display: none" />
+
+                  <label class="gm-checkbox-compact">
+                    <input type="checkbox" id="gm-random-names" />
+                    <span>(이름만) 랜덤 섞기</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 커스텀 이름 입력 (조건부) -->
+              <div id="gm-custom-names-container" class="gm-compact-row" style="display: none">
+                <label class="gm-inline-label"></label>
+                <div class="gm-custom-grid">
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="1모둠"
+                    maxlength="10"
+                  />
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="2모둠"
+                    maxlength="10"
+                  />
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="3모둠"
+                    maxlength="10"
+                  />
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="4모둠"
+                    maxlength="10"
+                  />
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="5모둠"
+                    maxlength="10"
+                  />
+                  <input
+                    class="input input-sm gm-custom-name"
+                    type="text"
+                    placeholder="6모둠"
+                    maxlength="10"
+                  />
+                </div>
+              </div>
+
+              <!-- 6. 계산 정보 -->
+              <div id="gm-calc-info" class="student-info gm-calc-compact"></div>
+            </div>
+            <!-- end glass-card -->
+          </div>
+          <!-- end section -->
+
+          <!-- 모둠 뽑기 버튼 -->
+          <button
+            class="btn btn-primary btn-lg"
+            id="gm-pick-btn"
+            style="width: 100%; margin-bottom: var(--space-xl)"
+          >
+            🎲 모둠 뽑기
+          </button>
+        </div>
+
+        <!-- ============ Phase 2: 타이머 + 결과 ============ -->
+
+        <!-- 타이머 (Phase 2 상단, 토글) -->
+        <div id="gm-timer-section" class="section" style="display: none">
+          <div class="section-title">⏱ 타이머</div>
+          <div class="glass-card" style="padding: var(--space-lg)">
+            <div
+              class="gm-timer-presets"
+              style="
+                display: flex;
+                gap: var(--space-sm);
+                flex-wrap: wrap;
+                margin-bottom: var(--space-md);
+              "
+            >
+              <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="30">
+                30초
+              </button>
+              <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="60">
+                1분
+              </button>
+              <button class="btn btn-sm btn-secondary gm-timer-preset active" data-seconds="180">
+                3분
+              </button>
+              <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="300">
+                5분
+              </button>
+              <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="600">
+                10분
+              </button>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-md)">
+              <div id="gm-timer-display" class="gm-timer-display">03:00</div>
+              <div style="display: flex; gap: var(--space-sm); flex: 1">
+                <button class="btn btn-sm btn-primary" id="gm-timer-start" style="flex: 1">
+                  ▶ 시작
+                </button>
+                <button
+                  class="btn btn-sm btn-secondary"
+                  id="gm-timer-pause"
+                  style="flex: 1; display: none"
+                >
+                  ⏸ 일시정지
+                </button>
+                <button class="btn btn-sm btn-secondary" id="gm-timer-reset">↺</button>
               </div>
             </div>
-
-            <!-- 커스텀 이름 입력 (조건부) -->
-            <div id="gm-custom-names-container" class="gm-compact-row" style="display: none;">
-              <label class="gm-inline-label"></label>
-              <div class="gm-custom-grid">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="1모둠" maxlength="10">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="2모둠" maxlength="10">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="3모둠" maxlength="10">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="4모둠" maxlength="10">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="5모둠" maxlength="10">
-                <input class="input input-sm gm-custom-name" type="text" placeholder="6모둠" maxlength="10">
-              </div>
-            </div>
-
-            <!-- 6. 계산 정보 -->
-            <div id="gm-calc-info" class="student-info gm-calc-compact"></div>
-
-          </div> <!-- end glass-card -->
-        </div> <!-- end section -->
-
-        <!-- 모둠 뽑기 버튼 -->
-        <button class="btn btn-primary btn-lg" id="gm-pick-btn" style="width: 100%; margin-bottom: var(--space-xl);">
-          🎲 모둠 뽑기
-        </button>
-
-      </div>
-
-      <!-- ============ Phase 2: 타이머 + 결과 ============ -->
-
-      <!-- 타이머 (Phase 2 상단, 토글) -->
-      <div id="gm-timer-section" class="section" style="display: none;">
-        <div class="section-title">⏱ 타이머</div>
-        <div class="glass-card" style="padding: var(--space-lg);">
-          <div class="gm-timer-presets"
-            style="display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-md);">
-            <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="30">30초</button>
-            <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="60">1분</button>
-            <button class="btn btn-sm btn-secondary gm-timer-preset active" data-seconds="180">3분</button>
-            <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="300">5분</button>
-            <button class="btn btn-sm btn-secondary gm-timer-preset" data-seconds="600">10분</button>
-          </div>
-          <div style="display: flex; align-items: center; gap: var(--space-md);">
-            <div id="gm-timer-display" class="gm-timer-display">03:00</div>
-            <div style="display: flex; gap: var(--space-sm); flex: 1;">
-              <button class="btn btn-sm btn-primary" id="gm-timer-start" style="flex:1;">▶ 시작</button>
-              <button class="btn btn-sm btn-secondary" id="gm-timer-pause" style="flex:1; display:none;">⏸ 일시정지</button>
-              <button class="btn btn-sm btn-secondary" id="gm-timer-reset">↺</button>
+            <div style="margin-top: var(--space-md); text-align: center">
+              <button class="btn btn-sm btn-secondary" id="gm-timer-fullscreen">
+                🖥 전체화면 타이머
+              </button>
             </div>
           </div>
-          <div style="margin-top: var(--space-md); text-align: center;">
-            <button class="btn btn-sm btn-secondary" id="gm-timer-fullscreen">🖥 전체화면 타이머</button>
-          </div>
+        </div>
+
+        <!-- 결과 영역 -->
+        <div id="gm-result-section" style="display: none">
+          <div class="section-title">🎯 모둠 뽑기 결과</div>
+          <div id="gm-groups-container" class="gm-groups-container"></div>
+        </div>
+
+        <!-- Phase 2 액션 버튼 (4열 그리드) -->
+        <div id="gm-phase2-actions" class="tag-phase2-grid" style="display: none">
+          <button class="btn btn-primary" id="gm-timer-toggle-btn">⏱ 타이머</button>
+          <button class="btn btn-secondary" id="gm-pick-again-btn">🎲 다시뽑기</button>
+          <button class="btn btn-secondary" id="gm-back-to-setup-btn">✏️ 설정</button>
+          <button class="btn btn-danger" id="gm-reset-btn">🧹 초기화</button>
         </div>
       </div>
 
-      <!-- 결과 영역 -->
-      <div id="gm-result-section" style="display: none;">
-        <div class="section-title">🎯 모둠 뽑기 결과</div>
-        <div id="gm-groups-container" class="gm-groups-container"></div>
-      </div>
-
-      <!-- Phase 2 액션 버튼 (4열 그리드) -->
-      <div id="gm-phase2-actions" class="tag-phase2-grid" style="display: none;">
-        <button class="btn btn-primary" id="gm-timer-toggle-btn">⏱ 타이머</button>
-        <button class="btn btn-secondary" id="gm-pick-again-btn">🎲 다시뽑기</button>
-        <button class="btn btn-secondary" id="gm-back-to-setup-btn">✏️ 설정</button>
-        <button class="btn btn-danger" id="gm-reset-btn">🧹 초기화</button>
-      </div>
-    </div>
-
-    <!-- ===================================================================
+      <!-- ===================================================================
          ==================== 학급 설정 페이지 ====================
          =================================================================== -->
-    <div id="page-settings" class="page-view">
-      <div class="page-header">
-        <div>
-          <div class="page-title">학급 관리</div>
-          <div class="page-subtitle">현재 학급의 정보를 관리합니다</div>
-        </div>
-      </div>
-
-      <!-- 현재 학급 정보 -->
-      <div class="section">
-        <div id="settings-current-class" class="glass-card" style="padding: var(--space-lg);">
-          <!-- JS에서 동적 렌더링 -->
-        </div>
-      </div>
-
-      <!-- 학급 학생 목록 -->
-      <div class="section">
-        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>📋 학생 목록</span>
-          <button class="btn btn-primary btn-sm" id="settings-add-class" style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md);">
-            편집
-          </button>
-        </div>
-        <div class="glass-card" style="padding: var(--space-lg);">
-          <div id="settings-class-list" class="settings-class-list"></div>
-        </div>
-      </div>
-
-      <!-- 기본 모둠 이름 설정 -->
-      <div class="section">
-        <div class="section-title">🏷️ 기본 모둠 이름 설정</div>
-        <div class="glass-card" style="padding: var(--space-lg);">
-          <div style="margin-bottom: var(--space-md); color: var(--text-secondary); font-size: var(--font-size-sm);">
-            새 학급에 기본으로 적용될 모둠 이름입니다 (최대 8개).
+      <div id="page-settings" class="page-view">
+        <div class="page-header">
+          <div>
+            <div class="page-title">학급 관리</div>
+            <div class="page-subtitle">현재 학급의 정보를 관리합니다</div>
           </div>
-          <div id="default-group-names-list" class="pill-grid">
+        </div>
+
+        <!-- 현재 학급 정보 -->
+        <div class="section">
+          <div id="settings-current-class" class="glass-card" style="padding: var(--space-lg)">
             <!-- JS에서 동적 렌더링 -->
           </div>
-          <div class="settings-btn-row">
-            <button class="btn btn-sm btn-sky" id="default-group-add">+ 추가</button>
-            <button class="btn btn-sm btn-danger" id="default-group-remove">− 삭제</button>
-            <button class="btn btn-sm btn-primary" id="save-default-group-names">저장</button>
+        </div>
+
+        <!-- 학급 학생 목록 -->
+        <div class="section">
+          <div
+            class="section-title"
+            style="display: flex; justify-content: space-between; align-items: center"
+          >
+            <span>📋 학생 목록</span>
+            <button
+              class="btn btn-primary btn-sm"
+              id="settings-add-class"
+              style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
+            >
+              편집
+            </button>
+          </div>
+          <div class="glass-card" style="padding: var(--space-lg)">
+            <div id="settings-class-list" class="settings-class-list"></div>
+          </div>
+        </div>
+
+        <!-- 기본 모둠 이름 설정 -->
+        <div class="section">
+          <div class="section-title">🏷️ 기본 모둠 이름 설정</div>
+          <div class="glass-card" style="padding: var(--space-lg)">
+            <div
+              style="
+                margin-bottom: var(--space-md);
+                color: var(--text-secondary);
+                font-size: var(--font-size-sm);
+              "
+            >
+              새 학급에 기본으로 적용될 모둠 이름입니다 (최대 8개).
+            </div>
+            <div id="default-group-names-list" class="pill-grid">
+              <!-- JS에서 동적 렌더링 -->
+            </div>
+            <div class="settings-btn-row">
+              <button class="btn btn-sm btn-sky" id="default-group-add">+ 추가</button>
+              <button class="btn btn-sm btn-danger" id="default-group-remove">− 삭제</button>
+              <button class="btn btn-sm btn-primary" id="save-default-group-names">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 앱 정보 -->
+        <div class="section">
+          <div class="section-title">ℹ️ 앱 정보</div>
+          <div class="glass-card" style="padding: var(--space-lg)">
+            <div class="setting-row">
+              <div class="setting-label">체육 수업 도우미</div>
+              <div style="font-size: var(--font-size-sm); color: var(--text-tertiary)">v2.0.0</div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">데이터 초기화</div>
+              <button class="btn btn-sm btn-danger" id="settings-reset-data">초기화</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 앱 정보 -->
-      <div class="section">
-        <div class="section-title">ℹ️ 앱 정보</div>
-        <div class="glass-card" style="padding: var(--space-lg);">
-          <div class="setting-row">
-            <div class="setting-label">체육 수업 도우미</div>
-            <div style="font-size: var(--font-size-sm); color: var(--text-tertiary);">v2.0.0</div>
-          </div>
-          <div class="setting-row">
-            <div class="setting-label">데이터 초기화</div>
-            <button class="btn btn-sm btn-danger" id="settings-reset-data">초기화</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===================================================================
+      <!-- ===================================================================
          ==================== 온보딩 Wizard 페이지 ====================
          =================================================================== -->
-    <div id="page-wizard" class="page-view">
-      <div class="wizard-container">
-        <div class="wizard-header">
-          <div class="wizard-logo">🎯 PePick!</div>
-          <div class="wizard-title">학급 설정을 시작할게요</div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="wizard-progress">
-          <div class="wizard-progress-track">
-            <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+      <div id="page-wizard" class="page-view">
+        <div class="wizard-container">
+          <div class="wizard-header">
+            <div class="wizard-logo">🎯 PePick!</div>
+            <div class="wizard-title">학급 설정을 시작할게요</div>
           </div>
-          <div class="wizard-step-indicator">Step <span id="wizard-current-step">1</span> / 5</div>
-        </div>
 
-        <!-- Step 1: 학교급 선택 -->
-        <div class="wizard-step active" id="wizard-step-1">
-          <h2 class="wizard-step-title">어떤 학교에서 근무하시나요?</h2>
-          <div class="wizard-options wizard-options-3col">
-            <button class="wizard-option-btn" data-value="elementary">
-              <span class="wizard-option-icon">🏫</span>
-              <span class="wizard-option-label">초등학교</span>
+          <!-- Progress Bar -->
+          <div class="wizard-progress">
+            <div class="wizard-progress-track">
+              <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+            </div>
+            <div class="wizard-step-indicator">
+              Step <span id="wizard-current-step">1</span> / 5
+            </div>
+          </div>
+
+          <!-- Step 1: 학교급 선택 -->
+          <div class="wizard-step active" id="wizard-step-1">
+            <h2 class="wizard-step-title">어떤 학교에서 근무하시나요?</h2>
+            <div class="wizard-options wizard-options-3col">
+              <button class="wizard-option-btn" data-value="elementary">
+                <span class="wizard-option-icon">🏫</span>
+                <span class="wizard-option-label">초등학교</span>
+              </button>
+              <button class="wizard-option-btn" data-value="middle">
+                <span class="wizard-option-icon">🏢</span>
+                <span class="wizard-option-label">중학교</span>
+              </button>
+              <button class="wizard-option-btn" data-value="high">
+                <span class="wizard-option-icon">🎓</span>
+                <span class="wizard-option-label">고등학교</span>
+              </button>
+            </div>
+            <button class="btn btn-primary btn-lg wizard-next-btn" id="wizard-step1-next" disabled>
+              다음
             </button>
-            <button class="wizard-option-btn" data-value="middle">
-              <span class="wizard-option-icon">🏢</span>
-              <span class="wizard-option-label">중학교</span>
-            </button>
-            <button class="wizard-option-btn" data-value="high">
-              <span class="wizard-option-icon">🎓</span>
-              <span class="wizard-option-label">고등학교</span>
-            </button>
           </div>
-          <button class="btn btn-primary btn-lg wizard-next-btn" id="wizard-step1-next" disabled>다음</button>
-        </div>
 
-        <!-- Step 2: 담당 학년 복수 선택 -->
-        <div class="wizard-step" id="wizard-step-2">
-          <h2 class="wizard-step-title">담당 학년을 선택해주세요</h2>
-          <p class="wizard-hint-top">복수 선택 가능합니다</p>
-          <div class="wizard-options" id="wizard-grade-options">
-            <!-- JavaScript로 동적 생성 -->
-          </div>
-          <div class="wizard-nav-buttons">
-            <button class="btn btn-secondary btn-lg" id="wizard-step2-back">이전</button>
-            <button class="btn btn-primary btn-lg" id="wizard-step2-next" disabled>다음</button>
-          </div>
-        </div>
-
-        <!-- Step 3: 학년별 반 수 설정 -->
-        <div class="wizard-step" id="wizard-step-3">
-          <h2 class="wizard-step-title">학년별 반 수를 설정해주세요</h2>
-          <div class="wizard-list" id="wizard-class-count-list">
-            <!-- JavaScript로 동적 생성 -->
-          </div>
-          <div class="wizard-nav-buttons">
-            <button class="btn btn-secondary btn-lg" id="wizard-step3-back">이전</button>
-            <button class="btn btn-primary btn-lg" id="wizard-step3-next">다음</button>
-          </div>
-        </div>
-
-        <!-- Step 4: 학급별 학생 수 -->
-        <div class="wizard-step" id="wizard-step-4">
-          <h2 class="wizard-step-title">학급별 학생 수를 조정해주세요</h2>
-          <p class="wizard-hint-top">기본값은 20명입니다</p>
-
-          <div class="wizard-scroll-area">
-            <div class="wizard-list" id="wizard-student-count-list">
+          <!-- Step 2: 담당 학년 복수 선택 -->
+          <div class="wizard-step" id="wizard-step-2">
+            <h2 class="wizard-step-title">담당 학년을 선택해주세요</h2>
+            <p class="wizard-hint-top">복수 선택 가능합니다</p>
+            <div class="wizard-options" id="wizard-grade-options">
               <!-- JavaScript로 동적 생성 -->
             </div>
+            <div class="wizard-nav-buttons">
+              <button class="btn btn-secondary btn-lg" id="wizard-step2-back">이전</button>
+              <button class="btn btn-primary btn-lg" id="wizard-step2-next" disabled>다음</button>
+            </div>
           </div>
 
-          <div class="wizard-nav-buttons">
-            <button class="btn btn-secondary btn-lg" id="wizard-step4-back">이전</button>
-            <button class="btn btn-primary btn-lg" id="wizard-step4-next">다음</button>
+          <!-- Step 3: 학년별 반 수 설정 -->
+          <div class="wizard-step" id="wizard-step-3">
+            <h2 class="wizard-step-title">학년별 반 수를 설정해주세요</h2>
+            <div class="wizard-list" id="wizard-class-count-list">
+              <!-- JavaScript로 동적 생성 -->
+            </div>
+            <div class="wizard-nav-buttons">
+              <button class="btn btn-secondary btn-lg" id="wizard-step3-back">이전</button>
+              <button class="btn btn-primary btn-lg" id="wizard-step3-next">다음</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Step 5: 교사 이름 입력 -->
-        <div class="wizard-step" id="wizard-step-5">
-          <h2 class="wizard-step-title">어떻게 불러드릴까요?</h2>
-          <div class="wizard-input-group">
-            <input type="text" id="wizard-teacher-name" class="wizard-input" placeholder="본명 또는 닉네임을 입력하세요" maxlength="20">
-            <p class="wizard-hint">앱에서 표시될 이름입니다 (예: 김체육, 홍길동 선생님)</p>
-            <p class="wizard-hint">선택사항입니다. 건너뛰려면 바로 완료를 눌러주세요</p>
-          </div>
-          <div class="wizard-nav-buttons">
-            <button class="btn btn-secondary btn-lg" id="wizard-step5-back">이전</button>
-            <button class="btn btn-primary btn-lg" id="wizard-step5-complete">완료</button>
-          </div>
-        </div>
+          <!-- Step 4: 학급별 학생 수 -->
+          <div class="wizard-step" id="wizard-step-4">
+            <h2 class="wizard-step-title">학급별 학생 수를 조정해주세요</h2>
+            <p class="wizard-hint-top">기본값은 20명입니다</p>
 
-        <!-- 로딩 오버레이 -->
-        <div class="wizard-loading" id="wizard-loading" style="display: none;">
-          <div class="wizard-loading-content">
-            <div class="wizard-loading-spinner"></div>
-            <p id="wizard-loading-text">학급을 생성하는 중...</p>
+            <div class="wizard-scroll-area">
+              <div class="wizard-list" id="wizard-student-count-list">
+                <!-- JavaScript로 동적 생성 -->
+              </div>
+            </div>
+
+            <div class="wizard-nav-buttons">
+              <button class="btn btn-secondary btn-lg" id="wizard-step4-back">이전</button>
+              <button class="btn btn-primary btn-lg" id="wizard-step4-next">다음</button>
+            </div>
+          </div>
+
+          <!-- Step 5: 교사 이름 입력 -->
+          <div class="wizard-step" id="wizard-step-5">
+            <h2 class="wizard-step-title">어떻게 불러드릴까요?</h2>
+            <div class="wizard-input-group">
+              <input
+                type="text"
+                id="wizard-teacher-name"
+                class="wizard-input"
+                placeholder="본명 또는 닉네임을 입력하세요"
+                maxlength="20"
+              />
+              <p class="wizard-hint">앱에서 표시될 이름입니다 (예: 김체육, 홍길동 선생님)</p>
+              <p class="wizard-hint">선택사항입니다. 건너뛰려면 바로 완료를 눌러주세요</p>
+            </div>
+            <div class="wizard-nav-buttons">
+              <button class="btn btn-secondary btn-lg" id="wizard-step5-back">이전</button>
+              <button class="btn btn-primary btn-lg" id="wizard-step5-complete">완료</button>
+            </div>
+          </div>
+
+          <!-- 로딩 오버레이 -->
+          <div class="wizard-loading" id="wizard-loading" style="display: none">
+            <div class="wizard-loading-content">
+              <div class="wizard-loading-spinner"></div>
+              <p id="wizard-loading-text">학급을 생성하는 중...</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-  </div>
+    <!-- 상단 네비바 (dock 대체) - app-container 밖에 배치 -->
+    <!-- navbar는 body 끝이 아닌 상단 fixed로 동작 -->
 
-  <!-- 상단 네비바 (dock 대체) - app-container 밖에 배치 -->
-  <!-- navbar는 body 끝이 아닌 상단 fixed로 동작 -->
+    <!-- ====== Modals ====== -->
 
-  <!-- ====== Modals ====== -->
-
-  <!-- 학급 편집 모달 -->
-  <div id="class-modal" class="modal-overlay">
-    <div class="modal timetable-modal">
-      <div class="modal-header">
-        <div class="modal-title" id="class-modal-title">학급 편집</div>
-        <button class="modal-close" id="class-modal-close">✕</button>
-      </div>
-      <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto;">
-
-        <!-- 학급 이름 + 모둠 수 (한 줄) -->
-        <div class="timetable-top-bar">
-          <div class="timetable-top-item">
-            <label class="timetable-label">학급 이름</label>
-            <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반">
-          </div>
-          <div class="timetable-top-item timetable-top-stepper">
-            <label class="timetable-label">모둠 수</label>
-            <div class="number-stepper">
-              <button class="stepper-btn" data-target="class-group-count" data-dir="down">−</button>
-              <input type="number" id="class-group-count" value="6" min="2" max="8">
-              <button class="stepper-btn" data-target="class-group-count" data-dir="up">+</button>
+    <!-- 학급 편집 모달 -->
+    <div id="class-modal" class="modal-overlay">
+      <div class="modal timetable-modal">
+        <div class="modal-header">
+          <div class="modal-title" id="class-modal-title">학급 편집</div>
+          <button class="modal-close" id="class-modal-close">✕</button>
+        </div>
+        <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto">
+          <div class="class-editor-section">
+            <div class="class-editor-title">1) 학급 기본 정보</div>
+            <div class="class-basic-grid">
+              <div class="timetable-top-item">
+                <label class="timetable-label">학급 이름</label>
+                <input
+                  class="input"
+                  type="text"
+                  id="class-name-input"
+                  placeholder="예: 6학년 3반"
+                />
+              </div>
+              <div class="timetable-top-item timetable-top-stepper">
+                <label class="timetable-label">모둠 수</label>
+                <div class="number-stepper">
+                  <button class="stepper-btn" data-target="class-group-count" data-dir="down">
+                    −
+                  </button>
+                  <input type="number" id="class-group-count" value="6" min="2" max="8" />
+                  <button class="stepper-btn" data-target="class-group-count" data-dir="up">
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 시간표 스타일 테이블 -->
-        <div class="timetable-hint">첫 번째 학생은 모둠장(⭐)으로 표시됩니다</div>
-        <div class="timetable-scroll">
-          <table id="class-group-grid" class="timetable">
-            <!-- JS에서 동적 생성 -->
-          </table>
-        </div>
+          <div class="class-editor-section">
+            <div class="class-editor-header">
+              <div class="class-editor-title">2) 학생 명렬표</div>
+              <div class="class-editor-meta">
+                <button class="btn btn-sm btn-primary" id="class-open-bulk-modal" type="button">
+                  번호순 일괄 등록
+                </button>
+                <span id="class-roster-count">0명</span>
+                <button class="btn btn-sm btn-secondary" id="class-add-student-card" type="button">
+                  + 학생 카드
+                </button>
+              </div>
+            </div>
+            <div class="class-import-row">
+              <button class="btn btn-sm btn-secondary" id="class-csv-download">
+                📥 템플릿 다운로드
+              </button>
+              <button class="btn btn-sm btn-secondary" id="class-csv-import">
+                📂 CSV 가져오기
+              </button>
+              <button class="btn btn-sm btn-primary" id="class-google-sheets-import">
+                📊 구글 시트 가져오기
+              </button>
+            </div>
+            <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none" />
+            <div
+              id="class-student-roster"
+              class="class-student-roster cm-drop-zone"
+              data-zone-type="roster"
+            >
+              <!-- JS에서 동적 생성 -->
+            </div>
+          </div>
 
-        <!-- CSV 가져오기 & 템플릿 -->
-        <div style="margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm);">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
-            <button class="btn btn-sm btn-secondary" id="class-csv-download" style="font-size: var(--font-size-xs);">
-              📥 템플릿 다운로드
+          <div class="class-editor-section">
+            <div class="class-editor-title">3) 모둠별 학생 명단 (드래그 배치)</div>
+            <div id="class-group-assign-board" class="class-group-assign-board">
+              <!-- JS에서 동적 생성 -->
+            </div>
+          </div>
+
+          <!-- 레거시 호환용 숨김 필드 -->
+          <textarea id="class-students-input" style="display: none"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="class-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="class-modal-save">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 번호순 일괄 등록 모달 (학생 명렬표) -->
+    <div id="class-bulk-modal" class="modal-overlay">
+      <div class="modal class-bulk-modal">
+        <div class="modal-header">
+          <div class="modal-title">번호순 일괄 등록</div>
+          <button class="modal-close" id="class-bulk-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="class-bulk-modal-toolbar">
+            <button class="btn btn-sm btn-secondary" id="class-bulk-row-add" type="button">
+              + 학생 추가
             </button>
-            <button class="btn btn-sm btn-secondary" id="class-csv-import" style="font-size: var(--font-size-xs);">
-              📂 CSV 가져오기
+            <button class="btn btn-sm btn-secondary" id="class-bulk-row-remove" type="button">
+              − 마지막 학생 삭제
             </button>
           </div>
-          <button class="btn btn-sm btn-primary" id="class-google-sheets-import" style="font-size: var(--font-size-xs);">
-            📊 구글 시트에서 가져오기
-          </button>
-          <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none;">
-        </div>
-
-        <!-- 레거시 호환용 숨김 필드 -->
-        <textarea id="class-students-input" style="display: none;"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="class-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="class-modal-save">저장</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 남는 학생 확인 모달 -->
-  <div id="overflow-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title" style="text-align: center; flex: 1;">남는 학생 안내</div>
-        <button class="modal-close" id="overflow-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <p id="overflow-message" style="color: var(--text-secondary);"></p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="overflow-cancel">취소</button>
-        <button class="btn btn-primary" id="overflow-confirm">확인</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 학생 부족 확인 모달 -->
-  <div id="shortage-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">학생 수 부족</div>
-        <button class="modal-close" id="shortage-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <p id="shortage-message" style="margin-bottom: var(--space-lg); color: var(--text-secondary);"></p>
-      </div>
-      <div class="modal-footer" style="flex-direction: column;">
-        <button class="btn btn-primary" id="shortage-proceed" style="width: 100%;"></button>
-        <button class="btn btn-secondary" id="shortage-alt" style="width: 100%;"></button>
-        <button class="btn btn-secondary" id="shortage-cancel" style="width: 100%;">취소</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 번호순 생성 모달 (술래뽑기) -->
-  <div id="tag-number-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">번호순 카드 생성</div>
-        <button class="modal-close" id="tag-number-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; gap: var(--space-md); align-items: center;">
-          <div style="flex: 1;">
-            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-            <input class="input" type="number" id="tag-number-start" value="1" min="1" max="99"
-              style="margin-top: var(--space-xs);">
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-            <input class="input" type="number" id="tag-number-end" value="20" min="1" max="99"
-              style="margin-top: var(--space-xs);">
+          <div class="class-bulk-table-wrap">
+            <table class="class-bulk-table">
+              <colgroup>
+                <col style="width: 30%" />
+                <col style="width: 50%" />
+                <col style="width: 20%" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>번호</th>
+                  <th>이름</th>
+                  <th>성별</th>
+                </tr>
+              </thead>
+              <tbody id="class-bulk-table-body">
+                <!-- JS에서 동적 생성 -->
+              </tbody>
+            </table>
           </div>
         </div>
-        <div style="font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-md);">
-          💡 시작~끝 번호로 학생 카드를 생성합니다
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="class-bulk-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="class-bulk-modal-apply">적용</button>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="tag-number-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="tag-number-modal-confirm">카드 생성</button>
       </div>
     </div>
-  </div>
 
-  <!-- 성별 구분 모달 (술래뽑기) -->
-  <div id="tag-gender-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">성별 구분 번호 입력</div>
-        <button class="modal-close" id="tag-gender-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="margin-bottom: var(--space-lg);">
-          <div class="setting-label" style="margin-bottom: var(--space-sm); color: var(--color-primary);">👦 남학생</div>
-          <div style="display: flex; gap: var(--space-md); align-items: center;">
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="tag-gender-male-start" value="1" min="1" max="99"
-                style="margin-top: var(--space-xs);">
-            </div>
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="tag-gender-male-end" value="7" min="1" max="99"
-                style="margin-top: var(--space-xs);">
-            </div>
-          </div>
+    <!-- 남는 학생 확인 모달 -->
+    <div id="overflow-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" style="text-align: center; flex: 1">남는 학생 안내</div>
+          <button class="modal-close" id="overflow-modal-close">✕</button>
         </div>
-        <div>
-          <div class="setting-label" style="margin-bottom: var(--space-sm); color: var(--color-danger);">👧 여학생</div>
-          <div style="display: flex; gap: var(--space-md); align-items: center;">
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="tag-gender-female-start" value="41" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+        <div class="modal-body">
+          <p id="overflow-message" style="color: var(--text-secondary)"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="overflow-cancel">취소</button>
+          <button class="btn btn-primary" id="overflow-confirm">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 학생 부족 확인 모달 -->
+    <div id="shortage-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">학생 수 부족</div>
+          <button class="modal-close" id="shortage-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <p
+            id="shortage-message"
+            style="margin-bottom: var(--space-lg); color: var(--text-secondary)"
+          ></p>
+        </div>
+        <div class="modal-footer" style="flex-direction: column">
+          <button class="btn btn-primary" id="shortage-proceed" style="width: 100%"></button>
+          <button class="btn btn-secondary" id="shortage-alt" style="width: 100%"></button>
+          <button class="btn btn-secondary" id="shortage-cancel" style="width: 100%">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 번호순 생성 모달 (술래뽑기) -->
+    <div id="tag-number-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">번호순 카드 생성</div>
+          <button class="modal-close" id="tag-number-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; gap: var(--space-md); align-items: center">
+            <div style="flex: 1">
+              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                >시작 번호</label
+              >
+              <input
+                class="input"
+                type="number"
+                id="tag-number-start"
+                value="1"
+                min="1"
+                max="99"
+                style="margin-top: var(--space-xs)"
+              />
             </div>
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="tag-gender-female-end" value="45" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+            <div style="flex: 1">
+              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                >끝 번호</label
+              >
+              <input
+                class="input"
+                type="number"
+                id="tag-number-end"
+                value="20"
+                min="1"
+                max="99"
+                style="margin-top: var(--space-xs)"
+              />
             </div>
           </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="tag-gender-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="tag-gender-modal-confirm">카드 생성</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 수동 입력 모달 (술래뽑기) -->
-  <div id="manual-input-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title" id="manual-input-title">수동 입력</div>
-        <button class="modal-close" id="manual-input-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <textarea class="input" id="manual-input-text" rows="6"
-          placeholder="학생 이름이나 번호를 쉼표로 구분하여 입력하세요&#10;예: 김철수, 이영희, 박민수 또는 1번, 2번, 3번"></textarea>
-        <div style="font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: var(--space-sm);">
-          💡 쉼표(,) 또는 줄바꿈으로 구분
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="manual-input-cancel">취소</button>
-        <button class="btn btn-primary" id="manual-input-confirm">확인</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 빈 학생 안내 모달 -->
-  <div id="empty-students-modal" class="modal-overlay">
-    <div class="modal modal-alert">
-      <div class="modal-alert-body">
-        <div class="modal-alert-message">
-          선택한 학급에 입력된 학생이 없습니다.
-          <br>
-          학급 관리에서 학생을 추가해주세요!
-        </div>
-        <button class="btn-alert-confirm" id="empty-students-confirm">학급 관리로 이동 →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 번호순 생성 모달 (모둠뽑기) -->
-  <div id="gm-number-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">번호순 카드 생성</div>
-        <button class="modal-close" id="gm-number-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; gap: var(--space-md); align-items: center;">
-          <div style="flex: 1;">
-            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-            <input class="input" type="number" id="gm-number-start" value="1" min="1" max="99"
-              style="margin-top: var(--space-xs);">
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-            <input class="input" type="number" id="gm-number-end" value="20" min="1" max="99"
-              style="margin-top: var(--space-xs);">
+          <div
+            style="
+              font-size: var(--font-size-xs);
+              color: var(--text-tertiary);
+              margin-top: var(--space-md);
+            "
+          >
+            💡 시작~끝 번호로 학생 카드를 생성합니다
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="gm-number-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="gm-number-modal-confirm">카드 생성</button>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="tag-number-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="tag-number-modal-confirm">카드 생성</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 성별 구분 모달 (모둠뽑기) -->
-  <div id="gm-gender-modal" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">성별 구분 번호 입력</div>
-        <button class="modal-close" id="gm-gender-modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="margin-bottom: var(--space-lg);">
-          <div class="setting-label" style="margin-bottom: var(--space-sm); color: var(--color-primary);">👦 남학생</div>
-          <div style="display: flex; gap: var(--space-md); align-items: center;">
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="gm-gender-male-start" value="1" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+    <!-- 성별 구분 모달 (술래뽑기) -->
+    <div id="tag-gender-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">성별 구분 번호 입력</div>
+          <button class="modal-close" id="tag-gender-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: var(--space-lg)">
+            <div
+              class="setting-label"
+              style="margin-bottom: var(--space-sm); color: var(--color-primary)"
+            >
+              👦 남학생
             </div>
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="gm-gender-male-end" value="7" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+            <div style="display: flex; gap: var(--space-md); align-items: center">
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >시작 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="tag-gender-male-start"
+                  value="1"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >끝 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="tag-gender-male-end"
+                  value="7"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div
+              class="setting-label"
+              style="margin-bottom: var(--space-sm); color: var(--color-danger)"
+            >
+              👧 여학생
+            </div>
+            <div style="display: flex; gap: var(--space-md); align-items: center">
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >시작 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="tag-gender-female-start"
+                  value="41"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >끝 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="tag-gender-female-end"
+                  value="45"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
             </div>
           </div>
         </div>
-        <div>
-          <div class="setting-label" style="margin-bottom: var(--space-sm); color: var(--color-danger);">👧 여학생</div>
-          <div style="display: flex; gap: var(--space-md); align-items: center;">
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">시작 번호</label>
-              <input class="input" type="number" id="gm-gender-female-start" value="41" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="tag-gender-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="tag-gender-modal-confirm">카드 생성</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수동 입력 모달 (술래뽑기) -->
+    <div id="manual-input-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="manual-input-title">수동 입력</div>
+          <button class="modal-close" id="manual-input-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <textarea
+            class="input"
+            id="manual-input-text"
+            rows="6"
+            placeholder="학생 이름이나 번호를 쉼표로 구분하여 입력하세요&#10;예: 김철수, 이영희, 박민수 또는 1번, 2번, 3번"
+          ></textarea>
+          <div
+            style="
+              font-size: var(--font-size-xs);
+              color: var(--text-tertiary);
+              margin-top: var(--space-sm);
+            "
+          >
+            💡 쉼표(,) 또는 줄바꿈으로 구분
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="manual-input-cancel">취소</button>
+          <button class="btn btn-primary" id="manual-input-confirm">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 빈 학생 안내 모달 -->
+    <div id="empty-students-modal" class="modal-overlay">
+      <div class="modal modal-alert">
+        <div class="modal-alert-body">
+          <div class="modal-alert-message">
+            선택한 학급에 입력된 학생이 없습니다.
+            <br />
+            학급 관리에서 학생을 추가해주세요!
+          </div>
+          <button class="btn-alert-confirm" id="empty-students-confirm">학급 관리로 이동 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 번호순 생성 모달 (모둠뽑기) -->
+    <div id="gm-number-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">번호순 카드 생성</div>
+          <button class="modal-close" id="gm-number-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; gap: var(--space-md); align-items: center">
+            <div style="flex: 1">
+              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                >시작 번호</label
+              >
+              <input
+                class="input"
+                type="number"
+                id="gm-number-start"
+                value="1"
+                min="1"
+                max="99"
+                style="margin-top: var(--space-xs)"
+              />
             </div>
-            <div style="flex: 1;">
-              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary);">끝 번호</label>
-              <input class="input" type="number" id="gm-gender-female-end" value="45" min="1" max="99"
-                style="margin-top: var(--space-xs);">
+            <div style="flex: 1">
+              <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                >끝 번호</label
+              >
+              <input
+                class="input"
+                type="number"
+                id="gm-number-end"
+                value="20"
+                min="1"
+                max="99"
+                style="margin-top: var(--space-xs)"
+              />
             </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="gm-gender-modal-cancel">취소</button>
-        <button class="btn btn-primary" id="gm-gender-modal-confirm">카드 생성</button>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="gm-number-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="gm-number-modal-confirm">카드 생성</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Scripts -->
-  <!-- Type Definitions -->
-  <script src="js/types.js"></script>
-  <!-- Storage Layer -->
-  <script src="js/storage/base-repo.js"></script>
-  <script src="js/storage/settings-repo.js"></script>
-  <script src="js/storage/class-repo.js"></script>
-  <script src="js/storage/tag-game-repo.js"></script>
-  <script src="js/storage/group-manager-repo.js"></script>
-  <script src="js/storage/teacher-repo.js"></script>
-  <script src="js/shared/store.js"></script>
-  <!-- Core Logic -->
-  <script src="js/core/tag-picker.js"></script>
-  <script src="js/core/group-picker.js"></script>
-  <!-- UI & Utils -->
-  <script src="js/shared/sound.js"></script>
-  <script src="js/shared/ui-utils.js"></script>
-  <script src="js/shared/timer.js"></script>
-  <script src="js/shared/ios-utils.js"></script>
-  <script src="js/shared/class-manager.js"></script>
-  <script src="js/tag-game/tag-game.js"></script>
-  <script src="js/tag-game/tag-game-ui.js"></script>
-  <script src="js/group-manager/group-manager.js"></script>
-  <script src="js/group-manager/group-manager-ui.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <script src="js/firestore-sync.js"></script>
-  <script src="js/auth-manager.js"></script>
-  <script src="js/wizard.js"></script>
-  <script src="js/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => { });
-    }
-  </script>
-</body>
+    <!-- 성별 구분 모달 (모둠뽑기) -->
+    <div id="gm-gender-modal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">성별 구분 번호 입력</div>
+          <button class="modal-close" id="gm-gender-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: var(--space-lg)">
+            <div
+              class="setting-label"
+              style="margin-bottom: var(--space-sm); color: var(--color-primary)"
+            >
+              👦 남학생
+            </div>
+            <div style="display: flex; gap: var(--space-md); align-items: center">
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >시작 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="gm-gender-male-start"
+                  value="1"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >끝 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="gm-gender-male-end"
+                  value="7"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div
+              class="setting-label"
+              style="margin-bottom: var(--space-sm); color: var(--color-danger)"
+            >
+              👧 여학생
+            </div>
+            <div style="display: flex; gap: var(--space-md); align-items: center">
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >시작 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="gm-gender-female-start"
+                  value="41"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+              <div style="flex: 1">
+                <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+                  >끝 번호</label
+                >
+                <input
+                  class="input"
+                  type="number"
+                  id="gm-gender-female-end"
+                  value="45"
+                  min="1"
+                  max="99"
+                  style="margin-top: var(--space-xs)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="gm-gender-modal-cancel">취소</button>
+          <button class="btn btn-primary" id="gm-gender-modal-confirm">카드 생성</button>
+        </div>
+      </div>
+    </div>
 
+    <!-- Scripts -->
+    <!-- Type Definitions -->
+    <script src="js/types.js"></script>
+    <!-- Storage Layer -->
+    <script src="js/storage/base-repo.js"></script>
+    <script src="js/storage/settings-repo.js"></script>
+    <script src="js/storage/class-repo.js"></script>
+    <script src="js/storage/tag-game-repo.js"></script>
+    <script src="js/storage/group-manager-repo.js"></script>
+    <script src="js/storage/teacher-repo.js"></script>
+    <script src="js/shared/store.js"></script>
+    <!-- Core Logic -->
+    <script src="js/core/tag-picker.js"></script>
+    <script src="js/core/group-picker.js"></script>
+    <!-- UI & Utils -->
+    <script src="js/shared/sound.js"></script>
+    <script src="js/shared/ui-utils.js"></script>
+    <script src="js/shared/timer.js"></script>
+    <script src="js/shared/ios-utils.js"></script>
+    <script src="js/shared/class-manager.js"></script>
+    <script src="js/tag-game/tag-game.js"></script>
+    <script src="js/tag-game/tag-game-ui.js"></script>
+    <script src="js/group-manager/group-manager.js"></script>
+    <script src="js/group-manager/group-manager-ui.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firestore-sync.js"></script>
+    <script src="js/auth-manager.js"></script>
+    <script src="js/wizard.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/shared/sw-boot.js"></script>
+  </body>
 </html>

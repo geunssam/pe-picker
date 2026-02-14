@@ -7,16 +7,16 @@ const WizardManager = (() => {
   let currentStep = 1;
   let wizardData = {
     schoolLevel: null,
-    selectedGrades: [],   // 복수 선택
-    classCount: {},       // { 3: 3, 4: 2 }
-    studentCounts: {},    // { "3-1": 20, "3-2": 20, ... }
-    teacherName: ''
+    selectedGrades: [], // 복수 선택
+    classCount: {}, // { 3: 3, 4: 2 }
+    studentCounts: {}, // { "3-1": 20, "3-2": 20, ... }
+    teacherName: '',
   };
 
   const SCHOOL_LEVELS = {
     elementary: { label: '초등학교', grades: [1, 2, 3, 4, 5, 6] },
     middle: { label: '중학교', grades: [1, 2, 3] },
-    high: { label: '고등학교', grades: [1, 2, 3] }
+    high: { label: '고등학교', grades: [1, 2, 3] },
   };
 
   function init() {
@@ -64,11 +64,15 @@ const WizardManager = (() => {
     const container = document.getElementById('wizard-grade-options');
     const schoolInfo = SCHOOL_LEVELS[wizardData.schoolLevel];
 
-    container.innerHTML = schoolInfo.grades.map(grade => `
+    container.innerHTML = schoolInfo.grades
+      .map(
+        grade => `
       <button class="wizard-option-btn wizard-option-btn-compact" data-grade="${grade}">
         <span class="wizard-option-label">${grade}학년</span>
       </button>
-    `).join('');
+    `
+      )
+      .join('');
 
     const gradeButtons = container.querySelectorAll('.wizard-option-btn');
     gradeButtons.forEach(btn => {
@@ -115,7 +119,9 @@ const WizardManager = (() => {
       }
     });
 
-    container.innerHTML = wizardData.selectedGrades.map(grade => `
+    container.innerHTML = wizardData.selectedGrades
+      .map(
+        grade => `
       <div class="wizard-list-item">
         <span class="wizard-list-label">${grade}학년</span>
         <div class="wizard-counter">
@@ -133,7 +139,9 @@ const WizardManager = (() => {
           </button>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     // 이벤트 바인딩
     container.querySelectorAll('.wizard-counter-btn').forEach(btn => {
@@ -167,16 +175,18 @@ const WizardManager = (() => {
       for (let i = 1; i <= count; i++) {
         const key = `${grade}-${i}`;
         if (!wizardData.studentCounts[key]) {
-          wizardData.studentCounts[key] = 20;  // 20명으로 변경
+          wizardData.studentCounts[key] = 20; // 20명으로 변경
         }
       }
     });
 
-    container.innerHTML = wizardData.selectedGrades.map(grade => {
-      const count = wizardData.classCount[grade];
-      const classItems = Array.from({ length: count }, (_, i) => i + 1).map(classNum => {
-        const key = `${grade}-${classNum}`;
-        return `
+    container.innerHTML = wizardData.selectedGrades
+      .map(grade => {
+        const count = wizardData.classCount[grade];
+        const classItems = Array.from({ length: count }, (_, i) => i + 1)
+          .map(classNum => {
+            const key = `${grade}-${classNum}`;
+            return `
           <div class="wizard-list-item wizard-list-item-sm">
             <span class="wizard-list-label-sm">${classNum}반</span>
             <div class="wizard-counter wizard-counter-sm">
@@ -195,9 +205,10 @@ const WizardManager = (() => {
             </div>
           </div>
         `;
-      }).join('');
+          })
+          .join('');
 
-      return `
+        return `
         <div class="wizard-grade-group">
           <h3 class="wizard-grade-group-title">${grade}학년</h3>
           <div class="wizard-grade-group-content">
@@ -205,7 +216,8 @@ const WizardManager = (() => {
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
 
     // 이벤트 바인딩
     container.querySelectorAll('.wizard-counter-btn').forEach(btn => {
@@ -246,6 +258,8 @@ const WizardManager = (() => {
     // 로딩 표시
     const loadingEl = document.getElementById('wizard-loading');
     const loadingText = document.getElementById('wizard-loading-text');
+    const completeBtn = document.getElementById('wizard-step5-complete');
+    if (completeBtn) completeBtn.disabled = true;
     loadingEl.style.display = 'flex';
 
     // 학급 수 계산
@@ -260,7 +274,7 @@ const WizardManager = (() => {
     Store.saveTeacherProfile({
       schoolLevel: wizardData.schoolLevel,
       grades: wizardData.selectedGrades,
-      teacherName: wizardData.teacherName || '체육 선생님'
+      teacherName: wizardData.teacherName || '체육 선생님',
     });
 
     // 모든 학급 생성 (localStorage)
@@ -280,7 +294,7 @@ const WizardManager = (() => {
           gender: '',
           sportsAbility: '',
           tags: [],
-          note: ''
+          note: '',
         }));
 
         const newClass = Store.addClass(className, students);
@@ -293,7 +307,7 @@ const WizardManager = (() => {
     // 온보딩 완료 플래그 설정 (Google 모드가 아니어도 설정)
     Store.saveTeacherProfile({
       ...Store.getTeacherProfile(),
-      isOnboarded: true
+      isOnboarded: true,
     });
     console.log('✅ localStorage 온보딩 완료 플래그 설정');
 
@@ -304,7 +318,7 @@ const WizardManager = (() => {
       userExists: !!user,
       uid: user?.uid,
       mode: user?.mode,
-      displayName: user?.displayName
+      displayName: user?.displayName,
     });
 
     if (user && user.mode === 'google') {
@@ -316,12 +330,13 @@ const WizardManager = (() => {
       if (!success) {
         const shouldContinue = confirm(
           '⚠️ 클라우드 저장에 실패했습니다.\n\n' +
-          '로컬에는 저장되었지만, 다른 기기에서는 접근할 수 없습니다.\n\n' +
-          '계속 진행하시겠습니까? (취소하면 다시 시도)'
+            '로컬에는 저장되었지만, 다른 기기에서는 접근할 수 없습니다.\n\n' +
+            '계속 진행하시겠습니까? (취소하면 다시 시도)'
         );
 
         if (!shouldContinue) {
           loadingEl.style.display = 'none';
+          if (completeBtn) completeBtn.disabled = false;
           return; // 완료 중단
         }
       }
@@ -329,21 +344,28 @@ const WizardManager = (() => {
       console.warn('⚠️ Firestore 저장 건너뜀 (로컬 모드 또는 사용자 없음):', {
         userExists: !!user,
         mode: user?.mode,
-        authManagerDefined: typeof AuthManager !== 'undefined'
+        authManagerDefined: typeof AuthManager !== 'undefined',
       });
     }
 
     console.log('🚀 학급 선택 화면으로 이동');
 
+    // 온보딩 완료 직후 실시간 동기화가 비활성 상태라면 시작
+    if (
+      user &&
+      user.mode === 'google' &&
+      typeof FirestoreSync !== 'undefined' &&
+      !FirestoreSync.isEnabled()
+    ) {
+      FirestoreSync.start(user.uid);
+    }
+
     // UX를 위한 약간의 지연
     setTimeout(() => {
-      if (typeof App !== 'undefined') {
-        // SPA 모드: 라우트 이동
-        App.navigateTo('class-selector');
-      } else {
-        // 독립 페이지 모드: 페이지 이동 (fallback)
-        window.location.href = 'index.html';
-      }
+      loadingEl.style.display = 'none';
+      // 온보딩 조기 return 경로에서는 앱 이벤트/모듈 초기화가 생략될 수 있어
+      // class-selector로 전체 재초기화 진입
+      window.location.href = 'index.html#class-selector';
     }, 1000);
   }
 
@@ -355,7 +377,10 @@ const WizardManager = (() => {
         await saveToFirestore(uid, createdClasses);
 
         // 저장 검증
-        const verified = await verifyFirestoreSave(uid, createdClasses.map(c => c.classId));
+        const verified = await verifyFirestoreSave(
+          uid,
+          createdClasses.map(c => c.classId)
+        );
         if (verified) {
           return true; // 성공
         } else {
@@ -382,7 +407,7 @@ const WizardManager = (() => {
       console.log('🔥 Firestore 저장 시작:', {
         uid,
         classCount: createdClasses.length,
-        classes: createdClasses.map(c => c.className)
+        classes: createdClasses.map(c => c.className),
       });
 
       const db = typeof FirebaseConfig !== 'undefined' ? FirebaseConfig.getFirestore() : null;
@@ -400,20 +425,29 @@ const WizardManager = (() => {
       console.log('📝 users 문서 업데이트:', {
         uid,
         isOnboarded: true,
-        selectedClassId: createdClasses[0]?.classId
+        selectedClassId: createdClasses[0]?.classId,
       });
 
-      batch.set(userRef, {
-        displayName: wizardData.teacherName || AuthManager.getCurrentUser().displayName,
-        schoolLevel: wizardData.schoolLevel,
-        selectedClassId: createdClasses.length > 0 ? createdClasses[0].classId : null,
-        isOnboarded: true,  // ✅ 온보딩 완료 플래그 추가
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      batch.set(
+        userRef,
+        {
+          displayName: wizardData.teacherName || AuthManager.getCurrentUser().displayName,
+          schoolLevel: wizardData.schoolLevel,
+          selectedClassId: createdClasses.length > 0 ? createdClasses[0].classId : null,
+          isOnboarded: true, // ✅ 온보딩 완료 플래그 추가
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
 
       // 각 학급 및 학생 생성
       createdClasses.forEach(({ classId, className, students, grade }) => {
         console.log(`📚 학급 생성: ${className} (${students.length}명)`);
+
+        // 이름이 비어있는 학생은 Firestore에 저장하지 않음
+        const validStudents = students.filter(
+          student => student.name && student.name.trim() !== ''
+        );
 
         // 학급 문서 생성
         const classRef = db.collection('users').doc(uid).collection('classes').doc(classId);
@@ -421,20 +455,24 @@ const WizardManager = (() => {
           name: className,
           year: new Date().getFullYear(),
           grade: grade.toString(),
-          studentCount: students.length,
+          studentCount: validStudents.length,
           groupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑'],
           groups: [],
           groupCount: 6,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
         // 학생 서브컬렉션 생성
-        students.forEach((student, index) => {
+        validStudents.forEach((student, index) => {
           const studentId = `student-${Date.now()}-${classId}-${index}`;
-          const studentRef = db.collection('users').doc(uid)
-            .collection('classes').doc(classId)
-            .collection('students').doc(studentId);
+          const studentRef = db
+            .collection('users')
+            .doc(uid)
+            .collection('classes')
+            .doc(classId)
+            .collection('students')
+            .doc(studentId);
 
           batch.set(studentRef, {
             name: student.name || '',
@@ -444,7 +482,7 @@ const WizardManager = (() => {
             tags: student.tags || [],
             note: student.note || '',
             groupIndex: -1,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
         });
       });
@@ -456,13 +494,9 @@ const WizardManager = (() => {
         setTimeout(() => reject(new Error('TIMEOUT')), 30000);
       });
 
-      await Promise.race([
-        batch.commit(),
-        timeoutPromise
-      ]);
+      await Promise.race([batch.commit(), timeoutPromise]);
 
       console.log(`✅ Firestore 저장 완료! ${createdClasses.length}개 학급`);
-
     } catch (error) {
       if (error.message === 'TIMEOUT') {
         console.error('⏱ Firestore 저장 타임아웃 (30초)');
@@ -470,7 +504,7 @@ const WizardManager = (() => {
         console.error('❌ Firestore 저장 실패:', {
           error: error.message,
           code: error.code,
-          stack: error.stack
+          stack: error.stack,
         });
       }
       throw error; // 에러를 다시 throw하여 재시도 로직에서 처리
@@ -497,15 +531,37 @@ const WizardManager = (() => {
       }
       console.log('✅ users 문서 isOnboarded: true 확인');
 
+      const uniqueClassIds = Array.from(new Set(classIds));
+
+      // classId 중복은 저장 로직 결함 신호이므로 검증 실패 처리
+      if (uniqueClassIds.length !== classIds.length) {
+        console.error('❌ 검증 실패: classId 중복 감지', { classIds, uniqueClassIds });
+        return false;
+      }
+
       // 2. 학급 문서 확인
-      for (const classId of classIds) {
-        const classDoc = await db.collection('users').doc(uid)
-          .collection('classes').doc(classId).get();
+      for (const classId of uniqueClassIds) {
+        const classDoc = await db
+          .collection('users')
+          .doc(uid)
+          .collection('classes')
+          .doc(classId)
+          .get();
 
         if (!classDoc.exists) {
           console.error(`❌ 검증 실패: 학급 ${classId} 미존재`);
           return false;
         }
+      }
+
+      // 3. classes 컬렉션 개수 확인 (최소 uniqueClassIds 수 이상)
+      const classesSnapshot = await db.collection('users').doc(uid).collection('classes').get();
+      if (classesSnapshot.size < uniqueClassIds.length) {
+        console.error('❌ 검증 실패: classes 컬렉션 문서 수 부족', {
+          expectedAtLeast: uniqueClassIds.length,
+          actual: classesSnapshot.size,
+        });
+        return false;
       }
 
       console.log('✅ Firestore 저장 검증 완료 (users + classes)');
@@ -528,7 +584,7 @@ const WizardManager = (() => {
     currentStep = step;
     document.getElementById('wizard-current-step').textContent = step;
     const progressFill = document.getElementById('wizard-progress-fill');
-    progressFill.style.width = `${(step / 5) * 100}%`;  // 5단계로 변경
+    progressFill.style.width = `${(step / 5) * 100}%`; // 5단계로 변경
   }
 
   return { init };

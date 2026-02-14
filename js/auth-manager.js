@@ -43,16 +43,14 @@ const AuthManager = (() => {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        mode: 'google'
+        mode: 'google',
       };
       localStorage.setItem('current-user', JSON.stringify(currentUser));
       localStorage.setItem('auth-mode', 'google');
       updateNavigation();
 
-      // Firestore 사용자 문서 확인 (로그인 페이지가 아닌 경우만)
-      if (!window.location.pathname.includes('login.html')) {
-        await checkFirestoreUser(user);
-      }
+      // Firestore 사용자 문서 확인 (모든 페이지에서 실행)
+      await checkFirestoreUser(user);
     } else {
       // 로그아웃됨
       if (authMode === 'google') {
@@ -84,7 +82,7 @@ const AuthManager = (() => {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        mode: 'google'
+        mode: 'google',
       };
 
       authMode = 'google';
@@ -182,7 +180,9 @@ const AuthManager = (() => {
         console.warn('⚠️ Firestore가 초기화되지 않았습니다. wizard로 이동합니다.');
         // Firestore 실패해도 wizard로 이동
         if (window.location.pathname.includes('login.html')) {
-          window.location.href = 'wizard.html';
+          window.location.href = 'index.html#wizard';
+        } else {
+          window.location.hash = '#wizard';
         }
         return;
       }
@@ -191,15 +191,25 @@ const AuthManager = (() => {
 
       const userRef = db.collection('users').doc(user.uid);
 
-      // 타임아웃 추가 (10초)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('TIMEOUT')), 10000);
-      });
+      // 타임아웃 헬퍼 (10초)
+      const withTimeout = (promise, ms = 10000) =>
+        Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms)),
+        ]);
 
-      const userDoc = await Promise.race([
-        userRef.get(),
-        timeoutPromise
-      ]);
+      // 온보딩 플래그는 서버 우선으로 조회 (캐시 stale 방지), 실패 시 캐시 fallback
+      let userDoc;
+      try {
+        userDoc = await withTimeout(userRef.get({ source: 'server' }));
+      } catch (serverError) {
+        if (serverError.message === 'TIMEOUT') throw serverError;
+        console.warn(
+          '⚠️ users 문서 서버 조회 실패, 캐시로 재시도:',
+          serverError.code || serverError.message
+        );
+        userDoc = await withTimeout(userRef.get());
+      }
 
       if (!userDoc.exists) {
         console.log('📝 신규 사용자 - 문서 생성 중...');
@@ -210,17 +220,17 @@ const AuthManager = (() => {
           displayName: user.displayName || '',
           photoURL: user.photoURL || '',
           selectedClassId: null,
-          isOnboarded: false,  // ✅ 온보딩 미완료 상태로 시작
+          isOnboarded: false, // ✅ 온보딩 미완료 상태로 시작
           settings: {
             cookieMode: 'session',
             timerMode: 'global',
             defaultTime: 300,
             timerAlert: 'soundAndVisual',
             animationEnabled: true,
-            defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑']
+            defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑'],
           },
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
         console.log('✅ 신규 사용자 문서 생성 완료 → wizard로 이동');
@@ -228,23 +238,41 @@ const AuthManager = (() => {
         // 온보딩 페이지로 이동 (login.html에서만)
         if (window.location.pathname.includes('login.html')) {
           window.location.href = 'index.html#wizard';
+          return;
         }
+
+        console.log('📍 index.html에서 신규 사용자 생성 완료 (app.js에서 wizard 처리)');
       } else {
-        // 기존 사용자 → 문서가 있다는 것은 이미 온보딩을 거쳤다는 의미
+        // 기존 사용자
         const userData = userDoc.data();
 
-        // isOnboarded 플래그가 없는 기존 사용자는 자동으로 true 설정
-        if (userData.isOnboarded !== true) {
-          console.log('🔧 기존 사용자 isOnboarded 플래그 자동 설정');
+        // 1. isOnboarded === false → wizard로 이동
+        if (userData.isOnboarded === false) {
+          console.log('📝 기존 문서 존재하지만 온보딩 미완료 → wizard로 이동');
+
+          // login.html에서는 index.html#wizard로 리다이렉션
+          if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'index.html#wizard';
+            return;
+          }
+
+          // index.html에서는 app.js의 continueInit()에서 처리하도록 위임
+          // (여기서는 아무것도 하지 않음)
+          return;
+        }
+
+        // 2. isOnboarded === undefined → 레거시 사용자 (classes가 이미 있다고 가정)
+        if (userData.isOnboarded === undefined) {
+          console.log('🔧 레거시 사용자 isOnboarded 플래그 자동 설정 (classes 존재 가정)');
           await userRef.update({
             isOnboarded: true,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
         }
 
+        // 3. isOnboarded === true → 정상 진행
         console.log('✅ 기존 사용자 확인 완료 → index.html로 이동');
 
-        // 기존 사용자 → index.html로 이동
         if (window.location.pathname.includes('login.html')) {
           window.location.href = 'index.html';
         }
@@ -255,7 +283,9 @@ const AuthManager = (() => {
       // 타임아웃 또는 연결 실패 시 wizard로 이동
       if (error.message === 'TIMEOUT') {
         console.warn('⏱ Firestore 연결 타임아웃 (10초) - wizard로 이동');
-        alert('서버 연결이 느립니다. 로컬 모드로 진행합니다.\n온보딩을 완료하면 다음부터는 정상 작동합니다.');
+        alert(
+          '서버 연결이 느립니다. 로컬 모드로 진행합니다.\n온보딩을 완료하면 다음부터는 정상 작동합니다.'
+        );
       } else {
         alert('클라우드 연결에 실패했습니다. 로컬 모드로 진행합니다.');
       }
@@ -275,6 +305,6 @@ const AuthManager = (() => {
     getCurrentUser,
     getAuthMode,
     updateNavigation,
-    checkFirestoreUser
+    checkFirestoreUser,
   };
 })();

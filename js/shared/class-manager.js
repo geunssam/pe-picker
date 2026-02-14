@@ -1,15 +1,842 @@
 /* ============================================
    PE Picker - Class Manager (학급/학생 관리)
    두 기능(술래뽑기, 모둠뽑기)에서 공유
-   v2: 랜딩 페이지 + 동적 모둠 수(2~8)
+   v3: 학생 카드 + 모둠 드래그 편집
    ============================================ */
 
 const ClassManager = (() => {
   let editingClassId = null;
   let onSaveCallback = null;
+  let initialized = false;
 
+  // 모달 편집 상태
+  let modalStudents = []; // [{id,name,number,gender,sportsAbility,tags,note}]
+  let modalUnassigned = []; // [studentId]
+  let modalGroups = []; // [[studentId,...], ...]
+  let modalGroupNames = []; // [name,...]
+  let draggedStudentId = null;
+  let bulkModalRows = []; // [{number,name,gender}]
+
+  function escapeAttr(value) {
+    return `${value ?? ''}`
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function sanitizeGender(value) {
+    if (value === 'male' || value === '남' || value === '남자') return 'male';
+    if (value === 'female' || value === '여' || value === '여자') return 'female';
+    return '';
+  }
+
+  function getGoogleSyncContext() {
+    const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
+    if (!user || user.mode !== 'google' || !user.uid) return null;
+
+    const db = typeof FirebaseConfig !== 'undefined' ? FirebaseConfig.getFirestore() : null;
+    if (!db) return null;
+
+    return { user, db };
+  }
+
+  function normalizeStudentName(student) {
+    if (typeof student === 'string') return student.trim();
+    if (student && typeof student.name === 'string') return student.name.trim();
+    return '';
+  }
+
+  function normalizeGroupMembers(groups) {
+    if (!Array.isArray(groups)) return [];
+    return groups.map(group =>
+      Array.isArray(group) ? group.map(member => normalizeStudentName(member)).filter(Boolean) : []
+    );
+  }
+
+  function encodeGroupsForFirestore(groups) {
+    const encoded = {};
+    if (!Array.isArray(groups)) return encoded;
+
+    groups.forEach((members, idx) => {
+      const key = `g${idx}`;
+      encoded[key] = Array.isArray(members) ? members.filter(Boolean) : [];
+    });
+
+    return encoded;
+  }
+
+  function extractGradeFromClassName(className) {
+    const matched = className.match(/(\d+)/);
+    return matched ? matched[1] : '';
+  }
+
+  function sortStudentsByNumber(a, b) {
+    const numA = parseInt(a.number, 10);
+    const numB = parseInt(b.number, 10);
+    const safeA = Number.isFinite(numA) && numA > 0 ? numA : Number.MAX_SAFE_INTEGER;
+    const safeB = Number.isFinite(numB) && numB > 0 ? numB : Number.MAX_SAFE_INTEGER;
+    if (safeA !== safeB) return safeA - safeB;
+    return (a.name || '').localeCompare(b.name || '', 'ko');
+  }
+
+  function createModalStudent(rawStudent = {}, fallbackNumber = 0) {
+    const hasObject = rawStudent && typeof rawStudent === 'object';
+    const name = normalizeStudentName(rawStudent);
+    const numberCandidate = hasObject ? parseInt(rawStudent.number, 10) : NaN;
+
+    return {
+      id: hasObject && rawStudent.id ? `${rawStudent.id}` : `student-${BaseRepo.generateId()}`,
+      name,
+      number:
+        Number.isFinite(numberCandidate) && numberCandidate > 0 ? numberCandidate : fallbackNumber,
+      gender: hasObject ? sanitizeGender(rawStudent.gender) : '',
+      sportsAbility:
+        hasObject && typeof rawStudent.sportsAbility === 'string' ? rawStudent.sportsAbility : '',
+      tags: hasObject && Array.isArray(rawStudent.tags) ? rawStudent.tags : [],
+      note: hasObject && typeof rawStudent.note === 'string' ? rawStudent.note : '',
+    };
+  }
+
+  function getStudentById(studentId) {
+    return modalStudents.find(student => student.id === studentId) || null;
+  }
+
+  function removeStudentFromAllZones(studentId) {
+    modalUnassigned = modalUnassigned.filter(id => id !== studentId);
+    modalGroups = modalGroups.map(group => group.filter(id => id !== studentId));
+  }
+
+  function sanitizeModalZones() {
+    const existingIds = new Set(modalStudents.map(student => student.id));
+    const used = new Set();
+
+    modalGroups = modalGroups.map(group => {
+      const next = [];
+      group.forEach(studentId => {
+        if (!existingIds.has(studentId)) return;
+        if (used.has(studentId)) return;
+        used.add(studentId);
+        next.push(studentId);
+      });
+      return next;
+    });
+
+    const nextUnassigned = [];
+    modalUnassigned.forEach(studentId => {
+      if (!existingIds.has(studentId)) return;
+      if (used.has(studentId)) return;
+      used.add(studentId);
+      nextUnassigned.push(studentId);
+    });
+
+    modalStudents.forEach(student => {
+      if (used.has(student.id)) return;
+      used.add(student.id);
+      nextUnassigned.push(student.id);
+    });
+
+    modalUnassigned = nextUnassigned;
+  }
+
+  function ensureModalGroupCount(groupCount) {
+    const count = Math.max(2, Math.min(8, parseInt(groupCount, 10) || 6));
+    const defaultNames = Store.getDefaultGroupNames();
+
+    if (modalGroups.length > count) {
+      const removedGroups = modalGroups.slice(count);
+      const movedToUnassigned = removedGroups.flat();
+      modalGroups = modalGroups.slice(0, count);
+      modalUnassigned = [...modalUnassigned, ...movedToUnassigned];
+    } else {
+      while (modalGroups.length < count) {
+        modalGroups.push([]);
+      }
+    }
+
+    if (modalGroupNames.length > count) {
+      modalGroupNames = modalGroupNames.slice(0, count);
+    } else {
+      while (modalGroupNames.length < count) {
+        const idx = modalGroupNames.length;
+        modalGroupNames.push(defaultNames[idx] || `${idx + 1}모둠`);
+      }
+    }
+
+    sanitizeModalZones();
+    return count;
+  }
+
+  function initializeModalState(cls, groupCount) {
+    modalStudents = [];
+    modalUnassigned = [];
+    modalGroups = [];
+    modalGroupNames = [];
+
+    const count = ensureModalGroupCount(groupCount);
+    const defaultNames = Store.getDefaultGroupNames();
+
+    for (let i = 0; i < count; i++) {
+      modalGroupNames[i] = (cls?.groupNames?.[i] || defaultNames[i] || `${i + 1}모둠`).trim();
+    }
+
+    if (!cls) return;
+
+    const sourceStudents = Array.isArray(cls.students) ? cls.students : [];
+
+    if (sourceStudents.length > 0) {
+      modalStudents = sourceStudents.map((student, idx) => createModalStudent(student, idx + 1));
+    } else if (Array.isArray(cls.groups)) {
+      const flattened = [];
+      cls.groups.forEach(group => {
+        if (!Array.isArray(group)) return;
+        group.forEach(member => {
+          const name = normalizeStudentName(member);
+          if (!name) return;
+          flattened.push({ name });
+        });
+      });
+      modalStudents = flattened.map((student, idx) => createModalStudent(student, idx + 1));
+    }
+
+    if (modalStudents.length === 0) return;
+
+    modalStudents.sort(sortStudentsByNumber);
+    modalStudents.forEach((student, idx) => {
+      if (!student.number || student.number < 1) student.number = idx + 1;
+    });
+
+    const usedIds = new Set();
+
+    if (Array.isArray(cls.groups) && cls.groups.length > 0) {
+      for (let groupIdx = 0; groupIdx < count; groupIdx++) {
+        const groupMembers = Array.isArray(cls.groups[groupIdx]) ? cls.groups[groupIdx] : [];
+
+        groupMembers.forEach(member => {
+          const memberName = normalizeStudentName(member);
+          if (!memberName) return;
+
+          const matched = modalStudents.find(
+            student => !usedIds.has(student.id) && student.name === memberName
+          );
+          if (matched) {
+            modalGroups[groupIdx].push(matched.id);
+            usedIds.add(matched.id);
+            return;
+          }
+
+          // 기존 groups에는 있지만 students에 누락된 경우 보정
+          const fallback = createModalStudent({ name: memberName }, modalStudents.length + 1);
+          modalStudents.push(fallback);
+          modalGroups[groupIdx].push(fallback.id);
+          usedIds.add(fallback.id);
+        });
+      }
+    }
+
+    modalStudents.forEach(student => {
+      if (usedIds.has(student.id)) return;
+      modalUnassigned.push(student.id);
+    });
+
+    sanitizeModalZones();
+  }
+
+  function buildBulkModalRowsFromStudents() {
+    const sortedStudents = [...modalStudents].sort(sortStudentsByNumber);
+    const targetCount = sortedStudents.length > 0 ? sortedStudents.length : 20;
+
+    const rows = [];
+    for (let i = 0; i < targetCount; i++) {
+      const student = sortedStudents[i];
+      rows.push({
+        number: i + 1,
+        name: student?.name || '',
+        gender: sanitizeGender(student?.gender),
+      });
+    }
+
+    return rows;
+  }
+
+  function renderBulkModalRows() {
+    const bodyEl = document.getElementById('class-bulk-table-body');
+    if (!bodyEl) return;
+
+    bodyEl.innerHTML = bulkModalRows
+      .map(
+        (row, idx) => `
+      <tr>
+        <td><span class="class-bulk-index">${idx + 1}</span></td>
+        <td>
+          <input
+            type="text"
+            class="class-bulk-name-input"
+            data-row-index="${idx}"
+            value="${escapeAttr(row.name || '')}"
+            maxlength="20"
+            placeholder="학생 이름"
+          >
+        </td>
+        <td>
+          <select class="class-bulk-gender-select" data-row-index="${idx}">
+            <option value="" ${!row.gender ? 'selected' : ''}>-</option>
+            <option value="male" ${row.gender === 'male' ? 'selected' : ''}>남</option>
+            <option value="female" ${row.gender === 'female' ? 'selected' : ''}>여</option>
+          </select>
+        </td>
+      </tr>
+    `
+      )
+      .join('');
+  }
+
+  function openBulkRegistrationModal() {
+    bulkModalRows = buildBulkModalRowsFromStudents();
+    renderBulkModalRows();
+    UI.showModal('class-bulk-modal');
+  }
+
+  function closeBulkRegistrationModal() {
+    UI.hideModal('class-bulk-modal');
+    bulkModalRows = [];
+  }
+
+  function addBulkModalRow() {
+    bulkModalRows.push({
+      number: bulkModalRows.length + 1,
+      name: '',
+      gender: '',
+    });
+    renderBulkModalRows();
+  }
+
+  function removeBulkModalRow() {
+    if (bulkModalRows.length <= 1) {
+      UI.showToast('최소 1명의 학생은 유지해야 합니다', 'info');
+      return;
+    }
+    bulkModalRows.pop();
+    renderBulkModalRows();
+  }
+
+  function applyBulkRegistrationModal() {
+    const bodyEl = document.getElementById('class-bulk-table-body');
+    if (!bodyEl) return;
+
+    const rows = Array.from(bodyEl.querySelectorAll('tr')).map((rowEl, idx) => {
+      const name = rowEl.querySelector('.class-bulk-name-input')?.value?.trim() || '';
+      const gender = sanitizeGender(rowEl.querySelector('.class-bulk-gender-select')?.value || '');
+      return {
+        number: idx + 1,
+        name,
+        gender,
+      };
+    });
+
+    const count = applyImportedStudents(rows);
+    if (count <= 0) return;
+
+    closeBulkRegistrationModal();
+    UI.showToast(`${count}명의 학생 명렬표를 적용했습니다`, 'success');
+  }
+
+  function handleBulkModalInput(event) {
+    const target = event.target;
+    if (!target) return;
+
+    const rowIndex = parseInt(target.dataset.rowIndex, 10);
+    if (!Number.isFinite(rowIndex) || !bulkModalRows[rowIndex]) return;
+
+    if (target.classList.contains('class-bulk-name-input')) {
+      bulkModalRows[rowIndex].name = target.value;
+      return;
+    }
+
+    if (target.classList.contains('class-bulk-gender-select')) {
+      bulkModalRows[rowIndex].gender = sanitizeGender(target.value);
+    }
+  }
+
+  function applyImportedStudents(importedRows) {
+    const nextStudents = importedRows
+      .map((row, idx) => {
+        const normalized =
+          typeof row === 'string' ? { name: row, number: idx + 1, gender: '' } : row;
+        const student = createModalStudent(normalized, idx + 1);
+        if (!student.name) return null;
+        return student;
+      })
+      .filter(Boolean)
+      .sort(sortStudentsByNumber)
+      .map((student, idx) => ({ ...student, number: idx + 1 }));
+
+    if (nextStudents.length === 0) {
+      UI.showToast('학생을 찾을 수 없습니다', 'error');
+      return 0;
+    }
+
+    modalStudents = nextStudents;
+    modalUnassigned = modalStudents.map(student => student.id);
+
+    const groupCountInput = document.getElementById('class-group-count');
+    const groupCount = ensureModalGroupCount(parseInt(groupCountInput?.value, 10) || 6);
+    if (groupCountInput) groupCountInput.value = groupCount;
+
+    modalGroups = Array.from({ length: groupCount }, () => []);
+
+    sanitizeModalZones();
+    renderModalEditor();
+
+    return nextStudents.length;
+  }
+
+  function normalizeStudentNumbers() {
+    modalStudents = [...modalStudents].sort(sortStudentsByNumber).map((student, idx) => ({
+      ...student,
+      number: idx + 1,
+    }));
+  }
+
+  function addStudentCard() {
+    const student = createModalStudent(
+      { name: '', number: modalStudents.length + 1, gender: '' },
+      modalStudents.length + 1
+    );
+    modalStudents.push(student);
+    modalUnassigned.push(student.id);
+
+    normalizeStudentNumbers();
+    sanitizeModalZones();
+    renderModalEditor();
+
+    setTimeout(() => {
+      const nameInput = document.querySelector(
+        `.cm-student-card[data-student-id="${student.id}"] .cm-name-input`
+      );
+      nameInput?.focus();
+    }, 0);
+  }
+
+  function removeStudent(studentId) {
+    modalStudents = modalStudents.filter(student => student.id !== studentId);
+    removeStudentFromAllZones(studentId);
+    normalizeStudentNumbers();
+    sanitizeModalZones();
+    renderModalEditor();
+  }
+
+  function getGroupIndexByStudentName(groups, studentName) {
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i].includes(studentName)) return i;
+    }
+    return -1;
+  }
+
+  function renderStudentCardHTML(student) {
+    if (!student) return '';
+
+    const selectedMale = student.gender === 'male' ? 'selected' : '';
+    const selectedFemale = student.gender === 'female' ? 'selected' : '';
+    const selectedUnknown =
+      student.gender !== 'male' && student.gender !== 'female' ? 'selected' : '';
+
+    return `
+      <div class="cm-student-card" draggable="true" data-student-id="${escapeAttr(student.id)}">
+        <div class="cm-card-top">
+          <span class="cm-card-drag" title="드래그하여 이동">⋮⋮</span>
+          <button type="button" class="cm-remove-student-btn" data-student-id="${escapeAttr(student.id)}" title="학생 삭제">✕</button>
+        </div>
+        <div class="cm-card-fields">
+          <div class="cm-card-field">
+            <span>번호</span>
+            <span class="cm-student-no">${escapeAttr(student.number || 0)}번</span>
+          </div>
+          <label class="cm-card-field">
+            <span>이름</span>
+            <input type="text" class="cm-name-input" maxlength="20" value="${escapeAttr(student.name)}" placeholder="이름">
+          </label>
+          <label class="cm-card-field">
+            <span>성별</span>
+            <select class="cm-gender-select">
+              <option value="" ${selectedUnknown}>-</option>
+              <option value="male" ${selectedMale}>남</option>
+              <option value="female" ${selectedFemale}>여</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRosterSection() {
+    const rosterEl = document.getElementById('class-student-roster');
+    const countEl = document.getElementById('class-roster-count');
+    if (!rosterEl) return;
+
+    const cardsHTML = modalUnassigned
+      .map(studentId => renderStudentCardHTML(getStudentById(studentId)))
+      .join('');
+
+    rosterEl.innerHTML =
+      cardsHTML ||
+      `
+      <div class="cm-empty-zone">
+        미배정 학생이 없습니다. 모둠 카드도 여기로 드래그하면 다시 명렬표로 돌아옵니다.
+      </div>
+    `;
+
+    if (countEl) countEl.textContent = `${modalUnassigned.length}명`;
+  }
+
+  function renderGroupSection() {
+    const boardEl = document.getElementById('class-group-assign-board');
+    if (!boardEl) return;
+
+    const columnsHTML = modalGroups
+      .map((groupStudentIds, groupIdx) => {
+        const groupName = modalGroupNames[groupIdx] || `${groupIdx + 1}모둠`;
+        const cardsHTML = groupStudentIds
+          .map(studentId => renderStudentCardHTML(getStudentById(studentId)))
+          .join('');
+
+        return `
+        <div class="cm-group-column">
+          <div class="cm-group-header">
+            <input
+              type="text"
+              class="cm-group-name-input"
+              data-group-index="${groupIdx}"
+              maxlength="10"
+              value="${escapeAttr(groupName)}"
+              placeholder="${groupIdx + 1}모둠"
+            >
+            <span class="cm-group-count">${groupStudentIds.length}명</span>
+          </div>
+          <div class="cm-group-list cm-drop-zone" data-zone-type="group" data-group-index="${groupIdx}">
+            ${cardsHTML || '<div class="cm-empty-zone">여기에 학생 카드를 드래그하세요</div>'}
+          </div>
+        </div>
+      `;
+      })
+      .join('');
+
+    boardEl.innerHTML = columnsHTML;
+  }
+
+  function clearDropHighlights() {
+    document.querySelectorAll('.cm-drop-zone.cm-drop-over').forEach(zone => {
+      zone.classList.remove('cm-drop-over');
+    });
+  }
+
+  function onCardDragStart(event) {
+    const card = event.currentTarget;
+    draggedStudentId = card.dataset.studentId;
+
+    card.classList.add('is-dragging');
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', draggedStudentId);
+    }
+  }
+
+  function onCardDragEnd(event) {
+    event.currentTarget.classList.remove('is-dragging');
+    draggedStudentId = null;
+    clearDropHighlights();
+  }
+
+  function moveStudentToZone(studentId, zoneType, groupIndex) {
+    if (!studentId) return;
+
+    removeStudentFromAllZones(studentId);
+
+    if (
+      zoneType === 'group' &&
+      Number.isInteger(groupIndex) &&
+      groupIndex >= 0 &&
+      groupIndex < modalGroups.length
+    ) {
+      modalGroups[groupIndex].push(studentId);
+    } else {
+      modalUnassigned.push(studentId);
+    }
+
+    sanitizeModalZones();
+  }
+
+  function onDropZoneDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('cm-drop-over');
+  }
+
+  function onDropZoneDragLeave(event) {
+    event.currentTarget.classList.remove('cm-drop-over');
+  }
+
+  function onDropZoneDrop(event) {
+    event.preventDefault();
+
+    const zone = event.currentTarget;
+    const zoneType = zone.dataset.zoneType;
+    const groupIndexRaw = parseInt(zone.dataset.groupIndex, 10);
+    const groupIndex = Number.isFinite(groupIndexRaw) ? groupIndexRaw : null;
+
+    const droppedId = draggedStudentId || event.dataTransfer?.getData('text/plain');
+    moveStudentToZone(droppedId, zoneType, groupIndex);
+
+    draggedStudentId = null;
+    clearDropHighlights();
+    renderModalEditor();
+  }
+
+  function bindDragAndDrop() {
+    document.querySelectorAll('.cm-student-card').forEach(card => {
+      card.addEventListener('dragstart', onCardDragStart);
+      card.addEventListener('dragend', onCardDragEnd);
+    });
+
+    document.querySelectorAll('.cm-drop-zone').forEach(zone => {
+      zone.addEventListener('dragover', onDropZoneDragOver);
+      zone.addEventListener('dragleave', onDropZoneDragLeave);
+      zone.addEventListener('drop', onDropZoneDrop);
+    });
+  }
+
+  function renderModalEditor() {
+    renderRosterSection();
+    renderGroupSection();
+    bindDragAndDrop();
+  }
+
+  function handleModalInput(event) {
+    const target = event.target;
+    const card = target.closest('.cm-student-card');
+
+    if (target.classList.contains('cm-group-name-input')) {
+      const groupIdx = parseInt(target.dataset.groupIndex, 10);
+      if (Number.isFinite(groupIdx) && groupIdx >= 0 && groupIdx < modalGroupNames.length) {
+        modalGroupNames[groupIdx] = target.value;
+      }
+      return;
+    }
+
+    if (!card) return;
+
+    const studentId = card.dataset.studentId;
+    const student = getStudentById(studentId);
+    if (!student) return;
+
+    if (target.classList.contains('cm-name-input')) {
+      student.name = target.value;
+      return;
+    }
+
+    if (target.classList.contains('cm-gender-select')) {
+      student.gender = sanitizeGender(target.value);
+    }
+  }
+
+  function handleModalClick(event) {
+    const removeBtn = event.target.closest('.cm-remove-student-btn');
+    if (!removeBtn) return;
+
+    const studentId = removeBtn.dataset.studentId;
+    if (!studentId) return;
+
+    removeStudent(studentId);
+  }
+
+  function onGroupCountChange() {
+    const groupCountInput = document.getElementById('class-group-count');
+    if (!groupCountInput) return;
+
+    const count = ensureModalGroupCount(groupCountInput.value);
+    groupCountInput.value = count;
+
+    renderModalEditor();
+  }
+
+  function parseCSV(content) {
+    const lines = content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return [];
+
+    const delimiter = lines[0].includes('\t') ? '\t' : ',';
+    const headerKeywords = ['이름', '성명', 'name', '학생'];
+    const numberKeywords = ['번호', 'num', 'number'];
+    const genderKeywords = ['성별', 'gender', 'sex'];
+
+    const firstCols = lines[0].split(delimiter).map(col => col.trim().toLowerCase());
+    const hasHeader = headerKeywords.some(keyword => firstCols.some(col => col.includes(keyword)));
+
+    let nameColIdx = 0;
+    let numberColIdx = -1;
+    let genderColIdx = -1;
+
+    if (hasHeader) {
+      const findByKeywords = keywords => {
+        return firstCols.findIndex(col => keywords.some(keyword => col.includes(keyword)));
+      };
+
+      const detectedName = findByKeywords(headerKeywords);
+      if (detectedName !== -1) nameColIdx = detectedName;
+
+      numberColIdx = findByKeywords(numberKeywords);
+      genderColIdx = findByKeywords(genderKeywords);
+    }
+
+    const startIdx = hasHeader ? 1 : 0;
+    const rows = [];
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter).map(col => col.trim());
+      const name = (cols[nameColIdx] || '').trim();
+      if (!name) continue;
+
+      const numberRaw = numberColIdx >= 0 ? parseInt(cols[numberColIdx], 10) : NaN;
+      const genderRaw = genderColIdx >= 0 ? cols[genderColIdx] : '';
+
+      rows.push({
+        name,
+        number: Number.isFinite(numberRaw) && numberRaw > 0 ? numberRaw : i - startIdx + 1,
+        gender: sanitizeGender(genderRaw),
+      });
+    }
+
+    return rows;
+  }
+
+  // ===== Firestore 동기화 =====
+  async function syncClassToFirestore(classId) {
+    const context = getGoogleSyncContext();
+    if (!context) return;
+
+    const { user, db } = context;
+    const cls = Store.getClassById(classId);
+    if (!cls) return;
+
+    const classRef = db.collection('users').doc(user.uid).collection('classes').doc(classId);
+    const userRef = db.collection('users').doc(user.uid);
+
+    const normalizedStudents = (cls.students || [])
+      .map((student, index) => {
+        const name = normalizeStudentName(student);
+        if (!name) return null;
+
+        const numberRaw = typeof student === 'object' ? parseInt(student.number, 10) : NaN;
+
+        return {
+          name,
+          number: Number.isFinite(numberRaw) && numberRaw > 0 ? numberRaw : index + 1,
+          gender: typeof student === 'object' ? sanitizeGender(student.gender) : '',
+          sportsAbility:
+            typeof student === 'object' && typeof student.sportsAbility === 'string'
+              ? student.sportsAbility
+              : '',
+          tags: typeof student === 'object' && Array.isArray(student.tags) ? student.tags : [],
+          note: typeof student === 'object' && typeof student.note === 'string' ? student.note : '',
+        };
+      })
+      .filter(Boolean)
+      .sort(sortStudentsByNumber)
+      .map((student, idx) => ({ ...student, number: idx + 1 }));
+
+    const groups = normalizeGroupMembers(cls.groups || []);
+    const groupsForFirestore = encodeGroupsForFirestore(groups);
+    const groupCount = cls.groupCount || (groups.length > 0 ? groups.length : 6);
+    const groupNames =
+      Array.isArray(cls.groupNames) && cls.groupNames.length > 0
+        ? cls.groupNames
+        : Store.getDefaultGroupNames().slice(0, groupCount);
+
+    const existingStudents = await classRef.collection('students').get();
+    const batch = db.batch();
+
+    batch.set(
+      classRef,
+      {
+        name: cls.name,
+        year: new Date().getFullYear(),
+        grade: extractGradeFromClassName(cls.name),
+        studentCount: normalizedStudents.length,
+        groupNames,
+        groups: groupsForFirestore,
+        groupCount,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    existingStudents.forEach(doc => batch.delete(doc.ref));
+
+    normalizedStudents.forEach(student => {
+      const studentRef = classRef
+        .collection('students')
+        .doc(`student-${String(student.number).padStart(3, '0')}`);
+      batch.set(studentRef, {
+        name: student.name,
+        number: student.number,
+        gender: student.gender,
+        sportsAbility: student.sportsAbility,
+        tags: student.tags,
+        note: student.note,
+        groupIndex: getGroupIndexByStudentName(groups, student.name),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    if (Store.getSelectedClassId() === classId) {
+      batch.set(
+        userRef,
+        {
+          selectedClassId: classId,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    await batch.commit();
+  }
+
+  async function deleteClassFromFirestore(classId, selectedWasDeleted) {
+    const context = getGoogleSyncContext();
+    if (!context) return;
+
+    const { user, db } = context;
+    const userRef = db.collection('users').doc(user.uid);
+    const classRef = userRef.collection('classes').doc(classId);
+
+    const existingStudents = await classRef.collection('students').get();
+    const batch = db.batch();
+
+    existingStudents.forEach(doc => batch.delete(doc.ref));
+    batch.delete(classRef);
+
+    if (selectedWasDeleted) {
+      batch.set(
+        userRef,
+        {
+          selectedClassId: null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    await batch.commit();
+  }
+
+  // ===== 기본 공개 함수 =====
   function init() {
-    // 모달 버튼 바인딩
+    if (initialized) return;
+    initialized = true;
+
     const closeBtn = document.getElementById('class-modal-close');
     const cancelBtn = document.getElementById('class-modal-cancel');
     const saveBtn = document.getElementById('class-modal-save');
@@ -17,6 +844,13 @@ const ClassManager = (() => {
     const csvFile = document.getElementById('class-csv-file');
     const csvDownloadBtn = document.getElementById('class-csv-download');
     const googleSheetsBtn = document.getElementById('class-google-sheets-import');
+    const openBulkModalBtn = document.getElementById('class-open-bulk-modal');
+    const bulkModalCloseBtn = document.getElementById('class-bulk-modal-close');
+    const bulkModalCancelBtn = document.getElementById('class-bulk-modal-cancel');
+    const bulkModalApplyBtn = document.getElementById('class-bulk-modal-apply');
+    const bulkRowAddBtn = document.getElementById('class-bulk-row-add');
+    const bulkRowRemoveBtn = document.getElementById('class-bulk-row-remove');
+    const addStudentBtn = document.getElementById('class-add-student-card');
 
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
@@ -25,14 +859,33 @@ const ClassManager = (() => {
     if (csvFile) csvFile.addEventListener('change', handleCSVImport);
     if (csvDownloadBtn) csvDownloadBtn.addEventListener('click', downloadCSVTemplate);
     if (googleSheetsBtn) googleSheetsBtn.addEventListener('click', importFromGoogleSheets);
+    if (openBulkModalBtn) openBulkModalBtn.addEventListener('click', openBulkRegistrationModal);
+    if (bulkModalCloseBtn) bulkModalCloseBtn.addEventListener('click', closeBulkRegistrationModal);
+    if (bulkModalCancelBtn)
+      bulkModalCancelBtn.addEventListener('click', closeBulkRegistrationModal);
+    if (bulkModalApplyBtn) bulkModalApplyBtn.addEventListener('click', applyBulkRegistrationModal);
+    if (bulkRowAddBtn) bulkRowAddBtn.addEventListener('click', addBulkModalRow);
+    if (bulkRowRemoveBtn) bulkRowRemoveBtn.addEventListener('click', removeBulkModalRow);
+    if (addStudentBtn) addStudentBtn.addEventListener('click', addStudentCard);
 
-    // 모둠 수 스테퍼 변경 이벤트
     const groupCountInput = document.getElementById('class-group-count');
     if (groupCountInput) {
       groupCountInput.addEventListener('change', onGroupCountChange);
     }
 
-    // 설정: 기본 모둠 이름 버튼들
+    const modalEl = document.getElementById('class-modal');
+    if (modalEl) {
+      modalEl.addEventListener('input', handleModalInput);
+      modalEl.addEventListener('change', handleModalInput);
+      modalEl.addEventListener('click', handleModalClick);
+    }
+
+    const bulkModalEl = document.getElementById('class-bulk-modal');
+    if (bulkModalEl) {
+      bulkModalEl.addEventListener('input', handleBulkModalInput);
+      bulkModalEl.addEventListener('change', handleBulkModalInput);
+    }
+
     const saveDefaultBtn = document.getElementById('save-default-group-names');
     if (saveDefaultBtn) saveDefaultBtn.addEventListener('click', saveDefaultGroupNamesHandler);
 
@@ -42,18 +895,14 @@ const ClassManager = (() => {
     const removeDefaultBtn = document.getElementById('default-group-remove');
     if (removeDefaultBtn) removeDefaultBtn.addEventListener('click', removeDefaultGroupName);
 
-    // 설정: 데이터 초기화
     const resetBtn = document.getElementById('settings-reset-data');
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         if (confirm('모든 데이터를 초기화하시겠습니까?\n학급, 기록 등이 모두 삭제됩니다.')) {
-          // 앱 전용 키만 삭제 (다른 사이트 데이터 보호)
           const keysToRemove = [];
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.startsWith('pet_')) {
-              keysToRemove.push(key);
-            }
+            if (key && key.startsWith('pet_')) keysToRemove.push(key);
           }
           keysToRemove.forEach(key => localStorage.removeItem(key));
           location.reload();
@@ -61,24 +910,21 @@ const ClassManager = (() => {
       });
     }
 
-    // 설정: 편집 버튼
     const editBtn = document.getElementById('settings-add-class');
     if (editBtn) {
       editBtn.addEventListener('click', () => {
         const cls = Store.getSelectedClass();
-        if (cls) {
-          openModal(cls.id, () => {
-            onSettingsPageEnter();
-            // 네비바 학급명 갱신
-            const nameEl = document.getElementById('navbar-class-name');
-            const updatedCls = Store.getSelectedClass();
-            if (nameEl && updatedCls) nameEl.textContent = updatedCls.name;
-          });
-        }
+        if (!cls) return;
+
+        openModal(cls.id, () => {
+          onSettingsPageEnter();
+          const nameEl = document.getElementById('navbar-class-name');
+          const updatedCls = Store.getSelectedClass();
+          if (nameEl && updatedCls) nameEl.textContent = updatedCls.name;
+        });
       });
     }
 
-    // 랜딩: 새 학급 만들기 버튼
     const landingAddBtn = document.getElementById('landing-add-class');
     if (landingAddBtn) {
       landingAddBtn.addEventListener('click', () => {
@@ -88,11 +934,9 @@ const ClassManager = (() => {
       });
     }
 
-    // 초기 기본 모둠 이름 로딩
     loadDefaultGroupNames();
   }
 
-  // === Select 옵션 채우기 ===
   function populateSelect(selectId, selectedId) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -101,26 +945,24 @@ const ClassManager = (() => {
     const current = select.value;
 
     select.innerHTML = '<option value="">학급 선택...</option>';
-    classes.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = `${c.name} (${c.students.length}명)`;
-      select.appendChild(opt);
+    classes.forEach(cls => {
+      const option = document.createElement('option');
+      option.value = cls.id;
+      option.textContent = `${cls.name} (${cls.students.length}명)`;
+      select.appendChild(option);
     });
 
-    // 선택 복원
     if (selectedId) select.value = selectedId;
     else if (current) select.value = current;
   }
 
-  // === 학급의 학생 이름 배열 가져오기 ===
   function getStudentNames(classId) {
     const cls = Store.getClassById(classId);
-    if (!cls) return [];
-    return cls.students.map(s => typeof s === 'string' ? s : s.name);
+    if (!cls || !Array.isArray(cls.students)) return [];
+
+    return cls.students.map(student => normalizeStudentName(student)).filter(Boolean);
   }
 
-  // === 모달 열기 ===
   function openModal(classId, callback) {
     editingClassId = classId;
     onSaveCallback = callback || null;
@@ -128,403 +970,217 @@ const ClassManager = (() => {
     const titleEl = document.getElementById('class-modal-title');
     const nameInput = document.getElementById('class-name-input');
     const groupCountInput = document.getElementById('class-group-count');
-
-    // 기존 단일 명단 입력 필드는 숨김 (호환성 유지)
     const legacyInput = document.getElementById('class-students-input');
+
     if (legacyInput) legacyInput.style.display = 'none';
 
     if (classId) {
-      // 편집 모드
       const cls = Store.getClassById(classId);
       if (cls) {
         titleEl.textContent = '학급 편집';
         nameInput.value = cls.name;
-        const gc = cls.groupCount || cls.groups?.length || 6;
-        if (groupCountInput) groupCountInput.value = gc;
-        renderGroupGrid(cls);
+
+        const count = cls.groupCount || cls.groups?.length || 6;
+        if (groupCountInput) groupCountInput.value = ensureModalGroupCount(count);
+
+        initializeModalState(cls, count);
       }
     } else {
-      // 새 학급 추가 모드
       titleEl.textContent = '새 학급 추가';
       nameInput.value = '';
-      if (groupCountInput) groupCountInput.value = 6;
-      renderGroupGrid(null);
+
+      const count = ensureModalGroupCount(6);
+      if (groupCountInput) groupCountInput.value = count;
+
+      initializeModalState(null, count);
     }
+
+    renderModalEditor();
 
     UI.showModal('class-modal');
   }
 
   function closeModal() {
     UI.hideModal('class-modal');
+
     editingClassId = null;
+    draggedStudentId = null;
+    closeBulkRegistrationModal();
+
     const csvFile = document.getElementById('class-csv-file');
+    const saveBtn = document.getElementById('class-modal-save');
+
     if (csvFile) csvFile.value = '';
-    // 그리드 초기화
-    const grid = document.getElementById('class-group-grid');
-    if (grid) grid.innerHTML = '';
+    if (saveBtn) saveBtn.disabled = false;
+
+    modalStudents = [];
+    modalUnassigned = [];
+    modalGroups = [];
+    modalGroupNames = [];
+    bulkModalRows = [];
+
+    const rosterEl = document.getElementById('class-student-roster');
+    const boardEl = document.getElementById('class-group-assign-board');
+    if (rosterEl) rosterEl.innerHTML = '';
+    if (boardEl) boardEl.innerHTML = '';
   }
 
-  // === 모둠 수 변경 핸들러 ===
-  function onGroupCountChange() {
-    // 현재 그리드 데이터 수집
-    const currentData = collectGridData();
-    // 새 모둠 수로 그리드 재렌더링
-    renderGroupGridFromData(currentData);
-  }
-
-  function collectGridData() {
-    const nameInputs = document.querySelectorAll('.group-name-input');
-    const studentInputs = document.querySelectorAll('.group-student-input');
-
-    // 모둠 수 파악
-    const groupCount = nameInputs.length;
-    const data = [];
-
-    for (let i = 0; i < groupCount; i++) {
-      // 각 모둠의 학생들 수집
-      const groupStudents = Array.from(studentInputs)
-        .filter(input => parseInt(input.dataset.group) === i)
-        .map(input => input.value.trim())
-        .filter(name => name.length > 0);
-
-      data.push({
-        name: nameInputs[i]?.value || '',
-        students: groupStudents.join('\n'), // 줄바꿈으로 조인 (기존 포맷 유지)
-      });
-    }
-    return data;
-  }
-
-  // === 시간표 테이블 생성 (기존 데이터에서) ===
-  function renderGroupGridFromData(existingData) {
-    const table = document.getElementById('class-group-grid');
-    if (!table) return;
-
-    const groupCountInput = document.getElementById('class-group-count');
-    const groupCount = parseInt(groupCountInput?.value) || 6;
-    const defaultNames = Store.getDefaultGroupNames();
-
-    // 각 모둠의 학생 배열 파싱
-    const groupStudents = [];
-    for (let i = 0; i < groupCount; i++) {
-      const existing = existingData[i] || {};
-      const memberText = existing.students || '';
-      const students = memberText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-      groupStudents.push(students);
-    }
-
-    // 최대 행 수 결정 (기본 6행, 학생 수에 따라 확장)
-    let maxRows = 6;
-    groupStudents.forEach(students => {
-      if (students.length > maxRows) maxRows = students.length;
-    });
-
-    // 헤더 행 (모둠명)
-    let headerCells = '';
-    for (let i = 0; i < groupCount; i++) {
-      const existing = existingData[i] || {};
-      const groupName = existing.name || defaultNames[i] || `${i + 1}모둠`;
-      headerCells += `<th><input type="text" class="group-name-input" data-idx="${i}" value="${groupName}" placeholder="${i + 1}모둠"></th>`;
-    }
-
-    // 학생 행 (각 셀마다 input)
-    let bodyRows = '';
-    for (let row = 0; row < maxRows; row++) {
-      let cells = '';
-      for (let col = 0; col < groupCount; col++) {
-        const studentName = groupStudents[col][row] || '';
-        cells += `<td><input type="text" class="group-student-input" data-group="${col}" data-row="${row}" value="${studentName}" placeholder="이름"></td>`;
-      }
-      bodyRows += `<tr>${cells}</tr>`;
-    }
-
-    table.innerHTML = `
-      <thead><tr>${headerCells}</tr></thead>
-      <tbody>${bodyRows}</tbody>
-    `;
-  }
-
-  // === 시간표 테이블 생성 (학급 객체에서) - 엑셀 스타일 ===
-  function renderGroupGrid(cls) {
-    const table = document.getElementById('class-group-grid');
-    if (!table) return;
-
-    const groupCountInput = document.getElementById('class-group-count');
-    const groupCount = parseInt(groupCountInput?.value) || (cls?.groupCount) || 6;
-    const defaultNames = Store.getDefaultGroupNames();
-
-    // 기존 데이터 → 모둠별 분배
-    let groupMembers = Array.from({ length: groupCount }, () => []);
-
-    if (cls) {
-      if (cls.groups && cls.groups.length > 0) {
-        groupMembers = Array.from({ length: groupCount }, (_, i) => cls.groups[i] || []);
-      } else if (cls.students && cls.students.length > 0) {
-        cls.students.forEach((s, idx) => {
-          groupMembers[idx % groupCount].push(s);
-        });
-      }
-    }
-
-    const currentGroupNames = (cls && cls.groupNames && cls.groupNames.length > 0)
-      ? cls.groupNames
-      : defaultNames;
-
-    // 최대 행 수 결정 (기본 6행, 학생 수에 따라 확장)
-    let maxRows = 6;
-    groupMembers.forEach(members => {
-      if (members.length > maxRows) maxRows = members.length;
-    });
-
-    // 헤더 행 (모둠명)
-    let headerCells = '';
-    for (let i = 0; i < groupCount; i++) {
-      const groupName = currentGroupNames[i] || defaultNames[i] || `${i + 1}모둠`;
-      headerCells += `<th><input type="text" class="group-name-input" data-idx="${i}" value="${groupName}" placeholder="${i + 1}모둠"></th>`;
-    }
-
-    // 학생 행 (각 셀마다 input)
-    let bodyRows = '';
-    for (let row = 0; row < maxRows; row++) {
-      let cells = '';
-      for (let col = 0; col < groupCount; col++) {
-        const members = groupMembers[col] || [];
-        const member = members[row];
-        const studentName = member ? (typeof member === 'string' ? member : member.name) : '';
-        cells += `<td><input type="text" class="group-student-input" data-group="${col}" data-row="${row}" value="${studentName}" placeholder="이름"></td>`;
-      }
-      bodyRows += `<tr>${cells}</tr>`;
-    }
-
-    table.innerHTML = `
-      <thead><tr>${headerCells}</tr></thead>
-      <tbody>${bodyRows}</tbody>
-    `;
-  }
-
-  // === 학급 저장 (엑셀 스타일) ===
-  function saveClass() {
+  async function saveClass() {
     const nameInput = document.getElementById('class-name-input');
-    const className = nameInput.value.trim();
+    const className = nameInput?.value.trim();
+    const saveBtn = document.getElementById('class-modal-save');
+    const groupCountInput = document.getElementById('class-group-count');
 
     if (!className) {
       UI.showToast('학급 이름을 입력하세요', 'error');
       return;
     }
 
-    const groupCountInput = document.getElementById('class-group-count');
-    const groupCount = parseInt(groupCountInput?.value) || 6;
-    const studentInputs = document.querySelectorAll('.group-student-input');
-    const nameInputs = document.querySelectorAll('.group-name-input');
+    const groupCount = ensureModalGroupCount(parseInt(groupCountInput?.value, 10) || 6);
+    if (groupCountInput) groupCountInput.value = groupCount;
 
-    const finalGroupNames = [];
-    const finalGroups = []; // [[s1, s2], ...]
-    let allStudents = [];
+    sanitizeModalZones();
 
-    for (let i = 0; i < groupCount; i++) {
-      // 모둠 이름
-      const gName = nameInputs[i]?.value?.trim() || `${i + 1}모둠`;
-      finalGroupNames.push(gName);
+    const validStudents = modalStudents
+      .map(student => ({
+        ...student,
+        name: (student.name || '').trim(),
+        number: parseInt(student.number, 10),
+        gender: sanitizeGender(student.gender),
+      }))
+      .filter(student => student.name.length > 0)
+      .sort(sortStudentsByNumber)
+      .map((student, idx) => ({
+        ...student,
+        number: idx + 1,
+        sportsAbility: student.sportsAbility || '',
+        tags: Array.isArray(student.tags) ? student.tags : [],
+        note: student.note || '',
+      }));
 
-      // 모둠원 (각 셀에서 수집)
-      const members = Array.from(studentInputs)
-        .filter(input => parseInt(input.dataset.group) === i)
-        .map(input => input.value.trim())
-        .filter(name => name.length > 0);
-
-      finalGroups.push(members);
-      allStudents = allStudents.concat(members);
-    }
-
-    if (allStudents.length === 0) {
+    if (validStudents.length === 0) {
       UI.showToast('학생을 한 명 이상 입력하세요', 'error');
       return;
     }
 
-    if (editingClassId) {
-      Store.updateClass(editingClassId, className, allStudents, finalGroupNames, finalGroups, groupCount);
-      UI.showToast(`${className} 수정 완료`, 'success');
-    } else {
-      Store.addClass(className, allStudents, finalGroupNames, finalGroups, groupCount);
-      UI.showToast(`${className} 추가 완료`, 'success');
-    }
+    const validIdSet = new Set(validStudents.map(student => student.id));
+    const nameById = new Map(validStudents.map(student => [student.id, student.name]));
 
-    closeModal();
-    if (onSaveCallback) onSaveCallback();
+    const finalGroups = modalGroups.slice(0, groupCount).map(group =>
+      group
+        .filter(studentId => validIdSet.has(studentId))
+        .map(studentId => nameById.get(studentId))
+        .filter(Boolean)
+    );
+
+    const finalGroupNames = Array.from({ length: groupCount }, (_, idx) => {
+      const raw = (modalGroupNames[idx] || '').trim();
+      return raw || `${idx + 1}모둠`;
+    });
+
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      let targetClassId = editingClassId;
+
+      if (editingClassId) {
+        Store.updateClass(
+          editingClassId,
+          className,
+          validStudents,
+          finalGroupNames,
+          finalGroups,
+          groupCount
+        );
+        UI.showToast(`${className} 수정 완료`, 'success');
+      } else {
+        const created = Store.addClass(
+          className,
+          validStudents,
+          finalGroupNames,
+          finalGroups,
+          groupCount
+        );
+        targetClassId = created?.id || null;
+        UI.showToast(`${className} 추가 완료`, 'success');
+      }
+
+      if (targetClassId) {
+        await syncClassToFirestore(targetClassId);
+      }
+
+      closeModal();
+      if (onSaveCallback) onSaveCallback();
+    } catch (error) {
+      console.error('❌ 학급 저장 실패:', error);
+      UI.showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+      if (saveBtn) saveBtn.disabled = false;
+    }
   }
 
-  // === CSV 가져오기 (순차 분배) - 엑셀 스타일 ===
-  function handleCSVImport(e) {
-    const file = e.target.files[0];
+  function handleCSVImport(event) {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const content = ev.target.result;
-      const students = parseCSV(content);
-
-      if (students.length === 0) {
+    reader.onload = loadEvent => {
+      const content = loadEvent.target?.result || '';
+      const rows = parseCSV(content);
+      if (rows.length === 0) {
         UI.showToast('학생을 찾을 수 없습니다', 'error');
         return;
       }
 
-      // 현재 모둠 수에 따라 분배
-      const groupCountInput = document.getElementById('class-group-count');
-      const groupCount = parseInt(groupCountInput?.value) || 6;
-
-      const inputs = document.querySelectorAll('.group-student-input');
-      students.forEach((studentName, idx) => {
-        const groupIdx = idx % groupCount;
-        const rowIdx = Math.floor(idx / groupCount);
-
-        // 해당 그룹과 행의 input 찾기
-        const targetInput = Array.from(inputs).find(input =>
-          parseInt(input.dataset.group) === groupIdx && parseInt(input.dataset.row) === rowIdx
-        );
-
-        if (targetInput) {
-          targetInput.value = studentName;
-        }
-      });
-
-      UI.showToast(`${students.length}명 가져오기 완료 (자동 분배됨)`, 'success');
+      const count = applyImportedStudents(rows);
+      if (count > 0) UI.showToast(`${count}명 가져오기 완료`, 'success');
     };
     reader.readAsText(file, 'UTF-8');
   }
 
-  function parseCSV(content) {
-    const lines = content.split('\n').map(l => l.trim()).filter(l => l);
-    if (lines.length === 0) return [];
-
-    // 헤더 감지
-    const headerKeywords = ['이름', '성명', 'name', '학생', '모둠'];
-    const firstLine = lines[0].toLowerCase();
-    const hasHeader = headerKeywords.some(k => firstLine.includes(k));
-
-    // 구분자 감지
-    const delimiter = lines[0].includes('\t') ? '\t' : ',';
-
-    const startIdx = hasHeader ? 1 : 0;
-    let nameColIdx = 0;
-
-    if (hasHeader) {
-      const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
-      const nameIdx = headers.findIndex(h =>
-        headerKeywords.some(k => h.includes(k))
-      );
-      if (nameIdx !== -1) nameColIdx = nameIdx;
-    }
-
-    const students = [];
-    for (let i = startIdx; i < lines.length; i++) {
-      const cols = lines[i].split(delimiter).map(c => c.trim());
-      const name = cols[nameColIdx] || '';
-      if (name && !/^\d+$/.test(name) && name.length <= 20) {
-        students.push(name);
-      }
-    }
-    return students;
-  }
-
-  // === CSV 템플릿 다운로드 ===
   function downloadCSVTemplate() {
-    const groupCountInput = document.getElementById('class-group-count');
-    const groupCount = parseInt(groupCountInput?.value) || 6;
-    const defaultNames = Store.getDefaultGroupNames();
-    const rowCount = 6; // 기본 6행
+    let csvContent = '\uFEFF번호,이름,성별\n';
 
-    // CSV 생성 (UTF-8 BOM 추가로 엑셀 한글 깨짐 방지)
-    let csvContent = '\uFEFF'; // UTF-8 BOM
-
-    // 헤더 (모둠 이름)
-    const headers = [];
-    for (let i = 0; i < groupCount; i++) {
-      const groupName = defaultNames[i] || `${i + 1}모둠`;
-      headers.push(groupName);
-    }
-    csvContent += headers.join(',') + '\n';
-
-    // 빈 행들 (6행)
-    for (let r = 0; r < rowCount; r++) {
-      const row = new Array(groupCount).fill('');
-      csvContent += row.join(',') + '\n';
+    for (let i = 1; i <= 30; i++) {
+      csvContent += `${i},,\n`;
     }
 
-    // Blob 생성 및 다운로드
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = '학급_명단_템플릿.csv';
+    link.download = '학급_명렬표_템플릿.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
 
-    UI.showToast('템플릿 다운로드 완료! CSV 파일을 열어서 학생 이름을 입력하세요.', 'success');
+    UI.showToast('명렬표 템플릿 다운로드 완료', 'success');
   }
 
-  // === 구글 시트에서 가져오기 ===
   function importFromGoogleSheets() {
-    // 사용 가이드 표시
     const showGuide = confirm(
-      '📊 구글 시트로 학생 명단 가져오기\n\n' +
-      '구글 시트가 이미 있으신가요?\n\n' +
-      '✅ "확인" - 사용 방법 보기 & 새 시트 만들기\n' +
-      '❌ "취소" - 기존 시트 URL 바로 입력'
+      '📊 구글 시트에서 명렬표 가져오기\n\n' + '✅ 확인: 가이드 보기\n' + '❌ 취소: URL 바로 입력'
     );
 
     if (showGuide) {
-      // 먼저 가이드 표시
       alert(
         '📝 구글 시트 작성 가이드\n\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '1️⃣ 학생 이름 입력 형식\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '• 1행: 모둠명 (1모둠, 2모둠, ...)\n' +
-        '• 2행부터: 학생 이름 (세로로)\n\n' +
-        '예시:\n' +
-        '┌────────┬────────┬────────┐\n' +
-        '│ 1모둠  │ 2모둠  │ 3모둠  │\n' +
-        '│ 김철수 │ 이영희 │ 박민수 │\n' +
-        '│ 홍길동 │ 신사임당│ 세종  │\n' +
-        '│ 장영실 │ 허준   │ 정약용 │\n' +
-        '└────────┴────────┴────────┘\n\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '2️⃣ 공개 설정 (필수!)\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '① 우측 상단 "공유" 클릭\n' +
-        '② "일반 액세스" 클릭\n' +
-        '③ "링크가 있는 모든 사용자" 선택\n' +
-        '④ 역할: "뷰어" 선택\n' +
-        '⑤ "링크 복사" 클릭\n\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '3️⃣ 가져오기\n' +
-        '━━━━━━━━━━━━━━━━━━━━\n' +
-        '• 이 버튼을 다시 클릭\n' +
-        '• 복사한 URL 붙여넣기\n\n' +
-        '확인을 누르면 새 탭에서 구글 시트가 열립니다!'
+          '1) 열 예시: 번호, 이름, 성별\n' +
+          '2) 공유 설정: 링크가 있는 모든 사용자(뷰어)\n' +
+          '3) 시트 URL을 복사해 다시 가져오기 버튼을 눌러주세요'
       );
 
-      // 가이드 확인 후 새 탭으로 구글 시트 열기
       window.open('https://sheets.google.com/create', '_blank');
-
-      // 완료 안내
-      UI.showToast('새 탭에서 구글 시트가 열렸습니다! 가이드대로 작성 후 다시 이 버튼을 클릭하세요.', 'success');
+      UI.showToast('새 탭에서 구글 시트를 열었습니다', 'success');
       return;
     }
 
-    // URL 입력 프롬프트
-    const message =
+    const url = prompt(
       '구글 스프레드시트 URL을 입력하세요.\n\n' +
-      '⚠️ 시트가 공개되어 있어야 합니다!\n' +
-      '(공유 > 일반 액세스 > "링크가 있는 모든 사용자")\n\n' +
-      '예시:\n' +
-      'https://docs.google.com/spreadsheets/d/1abc.../edit';
+        '예시:\nhttps://docs.google.com/spreadsheets/d/1abc.../edit'
+    );
 
-    const url = prompt(message);
     if (!url) return;
 
-    // URL에서 시트 ID 추출
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) {
       UI.showToast('올바른 구글 시트 URL이 아닙니다', 'error');
@@ -538,52 +1194,29 @@ const ClassManager = (() => {
 
     fetch(csvUrl, { mode: 'cors' })
       .then(response => {
-        if (!response.ok) {
-          throw new Error('시트를 불러올 수 없습니다');
-        }
+        if (!response.ok) throw new Error('시트를 불러올 수 없습니다');
         return response.text();
       })
       .then(content => {
-        const students = parseCSV(content);
-
-        if (students.length === 0) {
+        const rows = parseCSV(content);
+        if (rows.length === 0) {
           UI.showToast('학생을 찾을 수 없습니다', 'error');
           return;
         }
 
-        // 현재 모둠 수에 따라 분배
-        const groupCountInput = document.getElementById('class-group-count');
-        const groupCount = parseInt(groupCountInput?.value) || 6;
-
-        const inputs = document.querySelectorAll('.group-student-input');
-        students.forEach((studentName, idx) => {
-          const groupIdx = idx % groupCount;
-          const rowIdx = Math.floor(idx / groupCount);
-
-          // 해당 그룹과 행의 input 찾기
-          const targetInput = Array.from(inputs).find(input =>
-            parseInt(input.dataset.group) === groupIdx && parseInt(input.dataset.row) === rowIdx
-          );
-
-          if (targetInput) {
-            targetInput.value = studentName;
-          }
-        });
-
-        UI.showToast(`${students.length}명 가져오기 완료!`, 'success');
+        const count = applyImportedStudents(rows);
+        if (count > 0) UI.showToast(`${count}명 가져오기 완료`, 'success');
       })
       .catch(error => {
         console.error('구글 시트 가져오기 오류:', error);
-        UI.showToast('구글 시트를 불러올 수 없습니다.\n\n시트가 공개되어 있는지 확인하세요:\n1. 파일 > 공유 > 일반 액세스를 "링크가 있는 모든 사용자"로 변경\n2. 다시 시도해주세요', 'error');
+        UI.showToast('구글 시트를 불러올 수 없습니다. 공개 설정을 확인하세요.', 'error');
       });
   }
 
-  // === 모든 Select 갱신 ===
   function refreshAllSelects() {
     populateSelect('gm-class-name-select');
   }
 
-  // === 랜딩 페이지: 학급 카드 목록 ===
   function renderLandingClassList() {
     const container = document.getElementById('landing-class-list');
     if (!container) return;
@@ -601,34 +1234,44 @@ const ClassManager = (() => {
       return;
     }
 
-    container.innerHTML = classes.map(c => {
-      const gc = c.groupCount || c.groups?.length || 6;
-      return `
-        <div class="landing-class-card" onclick="App.onClassSelected('${c.id}')">
+    container.innerHTML = classes
+      .map(cls => {
+        const gc = cls.groupCount || cls.groups?.length || 6;
+        return `
+        <div class="landing-class-card" onclick="App.onClassSelected('${cls.id}')">
           <div class="landing-card-info">
-            <div class="landing-card-name">${UI.escapeHtml(c.name)}</div>
+            <div class="landing-card-name">${UI.escapeHtml(cls.name)}</div>
             <div class="landing-card-meta">
-              <span>👤 ${c.students.length}명</span>
+              <span>👤 ${cls.students.length}명</span>
               <span>👥 ${gc}모둠</span>
             </div>
           </div>
           <div class="landing-card-actions" onclick="event.stopPropagation();">
-            <button class="btn btn-sm btn-secondary" onclick="ClassManager.openModal('${c.id}', ClassManager.renderLandingClassList)">편집</button>
-            <button class="btn btn-sm btn-danger" onclick="ClassManager.deleteLandingClass('${c.id}')">삭제</button>
+            <button class="btn btn-sm btn-secondary" onclick="ClassManager.openModal('${cls.id}', ClassManager.renderLandingClassList)">편집</button>
+            <button class="btn btn-sm btn-danger" onclick="ClassManager.deleteLandingClass('${cls.id}')">삭제</button>
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
-  // === 랜딩에서 학급 삭제 ===
-  function deleteLandingClass(id) {
+  async function deleteLandingClass(id) {
     const cls = Store.getClassById(id);
     if (!cls) return;
     if (!confirm(`"${cls.name}"을(를) 삭제하시겠습니까?`)) return;
 
-    // 현재 선택된 학급이면 해제
-    if (Store.getSelectedClassId() === id) {
+    const selectedWasDeleted = Store.getSelectedClassId() === id;
+
+    try {
+      await deleteClassFromFirestore(id, selectedWasDeleted);
+    } catch (error) {
+      console.error('❌ Firestore 학급 삭제 실패:', error);
+      UI.showToast('클라우드 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
+      return;
+    }
+
+    if (selectedWasDeleted) {
       Store.clearSelectedClass();
     }
 
@@ -637,11 +1280,9 @@ const ClassManager = (() => {
     renderLandingClassList();
   }
 
-  // === 설정 페이지 진입 핸들러 ===
   function onSettingsPageEnter() {
     const cls = Store.getSelectedClass();
 
-    // 현재 학급 정보 렌더링 (가로 3열)
     const infoContainer = document.getElementById('settings-current-class');
     if (infoContainer && cls) {
       const gc = cls.groupCount || cls.groups?.length || 6;
@@ -663,58 +1304,51 @@ const ClassManager = (() => {
       `;
     }
 
-    // 학생 목록 렌더링
     renderSettingsStudentList();
-
-    // 기본 모둠 이름 로딩
     loadDefaultGroupNames();
   }
 
-  // === 설정 페이지: 학생 목록 (6×6 테이블) ===
   function renderSettingsStudentList() {
     const container = document.getElementById('settings-class-list');
     if (!container) return;
 
     const cls = Store.getSelectedClass();
     if (!cls) {
-      container.innerHTML = `<div style="text-align: center; color: var(--text-tertiary); padding: var(--space-lg); font-size: var(--font-size-sm);">학급 정보가 없습니다</div>`;
+      container.innerHTML =
+        '<div style="text-align: center; color: var(--text-tertiary); padding: var(--space-lg); font-size: var(--font-size-sm);">학급 정보가 없습니다</div>';
       return;
     }
 
     const gc = cls.groupCount || cls.groups?.length || 6;
 
-    // 6×6 테이블로 고정 (최소 6행)
     const minRows = 6;
     let maxMembers = minRows;
     for (let i = 0; i < gc; i++) {
-      const len = (cls.groups && cls.groups[i]) ? cls.groups[i].length : 0;
+      const len = cls.groups && cls.groups[i] ? cls.groups[i].length : 0;
       if (len > maxMembers) maxMembers = len;
     }
 
-    // 헤더 행 (모둠명)
     let headerCells = '';
     for (let i = 0; i < gc; i++) {
       const groupName = (cls.groupNames && cls.groupNames[i]) || `${i + 1}모둠`;
       headerCells += `<th>${UI.escapeHtml(groupName)}</th>`;
     }
 
-    // 학생 행 (최소 6행 보장)
     let bodyRows = '';
     for (let row = 0; row < maxMembers; row++) {
       let cells = '';
       for (let col = 0; col < gc; col++) {
         const members = (cls.groups && cls.groups[col]) || [];
-        const m = members[row];
-        if (m) {
-          const name = typeof m === 'string' ? m : m.name;
+        const member = members[row];
+        if (member) {
+          const name = typeof member === 'string' ? member : member.name;
           if (row === 0) {
-            // 모둠장: 별을 좌측 상단 코너에 배치
             cells += `<td class="leader-cell"><span class="leader-badge">⭐</span>${UI.escapeHtml(name)}</td>`;
           } else {
             cells += `<td>${UI.escapeHtml(name)}</td>`;
           }
         } else {
-          cells += `<td></td>`;
+          cells += '<td></td>';
         }
       }
       bodyRows += `<tr>${cells}</tr>`;
@@ -730,18 +1364,32 @@ const ClassManager = (() => {
     `;
   }
 
-  // === 학급 삭제 (레거시 호환) ===
-  function deleteClass(id) {
+  async function deleteClass(id) {
     const cls = Store.getClassById(id);
     if (!cls) return;
     if (!confirm(`"${cls.name}"을(를) 삭제하시겠습니까?`)) return;
+
+    const selectedWasDeleted = Store.getSelectedClassId() === id;
+
+    try {
+      await deleteClassFromFirestore(id, selectedWasDeleted);
+    } catch (error) {
+      console.error('❌ Firestore 학급 삭제 실패:', error);
+      UI.showToast('클라우드 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
+      return;
+    }
+
+    if (selectedWasDeleted) {
+      Store.clearSelectedClass();
+    }
+
     Store.deleteClass(id);
     UI.showToast('학급 삭제 완료', 'success');
     renderLandingClassList();
     refreshAllSelects();
   }
 
-  // === 기본 모둠 이름 관리 ===
+  // ===== 기본 모둠 이름 =====
   function loadDefaultGroupNames() {
     const container = document.getElementById('default-group-names-list');
     if (!container) return;
@@ -749,19 +1397,19 @@ const ClassManager = (() => {
     const names = Store.getDefaultGroupNames();
     container.innerHTML = '';
 
-    names.forEach((name, i) => {
-      createPillInput(container, name, i);
+    names.forEach((name, index) => {
+      createPillInput(container, name, index);
     });
   }
 
-  function createPillInput(container, value, idx) {
+  function createPillInput(container, value, index) {
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'pill-input';
     input.maxLength = 10;
-    input.placeholder = `${idx + 1}모둠`;
+    input.placeholder = `${index + 1}모둠`;
     input.value = value || '';
-    input.dataset.idx = idx;
+    input.dataset.idx = index;
     input.addEventListener('click', () => {
       input.classList.toggle('selected');
     });
@@ -771,28 +1419,33 @@ const ClassManager = (() => {
   function addDefaultGroupName() {
     const container = document.getElementById('default-group-names-list');
     if (!container) return;
+
     const current = container.querySelectorAll('.pill-input').length;
     if (current >= 8) {
       UI.showToast('최대 8개까지 추가할 수 있습니다', 'error');
       return;
     }
+
     createPillInput(container, '', current);
-    container.lastElementChild.focus();
+    container.lastElementChild?.focus();
   }
 
   function removeDefaultGroupName() {
     const container = document.getElementById('default-group-names-list');
     if (!container) return;
+
     const selected = container.querySelectorAll('.pill-input.selected');
     if (selected.length === 0) {
       UI.showToast('삭제할 모둠을 먼저 선택하세요', 'info');
       return;
     }
+
     const total = container.querySelectorAll('.pill-input').length;
     if (total - selected.length < 2) {
       UI.showToast('최소 2개는 유지해야 합니다', 'error');
       return;
     }
+
     selected.forEach(el => el.remove());
   }
 
@@ -802,9 +1455,10 @@ const ClassManager = (() => {
 
     const inputs = container.querySelectorAll('.pill-input');
     const names = [];
-    inputs.forEach((input, i) => {
-      const val = input.value.trim();
-      names.push(val || `${i + 1}모둠`);
+
+    inputs.forEach((input, index) => {
+      const value = input.value.trim();
+      names.push(value || `${index + 1}모둠`);
     });
 
     if (names.length === 0) {
