@@ -4,13 +4,15 @@
    UI와 상태 관리로부터 독립된 순수 함수
    ============================================ */
 
+import { UI } from '../shared/ui-utils.js';
+
 /**
- * Fisher-Yates 셔플 (간단 버전)
+ * Fisher-Yates 셔플 (UI.shuffleArray 위임)
  * @param {Array} array - 셔플할 배열
  * @returns {Array} 셔플된 새 배열
  */
 function shuffle(array) {
-  return [...array].sort(() => Math.random() - 0.5);
+  return UI.shuffleArray(array);
 }
 
 /**

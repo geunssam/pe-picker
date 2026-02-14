@@ -4,6 +4,7 @@
    ============================================ */
 
 import { Store } from './shared/store.js';
+import { generateId } from './storage/base-repo.js';
 
 let currentStep = 1;
 let wizardData = {
@@ -289,7 +290,7 @@ async function handleComplete() {
 
       // 학생 배열 생성 (빈 명단)
       const students = Array.from({ length: studentCount }, (_, idx) => ({
-        id: `stu_${Date.now()}_${grade}_${i}_${idx}`,
+        id: generateId('stu'),
         name: '',
         number: idx + 1,
         gender: '',
@@ -459,7 +460,7 @@ async function saveToFirestore(uid, createdClasses) {
 
       // 학생 서브컬렉션 생성
       validStudents.forEach((student, index) => {
-        const studentId = `student-${Date.now()}-${classId}-${index}`;
+        const studentId = generateId('student');
         const studentRef = db
           .collection('users')
           .doc(uid)

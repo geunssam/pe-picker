@@ -53,10 +53,12 @@ export function remove(key) {
 
 /**
  * 고유 ID 생성
+ * @param {string} [prefix=''] - ID 앞에 붙일 접두사 (예: 'stu', 'student')
  * @returns {string} 타임스탬프 기반 ID
  */
-export function generateId() {
-  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+export function generateId(prefix = '') {
+  const id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return prefix ? `${prefix}_${id}` : id;
 }
 
 export { PREFIX };

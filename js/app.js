@@ -5,6 +5,8 @@
    ============================================ */
 
 import { Store } from './shared/store.js';
+import { withTimeout } from './shared/promise-utils.js';
+import { decodeGroupsFromFirestore } from './shared/firestore-utils.js';
 import { AuthManager } from './auth-manager.js';
 import { FirebaseConfig } from './firebase-config.js';
 import { FirestoreSync } from './firestore-sync.js';
@@ -263,25 +265,25 @@ async function loadUserDataFromFirestore(uid) {
 
     console.log('Firestore에서 데이터 로드 중...');
 
-    // 타임아웃 헬퍼 (10초)
-    const withTimeout = (promise, ms = 10000) => {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms)),
-      ]);
-    };
-
     // 온보딩 판정용 users 문서는 서버 우선 조회, 실패 시 캐시 fallback
     const getUserDocPreferServer = async () => {
       try {
-        return await withTimeout(db.collection('users').doc(uid).get({ source: 'server' }));
+        return await withTimeout(
+          db.collection('users').doc(uid).get({ source: 'server' }),
+          10000,
+          'Firestore user doc (server)'
+        );
       } catch (serverError) {
-        if (serverError.message === 'TIMEOUT') throw serverError;
+        if (serverError.message.includes('timed out')) throw serverError;
         console.warn(
           '⚠️ users 문서 서버 조회 실패, 캐시로 재시도:',
           serverError.code || serverError.message
         );
-        return withTimeout(db.collection('users').doc(uid).get());
+        return withTimeout(
+          db.collection('users').doc(uid).get(),
+          10000,
+          'Firestore user doc (cache)'
+        );
       }
     };
 
@@ -317,36 +319,10 @@ async function loadUserDataFromFirestore(uid) {
 
     // 4. 학급 목록 로드 (타임아웃 10초)
     const classesSnapshot = await withTimeout(
-      db.collection('users').doc(uid).collection('classes').get()
+      db.collection('users').doc(uid).collection('classes').get(),
+      10000,
+      'Firestore classes'
     );
-
-    const decodeGroupsFromFirestore = (rawGroups, groupCount = 6) => {
-      if (Array.isArray(rawGroups)) return rawGroups;
-      if (!rawGroups || typeof rawGroups !== 'object') {
-        return Array.from({ length: groupCount }, () => []);
-      }
-
-      const entries = Object.entries(rawGroups);
-      if (entries.length === 0) {
-        return Array.from({ length: groupCount }, () => []);
-      }
-
-      const ordered = entries
-        .map(([key, members]) => {
-          const numeric = parseInt(String(key).replace(/\D/g, ''), 10);
-          return {
-            index: Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER,
-            members: Array.isArray(members) ? members : [],
-          };
-        })
-        .sort((a, b) => a.index - b.index);
-
-      const groups = ordered.map(item => item.members);
-      while (groups.length < groupCount) {
-        groups.push([]);
-      }
-      return groups;
-    };
 
     const classes = [];
     for (const classDoc of classesSnapshot.docs) {
@@ -362,7 +338,9 @@ async function loadUserDataFromFirestore(uid) {
           .doc(classId)
           .collection('students')
           .orderBy('number')
-          .get()
+          .get(),
+        10000,
+        'Firestore students'
       );
 
       const students = studentsSnapshot.docs.map(doc => {
@@ -402,7 +380,7 @@ async function loadUserDataFromFirestore(uid) {
     // 8. userData 반환 (온보딩 체크용)
     return userData;
   } catch (error) {
-    if (error.message === 'TIMEOUT') {
+    if (error.message.includes('timed out')) {
       console.error('⏱ Firestore 데이터 로드 타임아웃 (10초)');
     } else {
       console.error('❌ Firestore 데이터 로드 실패:', error);

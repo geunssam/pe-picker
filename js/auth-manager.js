@@ -6,14 +6,16 @@
 import { FirebaseConfig } from './firebase-config.js';
 import { FirestoreSync } from './firestore-sync.js';
 import { Store } from './shared/store.js';
+import { withTimeout } from './shared/promise-utils.js';
 
 let currentUser = null;
 let authMode = 'local'; // 'local' | 'google'
 
 function init() {
-  // 저장된 인증 모드 확인
-  const savedMode = localStorage.getItem('auth-mode');
-  const savedUser = localStorage.getItem('current-user');
+  // 저장된 인증 모드 확인 (새 키 우선, 구 키 fallback)
+  const savedMode = localStorage.getItem('pet_auth_mode') || localStorage.getItem('auth-mode');
+  const savedUser =
+    localStorage.getItem('pet_current_user') || localStorage.getItem('current-user');
 
   if (savedMode === 'google' && savedUser) {
     // Google 로그인 사용자
@@ -48,8 +50,8 @@ async function handleAuthStateChanged(user) {
       photoURL: user.photoURL,
       mode: 'google',
     };
-    localStorage.setItem('current-user', JSON.stringify(currentUser));
-    localStorage.setItem('auth-mode', 'google');
+    localStorage.setItem('pet_current_user', JSON.stringify(currentUser));
+    localStorage.setItem('pet_auth_mode', 'google');
     updateNavigation();
 
     // Firestore 사용자 문서 확인 (모든 페이지에서 실행)
@@ -89,8 +91,8 @@ async function loginWithGoogle() {
     };
 
     authMode = 'google';
-    localStorage.setItem('current-user', JSON.stringify(currentUser));
-    localStorage.setItem('auth-mode', 'google');
+    localStorage.setItem('pet_current_user', JSON.stringify(currentUser));
+    localStorage.setItem('pet_auth_mode', 'google');
 
     // Firestore 사용자 문서 확인
     await checkFirestoreUser(user);
@@ -106,8 +108,8 @@ async function loginWithGoogle() {
 function loginAsLocal() {
   authMode = 'local';
   currentUser = { mode: 'local', displayName: '로컬 사용자' };
-  localStorage.setItem('auth-mode', 'local');
-  localStorage.setItem('current-user', JSON.stringify(currentUser));
+  localStorage.setItem('pet_auth_mode', 'local');
+  localStorage.setItem('pet_current_user', JSON.stringify(currentUser));
   return true;
 }
 
@@ -131,6 +133,9 @@ async function logout() {
 
   currentUser = null;
   authMode = 'local';
+  localStorage.removeItem('pet_current_user');
+  localStorage.removeItem('pet_auth_mode');
+  // 레거시 키도 정리
   localStorage.removeItem('current-user');
   localStorage.removeItem('auth-mode');
 
@@ -194,24 +199,21 @@ async function checkFirestoreUser(user) {
 
     const userRef = db.collection('users').doc(user.uid);
 
-    // 타임아웃 헬퍼 (10초)
-    const withTimeout = (promise, ms = 10000) =>
-      Promise.race([
-        promise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms)),
-      ]);
-
     // 온보딩 플래그는 서버 우선으로 조회 (캐시 stale 방지), 실패 시 캐시 fallback
     let userDoc;
     try {
-      userDoc = await withTimeout(userRef.get({ source: 'server' }));
+      userDoc = await withTimeout(
+        userRef.get({ source: 'server' }),
+        10000,
+        'Firestore user doc (server)'
+      );
     } catch (serverError) {
-      if (serverError.message === 'TIMEOUT') throw serverError;
+      if (serverError.message.includes('timed out')) throw serverError;
       console.warn(
         '⚠️ users 문서 서버 조회 실패, 캐시로 재시도:',
         serverError.code || serverError.message
       );
-      userDoc = await withTimeout(userRef.get());
+      userDoc = await withTimeout(userRef.get(), 10000, 'Firestore user doc (cache)');
     }
 
     if (!userDoc.exists) {
@@ -284,7 +286,7 @@ async function checkFirestoreUser(user) {
     console.error('❌ Firestore 사용자 확인 실패:', error);
 
     // 타임아웃 또는 연결 실패 시 wizard로 이동
-    if (error.message === 'TIMEOUT') {
+    if (error.message.includes('timed out')) {
       console.warn('⏱ Firestore 연결 타임아웃 (10초) - wizard로 이동');
       alert(
         '서버 연결이 느립니다. 로컬 모드로 진행합니다.\n온보딩을 완료하면 다음부터는 정상 작동합니다.'

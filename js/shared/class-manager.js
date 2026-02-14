@@ -20,14 +20,6 @@ let modalGroupNames = []; // [name,...]
 let draggedStudentId = null;
 let bulkModalRows = []; // [{number,name,gender}]
 
-function escapeAttr(value) {
-  return `${value ?? ''}`
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 function sanitizeGender(value) {
   if (value === 'male' || value === '남' || value === '남자') return 'male';
   if (value === 'female' || value === '여' || value === '여자') return 'female';
@@ -276,7 +268,7 @@ function renderBulkModalRows() {
             type="text"
             class="class-bulk-name-input"
             data-row-index="${idx}"
-            value="${escapeAttr(row.name || '')}"
+            value="${UI.escapeHtml(row.name || '')}"
             maxlength="20"
             placeholder="학생 이름"
           >
@@ -444,19 +436,19 @@ function renderStudentCardHTML(student) {
     student.gender !== 'male' && student.gender !== 'female' ? 'selected' : '';
 
   return `
-      <div class="cm-student-card" draggable="true" data-student-id="${escapeAttr(student.id)}">
+      <div class="cm-student-card" draggable="true" data-student-id="${UI.escapeHtml(student.id)}">
         <div class="cm-card-top">
           <span class="cm-card-drag" title="드래그하여 이동">⋮⋮</span>
-          <button type="button" class="cm-remove-student-btn" data-student-id="${escapeAttr(student.id)}" title="학생 삭제">✕</button>
+          <button type="button" class="cm-remove-student-btn" data-student-id="${UI.escapeHtml(student.id)}" title="학생 삭제">✕</button>
         </div>
         <div class="cm-card-fields">
           <div class="cm-card-field">
             <span>번호</span>
-            <span class="cm-student-no">${escapeAttr(student.number || 0)}번</span>
+            <span class="cm-student-no">${UI.escapeHtml(student.number || 0)}번</span>
           </div>
           <label class="cm-card-field">
             <span>이름</span>
-            <input type="text" class="cm-name-input" maxlength="20" value="${escapeAttr(student.name)}" placeholder="이름">
+            <input type="text" class="cm-name-input" maxlength="20" value="${UI.escapeHtml(student.name)}" placeholder="이름">
           </label>
           <label class="cm-card-field">
             <span>성별</span>
@@ -510,7 +502,7 @@ function renderGroupSection() {
               class="cm-group-name-input"
               data-group-index="${groupIdx}"
               maxlength="10"
-              value="${escapeAttr(groupName)}"
+              value="${UI.escapeHtml(groupName)}"
               placeholder="${groupIdx + 1}모둠"
             >
             <span class="cm-group-count">${groupStudentIds.length}명</span>

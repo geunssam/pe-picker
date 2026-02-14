@@ -402,7 +402,7 @@ function startGame() {
 // ========== 핵심 뽑기 로직 (_pickGroup - 원본 동일) ==========
 function _pickGroup(count, availablePool, fullPlayerList) {
   let pickedGroup = [];
-  const shuffledAvailable = [...availablePool].sort(() => Math.random() - 0.5);
+  const shuffledAvailable = UI.shuffleArray(availablePool);
 
   // 1) available에서 먼저
   const newPicks = shuffledAvailable.slice(0, count);
@@ -412,7 +412,7 @@ function _pickGroup(count, availablePool, fullPlayerList) {
   const needed = count - pickedGroup.length;
   if (needed > 0) {
     const replenishmentPool = fullPlayerList.filter(p => !pickedGroup.includes(p));
-    const shuffledReplenish = replenishmentPool.sort(() => Math.random() - 0.5);
+    const shuffledReplenish = UI.shuffleArray(replenishmentPool);
     pickedGroup.push(...shuffledReplenish.slice(0, needed));
   }
 

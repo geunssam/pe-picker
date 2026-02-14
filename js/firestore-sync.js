@@ -5,6 +5,7 @@
 
 import { FirebaseConfig } from './firebase-config.js';
 import { Store } from './shared/store.js';
+import { decodeGroupsFromFirestore } from './shared/firestore-utils.js';
 
 let listeners = [];
 let isActive = false;
@@ -185,34 +186,6 @@ async function loadStudents(uid, classId, db) {
  * Firestore 데이터를 로컬 형식으로 변환
  */
 function convertToLocalClass(classId, classData, students) {
-  const decodeGroupsFromFirestore = (rawGroups, groupCount = 6) => {
-    if (Array.isArray(rawGroups)) return rawGroups;
-    if (!rawGroups || typeof rawGroups !== 'object') {
-      return Array.from({ length: groupCount }, () => []);
-    }
-
-    const entries = Object.entries(rawGroups);
-    if (entries.length === 0) {
-      return Array.from({ length: groupCount }, () => []);
-    }
-
-    const ordered = entries
-      .map(([key, members]) => {
-        const numeric = parseInt(String(key).replace(/\D/g, ''), 10);
-        return {
-          index: Number.isFinite(numeric) ? numeric : Number.MAX_SAFE_INTEGER,
-          members: Array.isArray(members) ? members : [],
-        };
-      })
-      .sort((a, b) => a.index - b.index);
-
-    const groups = ordered.map(item => item.members);
-    while (groups.length < groupCount) {
-      groups.push([]);
-    }
-    return groups;
-  };
-
   const groupCount = classData.groupCount || 6;
   return {
     id: classId,
