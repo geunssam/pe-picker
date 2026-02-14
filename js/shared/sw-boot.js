@@ -4,9 +4,7 @@
    - production: register SW
    ============================================ */
 
-(async () => {
-  if (!('serviceWorker' in navigator)) return;
-
+if ('serviceWorker' in navigator) {
   const host = window.location.hostname;
   const isLocalDev = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 
@@ -20,12 +18,10 @@
         const targets = keys.filter(key => key.startsWith('pe-picker-'));
         await Promise.all(targets.map(key => caches.delete(key)));
       }
-
-      return;
+    } else {
+      await navigator.serviceWorker.register('./sw.js');
     }
-
-    await navigator.serviceWorker.register('./sw.js');
   } catch (error) {
     console.warn('[SW] bootstrap error:', error);
   }
-})();
+}
