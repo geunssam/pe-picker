@@ -91,7 +91,7 @@ function getGoogleProvider() {
 }
 
 // Firebase 내보내기
-const FirebaseConfig = {
+export const FirebaseConfig = {
   initFirebase,
   getAuth: () => auth,
   getFirestore: () => db,

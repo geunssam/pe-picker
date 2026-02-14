@@ -4,10 +4,15 @@
   "description": "체육 수업 도구 - 술래뽑기, 모둠뽑기",
   "main": "index.html",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && netlify deploy --prod --dir=dist",
     "lint": "eslint js/**/*.js",
     "lint:fix": "eslint js/**/*.js --fix",
     "format": "prettier --write \"**/*.{js,html,css,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,html,css,json,md}\""
+    "format:check": "prettier --check \"**/*.{js,html,css,json,md}\"",
+    "prepare": "husky"
   },
   "keywords": [
     "education",
@@ -16,8 +21,20 @@
   ],
   "author": "",
   "license": "MIT",
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{html,css,json,md}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "eslint": "^8.57.0",
-    "prettier": "^3.2.5"
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.2.5",
+    "vite": "^7.3.1"
   }
 }

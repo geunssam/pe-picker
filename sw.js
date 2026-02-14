@@ -1,30 +1,6 @@
-const CACHE_NAME = 'pe-picker-v3';
+const CACHE_NAME = 'pe-picker-v4';
 
-const ASSETS = [
-  './',
-  './index.html',
-  './login.html',
-  './wizard.html',
-  './css/design-system.css',
-  './css/layout.css',
-  './css/animations.css',
-  './css/tag-game.css',
-  './css/group-manager.css',
-  './css/login.css',
-  './css/wizard.css',
-  './assets/logo.svg',
-  './manifest.json',
-  './js/firebase-config.js',
-  './js/auth-manager.js',
-  './js/firestore-sync.js',
-  './js/wizard.js',
-  './js/app.js',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -47,24 +23,28 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Document navigation: network-first with cached app-shell fallback.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .catch(async () => {
-          const fallback = await caches.match('./index.html');
-          return fallback || Response.error();
-        })
-    );
-    return;
-  }
-
-  // Static resources: cache-first, network fallback, then explicit error response.
+  // Network-first: try network, fall back to cache, update cache on success.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
+    fetch(request)
+      .then((response) => {
+        // Only cache successful same-origin responses
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
 
-      return fetch(request).catch(() => Response.error());
-    })
+        // Navigation fallback to cached index.html (app shell)
+        if (request.mode === 'navigate') {
+          const fallback = await caches.match('./index.html');
+          if (fallback) return fallback;
+        }
+
+        return Response.error();
+      })
   );
 });
