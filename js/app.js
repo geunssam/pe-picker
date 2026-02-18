@@ -111,9 +111,43 @@ async function bootstrapAfterAuth() {
     });
   });
 
-  const backBtn = document.getElementById('navbar-back-btn');
-  if (backBtn) {
-    backBtn.addEventListener('click', goBackToLanding);
+  // 프로필 드롭다운
+  const profileDropdown = document.getElementById('navbar-profile-dropdown');
+
+  if (profileImg && profileDropdown) {
+    profileImg.addEventListener('click', e => {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.navbar-profile-wrap')) {
+        profileDropdown.classList.remove('open');
+      }
+    });
+  }
+
+  const dropdownClassBtn = document.getElementById('navbar-dropdown-class');
+  if (dropdownClassBtn) {
+    dropdownClassBtn.addEventListener('click', () => {
+      if (profileDropdown) profileDropdown.classList.remove('open');
+      goBackToLanding();
+    });
+  }
+
+  const dropdownLogoutBtn = document.getElementById('navbar-dropdown-logout');
+  if (dropdownLogoutBtn) {
+    dropdownLogoutBtn.addEventListener('click', async () => {
+      if (profileDropdown) profileDropdown.classList.remove('open');
+      try {
+        FirestoreSync.stop();
+        Store.clearAllData();
+        await AuthManager.signOut();
+        window.location.replace('login.html');
+      } catch (error) {
+        console.warn('[App] 로그아웃 실패:', error);
+      }
+    });
   }
 
   const logoutBtn = document.getElementById('landing-logout-btn');

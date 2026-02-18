@@ -1713,25 +1713,64 @@
   color: var(--color-danger);
 }
 
-/* 하위 호환성 */
-.navbar-back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: rgba(124, 158, 245, 0.08);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  flex-shrink: 0;
+/* === 프로필 드롭다운 === */
+.navbar-profile-wrap {
+  position: relative;
 }
 
-.navbar-back-btn:hover {
-  background: rgba(124, 158, 245, 0.15);
-  color: var(--color-primary);
+.navbar-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  display: none;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  z-index: calc(var(--z-dock) + 1);
+}
+
+.navbar-profile-dropdown.open {
+  display: flex;
+}
+
+.navbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.navbar-dropdown-item:hover {
+  background: rgba(124, 158, 245, 0.08);
+}
+
+.navbar-dropdown-item + .navbar-dropdown-item {
+  border-top: 1px solid rgba(124, 158, 245, 0.08);
+}
+
+.navbar-dropdown-danger {
+  color: var(--color-danger);
+}
+
+.navbar-dropdown-danger:hover {
+  background: rgba(239, 68, 68, 0.06);
 }
 
 /* === Responsive === */
@@ -1770,6 +1809,10 @@
 
   .navbar-class-info {
     display: none; /* 모바일에서 학급정보 숨김 */
+  }
+
+  .navbar-profile-name {
+    display: none; /* 모바일에서 프로필 이름 숨김 */
   }
 
   .navbar-tab span {
