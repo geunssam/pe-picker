@@ -28,6 +28,14 @@ import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
 // ── Whistle FAB ──
 import whistleFabHtml from '../templates/whistle-fab.html?raw';
 
+// ── Assets (Vite가 해시 경로로 변환) ──
+import logoUrl from '../assets/logo.png';
+
+/** raw HTML 내 에셋 경로를 Vite 빌드 경로로 치환 */
+function resolveAssets(html) {
+  return html.replaceAll('assets/logo.png', logoUrl);
+}
+
 /**
  * 모든 HTML 템플릿을 DOM에 삽입한다.
  * app.js init() 최상단에서 호출해야 getElementById가 정상 동작한다.
@@ -41,12 +49,13 @@ import whistleFabHtml from '../templates/whistle-fab.html?raw';
 export function mountTemplates() {
   // 1. Navbar — toast-container 앞에 삽입
   const toast = document.getElementById('toast-container');
-  toast.insertAdjacentHTML('beforebegin', navbarHtml);
+  toast.insertAdjacentHTML('beforebegin', resolveAssets(navbarHtml));
 
   // 2. Pages — .app-container 내부에 삽입
   const appContainer = document.querySelector('.app-container');
-  appContainer.innerHTML =
-    classSelectorHtml + tagGameHtml + groupManagerHtml + settingsHtml + wizardHtml;
+  appContainer.innerHTML = resolveAssets(
+    classSelectorHtml + tagGameHtml + groupManagerHtml + settingsHtml + wizardHtml
+  );
 
   // 3. Modals — .app-container 바로 뒤에 삽입
   const modalsHtml =
