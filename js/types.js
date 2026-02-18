@@ -10,6 +10,7 @@
  * @property {string} name - 학생 이름
  * @property {number} number - 번호 (출석번호)
  * @property {string} gender - 성별 ('male'|'female'|'')
+ * @property {string} team - 소속 모둠 이름 (예: '1모둠', '' 미배정)
  * @property {string} sportsAbility - 운동 능력 ('high'|'medium'|'low'|'')
  * @property {string[]} tags - 태그 배열
  * @property {string} note - 메모

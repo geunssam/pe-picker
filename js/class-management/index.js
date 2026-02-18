@@ -183,10 +183,27 @@ function getStudentNames(classId) {
   return cls.students.map(student => normalizeStudentName(student)).filter(Boolean);
 }
 
+function getStudents(classId) {
+  const cls = Store.getClassById(classId);
+  if (!cls || !Array.isArray(cls.students)) return [];
+  return cls.students
+    .map(s => {
+      const name = normalizeStudentName(s);
+      if (!name) return null;
+      return {
+        name,
+        gender: (s && typeof s === 'object' && s.gender) || '',
+        team: (s && typeof s === 'object' && s.team) || '',
+      };
+    })
+    .filter(Boolean);
+}
+
 export const ClassManager = {
   init,
   populateSelect,
   getStudentNames,
+  getStudents,
   openRosterModal,
   closeRosterModal,
   openTeamModal,

@@ -213,10 +213,26 @@ export async function saveTeams() {
       return;
     }
 
+    // 학생별 team 필드 업데이트 (모둠 배정 반영)
+    const studentTeamMap = new Map();
+    finalTeams.forEach((members, teamIdx) => {
+      const teamName = finalTeamNames[teamIdx] || `${teamIdx + 1}모둠`;
+      members.forEach(memberName => {
+        if (memberName) studentTeamMap.set(memberName, teamName);
+      });
+    });
+
+    const updatedStudents = existing.students.map(s => {
+      const name = typeof s === 'string' ? s : s.name;
+      const teamName = studentTeamMap.get(name) || '';
+      if (typeof s === 'string') return s;
+      return { ...s, team: teamName };
+    });
+
     const targetClass = Store.updateClass(
       state.editingClassId,
       existing.name,
-      existing.students,
+      updatedStudents,
       finalTeamNames,
       finalTeams,
       teamCount

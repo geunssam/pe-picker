@@ -216,6 +216,7 @@ function migrateStudentData() {
           name: student,
           number: 0,
           gender: '',
+          team: '',
           sportsAbility: '',
           tags: [],
           note: '',
@@ -227,6 +228,7 @@ function migrateStudentData() {
         changed = true;
         return {
           id: generateId(),
+          team: '',
           sportsAbility: '',
           tags: [],
           note: '',
@@ -236,6 +238,7 @@ function migrateStudentData() {
 
       // 이미 확장된 구조인 경우 기본값 보장
       return {
+        team: '',
         sportsAbility: '',
         tags: [],
         note: '',

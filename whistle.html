@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>🏀 만능 휘슬</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700&display=swap');
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(160deg, #f0f4ff 0%, #e8f5e9 50%, #fff8e1 100%);
+        font-family: 'Noto Sans KR', sans-serif;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 22px;
+        padding: 24px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      h1 {
+        font-family: 'Black Han Sans', sans-serif;
+        color: #2e3a59;
+        font-size: 1.7rem;
+        letter-spacing: 3px;
+      }
+
+      .mode-row {
+        display: flex;
+        gap: 8px;
+      }
+      .mode-btn {
+        padding: 7px 14px;
+        border: 2px solid #dde;
+        border-radius: 20px;
+        background: #fff;
+        color: #999;
+        font-family: 'Noto Sans KR', sans-serif;
+        font-weight: 500;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      }
+      .mode-btn.active {
+        border-color: #e53935;
+        color: #e53935;
+        background: rgba(229, 57, 53, 0.08);
+        box-shadow: 0 2px 8px rgba(229, 57, 53, 0.15);
+      }
+
+      .whistle-btn {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        background: linear-gradient(145deg, #ff8a65, #e53935);
+        box-shadow:
+          0 8px 0 #c62828,
+          0 12px 30px rgba(229, 57, 53, 0.3),
+          inset 0 -3px 10px rgba(0, 0, 0, 0.15),
+          inset 0 3px 10px rgba(255, 255, 255, 0.2);
+        transition:
+          transform 0.08s,
+          box-shadow 0.08s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+      .whistle-btn.pressed {
+        transform: translateY(6px);
+        box-shadow:
+          0 2px 0 #c62828,
+          0 4px 12px rgba(229, 57, 53, 0.3),
+          inset 0 -2px 6px rgba(0, 0, 0, 0.15),
+          inset 0 3px 10px rgba(255, 255, 255, 0.2);
+        background: linear-gradient(145deg, #ef5350, #c62828);
+      }
+
+      .whistle-btn .icon {
+        font-size: 60px;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
+        pointer-events: none;
+      }
+      .whistle-btn .label {
+        color: rgba(255, 255, 255, 0.9);
+        font-family: 'Noto Sans KR', sans-serif;
+        font-weight: 700;
+        font-size: 0.85rem;
+        pointer-events: none;
+        letter-spacing: 1px;
+      }
+
+      .ring {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 3px solid rgba(229, 57, 53, 0.4);
+        pointer-events: none;
+        opacity: 0;
+      }
+      .ring.continuous {
+        animation: rippleContinuous 1s ease-out infinite;
+      }
+      .ring.animate {
+        animation: rippleOnce 0.6s ease-out forwards;
+      }
+      @keyframes rippleContinuous {
+        0% {
+          transform: scale(1);
+          opacity: 0.4;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+      @keyframes rippleOnce {
+        0% {
+          transform: scale(1);
+          opacity: 0.6;
+        }
+        100% {
+          transform: scale(1.9);
+          opacity: 0;
+        }
+      }
+
+      .volume-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #777;
+        font-size: 1.1rem;
+        width: 100%;
+        padding: 0 12px;
+      }
+      .volume-row .vol-icon {
+        font-size: 1.4rem;
+        flex-shrink: 0;
+      }
+      .volume-row .vol-pct {
+        font-family: 'Noto Sans KR', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #e53935;
+        min-width: 40px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      input[type='range'] {
+        -webkit-appearance: none;
+        flex: 1;
+        height: 8px;
+        background: linear-gradient(to right, #e53935, #ff8a65);
+        border-radius: 4px;
+        outline: none;
+        touch-action: none;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 32px;
+        height: 32px;
+        background: #fff;
+        border: 3px solid #e53935;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+      input[type='range']::-moz-range-thumb {
+        width: 32px;
+        height: 32px;
+        background: #fff;
+        border: 3px solid #e53935;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .hint {
+        color: #aab;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        text-align: center;
+        line-height: 1.6;
+      }
+      .hint .warn {
+        color: #f57c00;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏀 만능 휘슬</h1>
+
+      <div class="mode-row">
+        <button class="mode-btn active" data-mode="hold">꾹 누르기</button>
+        <button class="mode-btn" data-mode="long">길게 삐———</button>
+        <button class="mode-btn" data-mode="triple">삐삐삐!</button>
+      </div>
+
+      <div style="position: relative; display: flex; align-items: center; justify-content: center">
+        <button class="whistle-btn" id="btn">
+          <span class="icon">📣</span>
+          <span class="label" id="btnLabel">꾹 누르기</span>
+        </button>
+        <div class="ring" id="ring1"></div>
+        <div class="ring" id="ring2"></div>
+      </div>
+
+      <div class="volume-row">
+        <span class="vol-icon">🔈</span>
+        <input type="range" id="vol" min="0" max="100" step="1" value="100" />
+        <span class="vol-icon">🔊</span>
+        <span class="vol-pct" id="volLabel">100%</span>
+      </div>
+
+      <p class="hint" id="hint">누르고 있는 동안 소리가 납니다 🔊</p>
+    </div>
+
+    <script>
+      let audioCtx = null;
+      let isPlaying = false;
+      let activeNodes = null;
+      let masterGain = null;
+      let currentMode = 'hold';
+
+      function makeSoftClipCurve(amount) {
+        const samples = 44100;
+        const curve = new Float32Array(samples);
+        for (let i = 0; i < samples; i++) {
+          const x = (i * 2) / samples - 1;
+          curve[i] = ((Math.PI + amount) * x) / (Math.PI + amount * Math.abs(x));
+        }
+        return curve;
+      }
+
+      function ensureAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+
+      let firstUnlocked = false;
+      function unlockAudio() {
+        if (firstUnlocked) return;
+        ensureAudio();
+        try {
+          const buf = audioCtx.createBuffer(1, 1, 22050);
+          const src = audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.connect(audioCtx.destination);
+          src.start(0);
+        } catch (e) {}
+        firstUnlocked = true;
+      }
+
+      function getVolume() {
+        return parseFloat(document.getElementById('vol').value) / 100;
+      }
+
+      function getCubicVol() {
+        const v = getVolume();
+        return v * v * v;
+      }
+
+      function createMaxChain(now) {
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(getCubicVol() * 4.0, now);
+
+        const shaper = audioCtx.createWaveShaper();
+        shaper.curve = makeSoftClipCurve(18);
+        shaper.oversample = '4x';
+        const comp1 = audioCtx.createDynamicsCompressor();
+        comp1.threshold.setValueAtTime(-28, now);
+        comp1.knee.setValueAtTime(3, now);
+        comp1.ratio.setValueAtTime(14, now);
+        comp1.attack.setValueAtTime(0.001, now);
+        comp1.release.setValueAtTime(0.03, now);
+        const comp2 = audioCtx.createDynamicsCompressor();
+        comp2.threshold.setValueAtTime(-12, now);
+        comp2.knee.setValueAtTime(2, now);
+        comp2.ratio.setValueAtTime(10, now);
+        comp2.attack.setValueAtTime(0.001, now);
+        comp2.release.setValueAtTime(0.02, now);
+        const limiter = audioCtx.createDynamicsCompressor();
+        limiter.threshold.setValueAtTime(-1, now);
+        limiter.knee.setValueAtTime(0, now);
+        limiter.ratio.setValueAtTime(20, now);
+        limiter.attack.setValueAtTime(0.0005, now);
+        limiter.release.setValueAtTime(0.005, now);
+        const postGain = audioCtx.createGain();
+        postGain.gain.setValueAtTime(2.0, now);
+
+        masterGain.connect(shaper);
+        shaper.connect(comp1);
+        comp1.connect(comp2);
+        comp2.connect(limiter);
+        limiter.connect(postGain);
+        postGain.connect(audioCtx.destination);
+        return masterGain;
+      }
+
+      /* === 고정 길이 톤 (long, triple용) === */
+      function createFixedTone(startTime, duration) {
+        unlockAudio();
+        ensureAudio();
+
+        const now = startTime,
+          end = now + duration;
+        const cv = getCubicVol();
+
+        const preGain = audioCtx.createGain();
+        preGain.gain.setValueAtTime(cv * 4.0, now);
+        const shaper = audioCtx.createWaveShaper();
+        shaper.curve = makeSoftClipCurve(18);
+        shaper.oversample = '4x';
+        const comp1 = audioCtx.createDynamicsCompressor();
+        comp1.threshold.setValueAtTime(-28, now);
+        comp1.knee.setValueAtTime(3, now);
+        comp1.ratio.setValueAtTime(14, now);
+        comp1.attack.setValueAtTime(0.001, now);
+        comp1.release.setValueAtTime(0.03, now);
+        const comp2 = audioCtx.createDynamicsCompressor();
+        comp2.threshold.setValueAtTime(-12, now);
+        comp2.knee.setValueAtTime(2, now);
+        comp2.ratio.setValueAtTime(10, now);
+        comp2.attack.setValueAtTime(0.001, now);
+        comp2.release.setValueAtTime(0.02, now);
+        const limiter = audioCtx.createDynamicsCompressor();
+        limiter.threshold.setValueAtTime(-1, now);
+        limiter.knee.setValueAtTime(0, now);
+        limiter.ratio.setValueAtTime(20, now);
+        limiter.attack.setValueAtTime(0.0005, now);
+        limiter.release.setValueAtTime(0.005, now);
+        const postGain = audioCtx.createGain();
+        postGain.gain.setValueAtTime(2.0, now);
+        preGain.connect(shaper);
+        shaper.connect(comp1);
+        comp1.connect(comp2);
+        comp2.connect(limiter);
+        limiter.connect(postGain);
+        postGain.connect(audioCtx.destination);
+
+        const env = audioCtx.createGain();
+        env.gain.setValueAtTime(0, now);
+        env.gain.linearRampToValueAtTime(1, now + 0.015);
+        env.gain.setValueAtTime(1, end - 0.04);
+        env.gain.linearRampToValueAtTime(0, end);
+        env.connect(preGain);
+
+        const osc1 = audioCtx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(2800, now);
+        osc1.connect(env);
+        const osc2 = audioCtx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(5600, now);
+        const g2 = audioCtx.createGain();
+        g2.gain.setValueAtTime(0.2, now);
+        osc2.connect(g2);
+        g2.connect(env);
+        const lfo = audioCtx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(28, now);
+        const lfoG = audioCtx.createGain();
+        lfoG.gain.setValueAtTime(80, now);
+        lfo.connect(lfoG);
+        lfoG.connect(osc1.frequency);
+        lfoG.connect(osc2.frequency);
+
+        const noiseLen = Math.ceil(audioCtx.sampleRate * duration);
+        const noiseBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
+        const nd = noiseBuf.getChannelData(0);
+        for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * 0.12;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuf;
+        const hpf = audioCtx.createBiquadFilter();
+        hpf.type = 'highpass';
+        hpf.frequency.setValueAtTime(2000, now);
+        const nG = audioCtx.createGain();
+        nG.gain.setValueAtTime(0.4, now);
+        nG.gain.setValueAtTime(0.4, end - 0.04);
+        nG.gain.linearRampToValueAtTime(0, end);
+        noise.connect(hpf);
+        hpf.connect(nG);
+        nG.connect(preGain);
+
+        osc1.start(now);
+        osc1.stop(end + 0.01);
+        osc2.start(now);
+        osc2.stop(end + 0.01);
+        lfo.start(now);
+        lfo.stop(end + 0.01);
+        noise.start(now);
+        noise.stop(end + 0.01);
+      }
+
+      /* === 꾹 누르기 (hold) 모드 === */
+      function startHoldWhistle() {
+        if (isPlaying) return;
+        unlockAudio();
+        ensureAudio();
+        if (audioCtx.state !== 'running') {
+          audioCtx.resume().then(() => doStartHold());
+        } else {
+          doStartHold();
+        }
+      }
+
+      function doStartHold() {
+        if (isPlaying) return;
+        isPlaying = true;
+        const now = audioCtx.currentTime;
+        const input = createMaxChain(now);
+
+        const env = audioCtx.createGain();
+        env.gain.setValueAtTime(0, now);
+        env.gain.linearRampToValueAtTime(1, now + 0.015);
+        env.connect(input);
+
+        const osc1 = audioCtx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(2800, now);
+        osc1.connect(env);
+        const osc2 = audioCtx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(5600, now);
+        const g2 = audioCtx.createGain();
+        g2.gain.setValueAtTime(0.2, now);
+        osc2.connect(g2);
+        g2.connect(env);
+        const lfo = audioCtx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(28, now);
+        const lfoG = audioCtx.createGain();
+        lfoG.gain.setValueAtTime(80, now);
+        lfo.connect(lfoG);
+        lfoG.connect(osc1.frequency);
+        lfoG.connect(osc2.frequency);
+
+        const noiseLen = audioCtx.sampleRate * 30;
+        const noiseBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
+        const nd = noiseBuf.getChannelData(0);
+        for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * 0.12;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuf;
+        const hpf = audioCtx.createBiquadFilter();
+        hpf.type = 'highpass';
+        hpf.frequency.setValueAtTime(2000, now);
+        const nG = audioCtx.createGain();
+        nG.gain.setValueAtTime(0.4, now);
+        noise.connect(hpf);
+        hpf.connect(nG);
+        nG.connect(input);
+
+        osc1.start(now);
+        osc2.start(now);
+        lfo.start(now);
+        noise.start(now);
+        if (navigator.vibrate) navigator.vibrate([9999]);
+        activeNodes = { osc1, osc2, lfo, noise, env, nG };
+      }
+
+      function stopHoldWhistle() {
+        if (!isPlaying || !activeNodes) {
+          isPlaying = false;
+          return;
+        }
+        const now = audioCtx.currentTime;
+        const fade = 0.03;
+        try {
+          activeNodes.env.gain.cancelScheduledValues(now);
+          activeNodes.env.gain.setValueAtTime(activeNodes.env.gain.value, now);
+          activeNodes.env.gain.linearRampToValueAtTime(0, now + fade);
+          activeNodes.nG.gain.cancelScheduledValues(now);
+          activeNodes.nG.gain.setValueAtTime(activeNodes.nG.gain.value, now);
+          activeNodes.nG.gain.linearRampToValueAtTime(0, now + fade);
+          const st = now + fade + 0.01;
+          activeNodes.osc1.stop(st);
+          activeNodes.osc2.stop(st);
+          activeNodes.lfo.stop(st);
+          activeNodes.noise.stop(st);
+        } catch (e) {}
+        if (navigator.vibrate) navigator.vibrate(0);
+        activeNodes = null;
+        masterGain = null;
+        isPlaying = false;
+      }
+
+      /* === 볼륨 === */
+      const volSlider = document.getElementById('vol');
+      const volLabel = document.getElementById('volLabel');
+
+      function updateVolume() {
+        const v = getVolume();
+        volLabel.textContent = Math.round(v * 100) + '%';
+        if (masterGain && audioCtx) {
+          const now = audioCtx.currentTime;
+          const expVol = v * v * v;
+          masterGain.gain.cancelScheduledValues(now);
+          masterGain.gain.setValueAtTime(expVol * 4.0, now);
+        }
+      }
+      volSlider.addEventListener('input', updateVolume);
+      volSlider.addEventListener('change', updateVolume);
+
+      /* === 리플 === */
+      function startRipple() {
+        document.getElementById('ring1').classList.add('continuous');
+        setTimeout(() => document.getElementById('ring2').classList.add('continuous'), 400);
+      }
+      function stopRipple() {
+        document.getElementById('ring1').classList.remove('continuous');
+        document.getElementById('ring2').classList.remove('continuous');
+      }
+      function pulseRipple() {
+        ['ring1', 'ring2'].forEach((id, i) => {
+          const r = document.getElementById(id);
+          r.classList.remove('animate');
+          void r.offsetWidth;
+          setTimeout(() => r.classList.add('animate'), i * 120);
+        });
+      }
+
+      /* === 모드 버튼 === */
+      document.querySelectorAll('.mode-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.mode-btn').forEach(x => {
+            x.classList.remove('active');
+            x.style.borderColor = '#dde';
+            x.style.color = '#999';
+            x.style.background = '#fff';
+            x.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)';
+          });
+          b.classList.add('active');
+          b.style.borderColor = '#e53935';
+          b.style.color = '#e53935';
+          b.style.background = 'rgba(229,57,53,0.08)';
+          b.style.boxShadow = '0 2px 8px rgba(229,57,53,0.15)';
+          currentMode = b.dataset.mode;
+
+          const btnLabel = document.getElementById('btnLabel');
+          const hint = document.getElementById('hint');
+          if (currentMode === 'hold') {
+            btnLabel.textContent = '꾹 누르기';
+            hint.innerHTML = '누르고 있는 동안 소리가 납니다 🔊';
+          } else if (currentMode === 'long') {
+            btnLabel.textContent = '길게 삐———';
+            hint.innerHTML = '버튼을 누르세요 🔊';
+          } else {
+            btnLabel.textContent = '삐삐삐!';
+            hint.innerHTML = '버튼을 누르세요 🔊';
+          }
+          if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            hint.innerHTML =
+              '<span class="warn">📱 소리가 안 나면 옆면 무음 스위치를 해제하세요</span>';
+          }
+        });
+      });
+
+      /* === 이벤트 === */
+      const btn = document.getElementById('btn');
+      let pressing = false;
+
+      function handleDown(e) {
+        e.preventDefault();
+        if (pressing) return;
+        pressing = true;
+        btn.classList.add('pressed');
+
+        if (currentMode === 'hold') {
+          startHoldWhistle();
+          startRipple();
+        } else if (currentMode === 'long') {
+          unlockAudio();
+          ensureAudio();
+          if (audioCtx.state !== 'running') {
+            audioCtx.resume().then(() => {
+              createFixedTone(audioCtx.currentTime, 1.5);
+            });
+          } else {
+            createFixedTone(audioCtx.currentTime, 1.5);
+          }
+          pulseRipple();
+          if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+          setTimeout(() => {
+            pressing = false;
+            btn.classList.remove('pressed');
+          }, 300);
+        } else if (currentMode === 'triple') {
+          unlockAudio();
+          ensureAudio();
+          if (audioCtx.state !== 'running') {
+            audioCtx.resume().then(() => {
+              const now = audioCtx.currentTime;
+              createFixedTone(now, 0.25);
+              createFixedTone(now + 0.35, 0.25);
+              createFixedTone(now + 0.7, 0.5);
+            });
+          } else {
+            const now = audioCtx.currentTime;
+            createFixedTone(now, 0.25);
+            createFixedTone(now + 0.35, 0.25);
+            createFixedTone(now + 0.7, 0.5);
+          }
+          pulseRipple();
+          if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+          setTimeout(() => {
+            pressing = false;
+            btn.classList.remove('pressed');
+          }, 300);
+        }
+      }
+
+      function handleUp(e) {
+        if (e) e.preventDefault();
+        if (!pressing) return;
+        if (currentMode === 'hold') {
+          pressing = false;
+          btn.classList.remove('pressed');
+          stopHoldWhistle();
+          stopRipple();
+        }
+        // long, triple은 handleDown에서 자동 해제
+      }
+
+      btn.addEventListener('touchstart', handleDown, { passive: false });
+      btn.addEventListener('touchend', handleUp, { passive: false });
+      btn.addEventListener('touchcancel', handleUp, { passive: false });
+
+      btn.addEventListener('mousedown', e => {
+        if ('ontouchstart' in window) return;
+        handleDown(e);
+      });
+      document.addEventListener('mouseup', e => {
+        if ('ontouchstart' in window) return;
+        handleUp(e);
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !e.repeat) {
+          e.preventDefault();
+          handleDown(e);
+        }
+      });
+      document.addEventListener('keyup', e => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          handleUp(e);
+        }
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) handleUp();
+      });
+      window.addEventListener('blur', () => handleUp());
+
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        document.getElementById('hint').innerHTML =
+          '<span class="warn">📱 소리가 안 나면 옆면 무음 스위치를 해제하세요</span>';
+      }
+    </script>
+  </body>
+</html>

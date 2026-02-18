@@ -45,6 +45,7 @@ function sanitizeClassData(classData) {
         name: student.name || '',
         number: parseInt(student.number, 10) || 0,
         gender: student.gender || '',
+        team: student.team || '',
         sportsAbility: student.sportsAbility || '',
         tags: Array.isArray(student.tags) ? student.tags : [],
         note: student.note || '',

@@ -126,19 +126,22 @@ function onPageEnter() {
 
 function autoLoadFromSelectedClass() {
   const cls = Store.getSelectedClass();
-  if (!cls) return;
-  const students = window.ClassManager.getStudentNames(cls.id);
-  if (students.length === 0) return;
-
-  // 빈 이름 필터링
-  const validStudents = students.filter(name => name && name.trim() !== '');
-  if (validStudents.length === 0) return;
+  if (!cls) {
+    showStudentCardsWrapper();
+    return;
+  }
+  const students = window.ClassManager.getStudents(cls.id);
+  if (students.length === 0) {
+    showStudentCardsWrapper();
+    return;
+  }
 
   const container = document.getElementById('gm-student-cards');
   if (!container) return;
   container.innerHTML = '';
-  validStudents.forEach(name => createStudentCard(container, name));
-  document.getElementById('gm-student-count').value = validStudents.length;
+  students.forEach(s => createStudentCard(container, s.name, false, s.gender));
+  document.getElementById('gm-student-count').value = students.length;
+  showStudentCardsWrapper();
 }
 
 // === Phase UI 전환 ===
@@ -226,9 +229,10 @@ function createStudentCard(container, name, isExcluded = false, gender = null) {
 // 학생 카드 생성 후 wrapper 표시
 function showStudentCardsWrapper() {
   const wrapper = document.getElementById('gm-student-cards-wrapper');
-  if (wrapper && document.querySelectorAll('#gm-student-cards .tag-student-card').length > 0) {
-    wrapper.style.display = 'flex';
-  }
+  const emptyMsg = document.getElementById('gm-no-students-message');
+  const hasCards = document.querySelectorAll('#gm-student-cards .tag-student-card').length > 0;
+  if (wrapper) wrapper.style.display = hasCards ? '' : 'none';
+  if (emptyMsg) emptyMsg.style.display = hasCards ? 'none' : '';
 }
 
 function toggleStudentCard(button) {
@@ -319,15 +323,12 @@ function openClassSelectModal() {
     UI.showToast('선택된 학급이 없습니다', 'error');
     return;
   }
-  const students = window.ClassManager.getStudentNames(cls.id);
-
-  // 빈 이름 필터링
-  const validStudents = students.filter(name => name && name.trim() !== '');
+  const students = window.ClassManager.getStudents(cls.id);
 
   const container = document.getElementById('gm-student-cards');
   if (!container) return;
 
-  if (validStudents.length === 0) {
+  if (students.length === 0) {
     container.innerHTML = '';
     showStudentCardsWrapper();
     UI.showModal('empty-students-modal');
@@ -335,11 +336,11 @@ function openClassSelectModal() {
   }
 
   container.innerHTML = '';
-  validStudents.forEach(name => createStudentCard(container, name));
-  document.getElementById('gm-student-count').value = validStudents.length;
+  students.forEach(s => createStudentCard(container, s.name, false, s.gender));
+  document.getElementById('gm-student-count').value = students.length;
   updateCalcInfo();
   showStudentCardsWrapper();
-  UI.showToast(`${validStudents.length}명 불러오기 완료`, 'success');
+  UI.showToast(`${students.length}명 불러오기 완료`, 'success');
 }
 
 // === 계산 정보 업데이트 ===
@@ -515,41 +516,46 @@ async function executeGroupPick(students, groupSize, groupCount) {
 
   if (isFixedGroups && cls && cls.teams) {
     // === 고정 모둠 로직 ===
-    // 현재 존재하는 학생(students)만 필터링해서 고정 모둠 형태로 배치
-
-    // students 배열을 Set으로 변환하여 검색 속도 향상
     const studentSet = new Set(students);
+    const shuffleOrder = document.getElementById('gm-fixed-shuffle-order')?.checked;
+    const shuffleMembers = document.getElementById('gm-fixed-shuffle-members')?.checked;
 
+    const fixedGroups = [];
     for (let i = 0; i < groupCount; i++) {
-      // 저장된 모둠원 중 현재 '참가자 카드'에 있는 학생만 필터링 (결석 처리)
-      // cls.teams[i]가 없을 수도 있음
       const savedMembers = cls.teams[i] || [];
+      const activeMembers = savedMembers
+        .filter(m => {
+          const name = typeof m === 'string' ? m : m.name;
+          return studentSet.has(name);
+        })
+        .map(m => (typeof m === 'string' ? m : m.name));
 
-      // 문자열 또는 객체 처리
-      const activeMembers = savedMembers.filter(m => {
-        const name = typeof m === 'string' ? m : m.name;
-        return studentSet.has(name);
-      });
+      // 모둠 내 순서 셔플 (리더 ⭐ 고정, 나머지만 셔플)
+      let formattedMembers;
+      if (shuffleMembers && activeMembers.length > 1) {
+        const [leader, ...rest] = activeMembers;
+        formattedMembers = [`⭐ ${leader}`, ...UI.shuffleArray(rest)];
+      } else {
+        formattedMembers = activeMembers.map((name, idx) => (idx === 0 ? `⭐ ${name}` : name));
+      }
 
-      // 리더 표시 (첫 번째 학생에게 ⭐)
-      const formattedMembers = activeMembers.map((m, idx) => {
-        const name = typeof m === 'string' ? m : m.name;
-        return idx === 0 ? `⭐ ${name}` : name;
-      });
-
-      currentGroups.push({
-        id: i + 1,
+      fixedGroups.push({
         name: groupNames[i] || `${i + 1}모둠`,
         members: formattedMembers,
-        cookies: 0,
       });
     }
 
-    // 고정 모둠에 속하지 않은 학생 찾기 (오류 방지용)
-    // (학급 설정에는 없는데 카드에는 있는 경우 -> "미배정" 또는 랜덤 배정?)
-    // 현재 로직상 학급에서 불러오면 카드가 생성되므로, 보통은 다 포함됨.
-    // 만약 수동으로 추가한 카드가 있다면? -> 이들은 제외될 수 있음.
-    // 일단은 제외하는 것으로 처리 (고정 모둠의 맹점)
+    // 모둠 순서 셔플 (체크 시에만)
+    const finalGroups = shuffleOrder ? UI.shuffleArray(fixedGroups) : fixedGroups;
+
+    finalGroups.forEach((group, idx) => {
+      currentGroups.push({
+        id: idx + 1,
+        name: group.name,
+        members: group.members,
+        cookies: 0,
+      });
+    });
   } else {
     // === 기존 랜덤 섞기 로직 ===
     const shuffled = UI.shuffleArray(students);
@@ -578,15 +584,39 @@ async function executeGroupPick(students, groupSize, groupCount) {
   UI.hidePickingOverlay();
   Sound.playPick();
 
+  // 설정 카드의 분/초에서 타이머 시간 읽기
+  const setMin = parseInt(document.getElementById('gm-timer-min')?.value) || 0;
+  const setSec = parseInt(document.getElementById('gm-timer-sec')?.value) || 0;
+  const totalSec = setMin * 60 + setSec;
+  if (totalSec > 0) {
+    timerSeconds = totalSec;
+    if (timer) timer.reset(timerSeconds);
+    updateTimerDisplay(timerSeconds);
+    // 프리셋 활성 표시 해제 (커스텀 시간이므로)
+    document.querySelectorAll('.gm-timer-preset').forEach(b => b.classList.remove('active'));
+  }
+
   currentPhase = 2;
-  timerVisible = false;
+  timerVisible = totalSec > 0; // 시간이 설정된 경우만 타이머 표시
 
   // 결과 화면 타이틀 업데이트 (랜덤/고정 모드 표시)
   const resultTitle = document.querySelector('#gm-result-section .section-title');
   if (resultTitle) {
-    resultTitle.textContent = isFixedGroups
-      ? '🎯 고정 모둠 구성 결과 (📌 고정)'
-      : '🎯 랜덤 모둠 뽑기 결과 (🔀 섞음)';
+    if (!isFixedGroups) {
+      resultTitle.textContent = '🎯 랜덤 모둠 뽑기 결과 (🔀 섞음)';
+    } else {
+      const so = document.getElementById('gm-fixed-shuffle-order')?.checked;
+      const sm = document.getElementById('gm-fixed-shuffle-members')?.checked;
+      if (so && sm) {
+        resultTitle.textContent = '🎯 고정 모둠 뽑기 결과 (🔀 순서+멤버 섞음)';
+      } else if (so) {
+        resultTitle.textContent = '🎯 고정 모둠 순서 뽑기 결과 (🔀 순서 섞음)';
+      } else if (sm) {
+        resultTitle.textContent = '🎯 고정 모둠 내 순서 뽑기 결과 (🔀 멤버 섞음)';
+      } else {
+        resultTitle.textContent = '🎯 고정 모둠 구성 결과 (📌 고정)';
+      }
+    }
   }
 
   updateGmUI();
@@ -603,7 +633,17 @@ async function executeGroupPick(students, groupSize, groupCount) {
       UI.showToast('모둠 구성 완료!', 'success');
     }
   } else {
-    UI.showToast('고정 모둠 구성 완료!', 'success');
+    const so = document.getElementById('gm-fixed-shuffle-order')?.checked;
+    const sm = document.getElementById('gm-fixed-shuffle-members')?.checked;
+    if (so && sm) {
+      UI.showToast('고정 모둠 뽑기 완료! (순서+멤버 섞음)', 'success');
+    } else if (so) {
+      UI.showToast('고정 모둠 순서 뽑기 완료!', 'success');
+    } else if (sm) {
+      UI.showToast('고정 모둠 내 순서 뽑기 완료! (멤버 섞음)', 'success');
+    } else {
+      UI.showToast('고정 모둠 구성 완료! (고정)', 'success');
+    }
   }
 }
 
@@ -642,11 +682,11 @@ function initTimer() {
   document.getElementById('gm-timer-start')?.addEventListener('click', startTimer);
   document.getElementById('gm-timer-pause')?.addEventListener('click', pauseTimer);
   document.getElementById('gm-timer-reset')?.addEventListener('click', resetTimer);
-  // 전체화면 타이머 (HTML 모달 없음 - 추후 구현 시 주석 해제)
-  // document.getElementById('gm-timer-fullscreen')?.addEventListener('click', () => {
-  //   const remaining = timer ? timer.remainingSeconds : timerSeconds;
-  //   TimerModule.openFullscreen(remaining);
-  // });
+  // 전체화면 타이머
+  document.getElementById('gm-timer-fullscreen')?.addEventListener('click', enterGmFullscreen);
+  document.getElementById('gm-timer-fs-close')?.addEventListener('click', exitGmFullscreen);
+  document.getElementById('gm-timer-fs-toggle')?.addEventListener('click', toggleFsTimer);
+  document.getElementById('gm-timer-fs-end')?.addEventListener('click', endGmTimer);
 
   // 초기 타이머 표시
   updateTimerDisplay(timerSeconds);
@@ -666,6 +706,12 @@ function startTimer() {
         document.getElementById('gm-timer-start').style.display = '';
         document.getElementById('gm-timer-pause').style.display = 'none';
         UI.showToast('타이머 종료!', 'success');
+        // 전체화면이면 2초 후 자동 닫기
+        if (gmFullscreen) {
+          const fsToggle = document.getElementById('gm-timer-fs-toggle');
+          if (fsToggle) fsToggle.textContent = '▶️ 시작';
+          setTimeout(exitGmFullscreen, 2000);
+        }
       },
       warningAt: 10,
     });
@@ -698,6 +744,77 @@ function updateTimerDisplay(seconds) {
     display.textContent = UI.formatTime(seconds);
     display.classList.toggle('warning', seconds <= 10 && seconds > 0);
   }
+  // 전체화면 디스플레이도 동기화
+  const fsDisplay = document.getElementById('gm-fs-timer-display');
+  if (fsDisplay) {
+    fsDisplay.textContent = UI.formatTime(seconds);
+    fsDisplay.classList.remove('timer-normal', 'timer-warning', 'timer-danger');
+    if (seconds > 30) fsDisplay.classList.add('timer-normal');
+    else if (seconds > 10) fsDisplay.classList.add('timer-warning');
+    else fsDisplay.classList.add('timer-danger');
+  }
+}
+
+let gmFullscreen = false;
+
+function enterGmFullscreen() {
+  const el = document.getElementById('gm-timer-phase');
+  if (!el) return;
+
+  // 현재 남은 시간 동기화
+  const remaining = timer ? timer.remainingSeconds : timerSeconds;
+  updateTimerDisplay(remaining);
+
+  // 전체화면 표시 + timer-fullscreen 클래스 (술래뽑기와 동일)
+  el.style.display = '';
+  el.classList.add('timer-fullscreen');
+  document.body.style.overflow = 'hidden';
+  gmFullscreen = true;
+
+  // 전체화면 토글 버튼 상태
+  const fsToggle = document.getElementById('gm-timer-fs-toggle');
+  if (fsToggle) {
+    fsToggle.textContent = timer?.isRunning ? '⏸️ 일시정지' : '▶️ 시작';
+  }
+
+  // 타이머가 안 돌고 있으면 자동 시작
+  if (!timer || !timer.isRunning) {
+    startTimer();
+    if (fsToggle) fsToggle.textContent = '⏸️ 일시정지';
+  }
+}
+
+function exitGmFullscreen() {
+  const el = document.getElementById('gm-timer-phase');
+  if (el) {
+    el.classList.remove('timer-fullscreen');
+    el.style.display = 'none';
+  }
+  document.body.style.overflow = '';
+  gmFullscreen = false;
+}
+
+function toggleFsTimer() {
+  const fsToggle = document.getElementById('gm-timer-fs-toggle');
+  if (timer?.isRunning) {
+    pauseTimer();
+    if (fsToggle) fsToggle.textContent = '▶️ 시작';
+  } else {
+    startTimer();
+    if (fsToggle) fsToggle.textContent = '⏸️ 일시정지';
+  }
+}
+
+function endGmTimer() {
+  if (timer) {
+    timer.reset(timerSeconds);
+  }
+  updateTimerDisplay(timerSeconds);
+  document.getElementById('gm-timer-start').style.display = '';
+  document.getElementById('gm-timer-pause').style.display = 'none';
+  const display = document.getElementById('gm-timer-display');
+  if (display) display.classList.remove('warning');
+  exitGmFullscreen();
 }
 
 // === 모둠 이름 관련 함수 ===

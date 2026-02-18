@@ -512,6 +512,45 @@ function hide() {
   closePanel();
 }
 
+// === 전체화면 타이머 휘슬 바인딩 헬퍼 ===
+function bindTimerWhistle(btnId, ring1Id, ring2Id) {
+  const btn = document.getElementById(btnId);
+  const r1 = document.getElementById(ring1Id);
+  const r2 = document.getElementById(ring2Id);
+  if (!btn) return;
+
+  // 첫 번째 바인딩만 timerWhistleBtn 등에 저장 (기존 호환)
+  if (!timerWhistleBtn) {
+    timerWhistleBtn = btn;
+    timerRing1 = r1;
+    timerRing2 = r2;
+  }
+
+  const down = e => {
+    e.preventDefault();
+    // 현재 활성 버튼/링 교체
+    timerWhistleBtn = btn;
+    timerRing1 = r1;
+    timerRing2 = r2;
+    handleTimerDown(e);
+  };
+  const up = e => {
+    handleTimerUp(e);
+  };
+
+  btn.addEventListener('touchstart', down, { passive: false });
+  btn.addEventListener('touchend', up, { passive: false });
+  btn.addEventListener('touchcancel', up, { passive: false });
+  btn.addEventListener('mousedown', e => {
+    if ('ontouchstart' in window) return;
+    down(e);
+  });
+  document.addEventListener('mouseup', e => {
+    if ('ontouchstart' in window) return;
+    up(e);
+  });
+}
+
 // === 초기화 ===
 function init() {
   fabBtn = document.getElementById('whistle-fab');
@@ -577,31 +616,19 @@ function init() {
   const closeBtn = document.getElementById('whistle-panel-close');
   if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
-  // === 전체화면 타이머 인라인 휘슬 바인딩 ===
-  timerWhistleBtn = document.getElementById('tag-timer-whistle-btn');
-  timerRing1 = document.getElementById('tag-timer-whistle-ring1');
-  timerRing2 = document.getElementById('tag-timer-whistle-ring2');
+  // === 전체화면 타이머 인라인 휘슬 바인딩 (술래뽑기 + 모둠뽑기) ===
+  bindTimerWhistle('tag-timer-whistle-btn', 'tag-timer-whistle-ring1', 'tag-timer-whistle-ring2');
+  bindTimerWhistle('gm-timer-whistle-btn', 'gm-timer-whistle-ring1', 'gm-timer-whistle-ring2');
 
-  if (timerWhistleBtn) {
-    timerWhistleBtn.addEventListener('touchstart', handleTimerDown, { passive: false });
-    timerWhistleBtn.addEventListener('touchend', handleTimerUp, { passive: false });
-    timerWhistleBtn.addEventListener('touchcancel', handleTimerUp, { passive: false });
-
-    timerWhistleBtn.addEventListener('mousedown', e => {
-      if ('ontouchstart' in window) return;
-      handleTimerDown(e);
-    });
-    document.addEventListener('mouseup', e => {
-      if ('ontouchstart' in window) return;
-      handleTimerUp(e);
-    });
-  }
-
-  // 타이머 휘슬 모드 버튼
-  document.querySelectorAll('[data-whistle-mode]').forEach(b => {
+  // 타이머 휘슬 모드 버튼 (술래뽑기 + 모둠뽑기)
+  document.querySelectorAll('[data-whistle-mode], [data-gm-whistle-mode]').forEach(b => {
     b.addEventListener('click', () => {
       timerMode = b.dataset.mode;
-      document.querySelectorAll('[data-whistle-mode]').forEach(m => {
+      // 같은 컨테이너 내 모드 버튼만 토글
+      const attr = b.hasAttribute('data-gm-whistle-mode')
+        ? 'data-gm-whistle-mode'
+        : 'data-whistle-mode';
+      document.querySelectorAll(`[${attr}]`).forEach(m => {
         m.classList.toggle('timer-whistle-mode--active', m.dataset.mode === timerMode);
       });
     });

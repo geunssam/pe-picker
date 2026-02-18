@@ -295,6 +295,7 @@ async function handleComplete() {
         name: '',
         number: idx + 1,
         gender: '',
+        team: '',
         sportsAbility: '',
         tags: [],
         note: '',

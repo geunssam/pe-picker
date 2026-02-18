@@ -177,9 +177,10 @@
 
 /* === 라운드 표시 === */
 .tag-round-display {
+  font-family: var(--font-display);
   text-align: center;
   font-size: var(--font-size-xl);
-  font-weight: 800;
+  font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -333,8 +334,9 @@
 }
 
 .tag-timer-display {
+  font-family: var(--font-display);
   font-size: min(20vw, 100px);
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -2px;
 }

@@ -36,6 +36,7 @@ export function createModalStudent(rawStudent = {}, fallbackNumber = 0) {
     number:
       Number.isFinite(numberCandidate) && numberCandidate > 0 ? numberCandidate : fallbackNumber,
     gender: hasObject ? sanitizeGender(rawStudent.gender) : '',
+    team: hasObject && typeof rawStudent.team === 'string' ? rawStudent.team : '',
     sportsAbility:
       hasObject && typeof rawStudent.sportsAbility === 'string' ? rawStudent.sportsAbility : '',
     tags: hasObject && Array.isArray(rawStudent.tags) ? rawStudent.tags : [],

@@ -38,6 +38,7 @@
 }
 
 .login-title {
+  font-family: var(--font-display);
   font-size: var(--font-size-3xl);
   margin-bottom: 4px;
 }

@@ -75,6 +75,7 @@
 }
 
 .page-title {
+  font-family: var(--font-display);
   font-size: var(--font-size-xl);
   font-weight: 700;
   background: var(--gradient-primary);
@@ -226,8 +227,9 @@
 }
 
 .section-title {
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: var(--space-md);
   display: flex;
@@ -357,6 +359,7 @@
 }
 
 .modal-title {
+  font-family: var(--font-display);
   font-size: var(--font-size-lg);
   font-weight: 700;
 }
@@ -600,8 +603,9 @@
 }
 
 .landing-title {
+  font-family: var(--font-display);
   font-size: var(--font-size-2xl, 28px);
-  font-weight: 800;
+  font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

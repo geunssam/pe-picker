@@ -58,24 +58,21 @@ function autoLoadFromSelectedClass() {
     showStudentCardsWrapper();
     return;
   }
-  const students = window.ClassManager.getStudentNames(cls.id);
-
-  // 빈 이름 필터링
-  const validStudents = students.filter(name => name && name.trim() !== '');
+  const students = window.ClassManager.getStudents(cls.id);
 
   const container = $('tag-student-cards');
   if (!container) return;
 
-  if (validStudents.length === 0) {
+  if (students.length === 0) {
     container.innerHTML = '';
     showStudentCardsWrapper();
     return;
   }
 
   container.innerHTML = '';
-  validStudents.forEach(name => createStudentCard(container, name));
-  $('tag-student-count').value = validStudents.length;
-  gameSettings.studentCount = validStudents.length;
+  students.forEach(s => createStudentCard(container, s.name, false, s.gender));
+  $('tag-student-count').value = students.length;
+  gameSettings.studentCount = students.length;
   showStudentCardsWrapper();
 }
 
@@ -266,15 +263,12 @@ function openClassSelectModal() {
     UI.showToast('선택된 학급이 없습니다', 'error');
     return;
   }
-  const students = window.ClassManager.getStudentNames(cls.id);
-
-  // 빈 이름 필터링 추가
-  const validStudents = students.filter(name => name && name.trim() !== '');
+  const students = window.ClassManager.getStudents(cls.id);
 
   const container = $('tag-student-cards');
   if (!container) return;
 
-  if (validStudents.length === 0) {
+  if (students.length === 0) {
     container.innerHTML = '';
     showStudentCardsWrapper();
     UI.showModal('empty-students-modal');
@@ -282,10 +276,10 @@ function openClassSelectModal() {
   }
 
   container.innerHTML = '';
-  validStudents.forEach(name => createStudentCard(container, name));
-  $('tag-student-count').value = validStudents.length;
-  gameSettings.studentCount = validStudents.length;
-  UI.showToast(`${validStudents.length}명 불러오기 완료`, 'success');
+  students.forEach(s => createStudentCard(container, s.name, false, s.gender));
+  $('tag-student-count').value = students.length;
+  gameSettings.studentCount = students.length;
+  UI.showToast(`${students.length}명 불러오기 완료`, 'success');
   showStudentCardsWrapper();
 }
 

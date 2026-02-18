@@ -61,7 +61,8 @@
   --space-3xl: 32px;
 
   /* === Font === */
-  --font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  --font-family: 'Paperlogy', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  --font-display: 'GmarketSans', 'Paperlogy', sans-serif;
   --font-size-xs: 0.8125rem;
   --font-size-sm: 0.9375rem;
   --font-size-base: 1.0625rem;
