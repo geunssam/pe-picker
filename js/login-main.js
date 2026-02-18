@@ -42,12 +42,22 @@ function goToNextStep() {
   window.location.href = './index.html';
 }
 
+function clearLocalUserData() {
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('pet_')) keysToRemove.push(key);
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
 function bindLogout() {
   const logoutBtn = document.getElementById('logout-btn');
   if (!logoutBtn) return;
 
   logoutBtn.addEventListener('click', async () => {
     try {
+      clearLocalUserData();
       await AuthManager.signOut();
       location.href = './login.html';
     } catch (error) {

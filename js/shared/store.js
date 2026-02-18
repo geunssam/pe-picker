@@ -4,7 +4,7 @@
    - 추후 Firebase 전환 시 각 repo만 교체
    ============================================ */
 
-import { KEYS, get, set, generateId } from '../storage/base-repo.js';
+import { KEYS, get, set, generateId, clearAll } from '../storage/base-repo.js';
 import { ClassRepo } from '../storage/class-repo.js';
 import { TagGameRepo } from '../storage/tag-game-repo.js';
 import { GroupManagerRepo } from '../storage/group-manager-repo.js';
@@ -127,6 +127,11 @@ function saveTeacherProfile(profile) {
 
 function isTeacherOnboarded() {
   return TeacherRepo.isOnboarded();
+}
+
+// === 계정 전환/로그아웃 시 전체 초기화 ===
+function clearAllData() {
+  clearAll();
 }
 
 // === 마이그레이션 ===
@@ -375,6 +380,8 @@ export const Store = {
   getTeacherProfile,
   saveTeacherProfile,
   isTeacherOnboarded,
+  // 초기화
+  clearAllData,
   // 마이그레이션
   migrateFromLegacy,
 };

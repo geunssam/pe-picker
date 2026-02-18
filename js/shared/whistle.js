@@ -45,9 +45,17 @@ function ensureAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function unlockAudio() {
+async function unlockAudio() {
   if (firstUnlocked) return;
   ensureAudio();
+  // 모바일에서 resume()이 완료될 때까지 대기
+  if (audioCtx.state === 'suspended') {
+    try {
+      await audioCtx.resume();
+    } catch (e) {
+      /* ignore */
+    }
+  }
   try {
     const buf = audioCtx.createBuffer(1, 1, 22050);
     const src = audioCtx.createBufferSource();
@@ -202,15 +210,13 @@ function createFixedTone(startTime, duration) {
 }
 
 // === 꾹 누르기 (hold) ===
-function startHoldWhistle() {
+async function startHoldWhistle() {
   if (isPlaying) return;
-  unlockAudio();
   ensureAudio();
   if (audioCtx.state !== 'running') {
-    audioCtx.resume().then(() => doStartHold());
-  } else {
-    doStartHold();
+    await audioCtx.resume();
   }
+  doStartHold();
 }
 
 function doStartHold() {
@@ -348,23 +354,23 @@ function pulseTimerRipple() {
 }
 
 // === 이벤트 핸들러 ===
-function handleDown(e) {
+async function handleDown(e) {
   e.preventDefault();
   if (pressing) return;
   pressing = true;
   if (whistleBtn) whistleBtn.classList.add('whistle-main-btn--pressed');
 
+  // 모바일: AudioContext resume을 확실히 대기
+  ensureAudio();
+  if (audioCtx.state !== 'running') {
+    await audioCtx.resume();
+  }
+
   if (currentMode === 'hold') {
     startHoldWhistle();
     startRipple();
   } else if (currentMode === 'long') {
-    unlockAudio();
-    ensureAudio();
-    if (audioCtx.state !== 'running') {
-      audioCtx.resume().then(() => createFixedTone(audioCtx.currentTime, 1.5));
-    } else {
-      createFixedTone(audioCtx.currentTime, 1.5);
-    }
+    createFixedTone(audioCtx.currentTime, 1.5);
     pulseRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -372,19 +378,10 @@ function handleDown(e) {
       if (whistleBtn) whistleBtn.classList.remove('whistle-main-btn--pressed');
     }, 300);
   } else if (currentMode === 'triple') {
-    unlockAudio();
-    ensureAudio();
-    const play = () => {
-      const now = audioCtx.currentTime;
-      createFixedTone(now, 0.25);
-      createFixedTone(now + 0.35, 0.25);
-      createFixedTone(now + 0.7, 0.5);
-    };
-    if (audioCtx.state !== 'running') {
-      audioCtx.resume().then(play);
-    } else {
-      play();
-    }
+    const now = audioCtx.currentTime;
+    createFixedTone(now, 0.25);
+    createFixedTone(now + 0.35, 0.25);
+    createFixedTone(now + 0.7, 0.5);
     pulseRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -408,23 +405,23 @@ function handleUp(e) {
 // === 타이머 인라인 휘슬 핸들러 ===
 let timerPressing = false;
 
-function handleTimerDown(e) {
+async function handleTimerDown(e) {
   e.preventDefault();
   if (timerPressing) return;
   timerPressing = true;
   if (timerWhistleBtn) timerWhistleBtn.classList.add('timer-whistle-btn--pressed');
 
+  // 모바일: AudioContext resume을 확실히 대기
+  ensureAudio();
+  if (audioCtx.state !== 'running') {
+    await audioCtx.resume();
+  }
+
   if (timerMode === 'hold') {
     startHoldWhistle();
     startTimerRipple();
   } else if (timerMode === 'long') {
-    unlockAudio();
-    ensureAudio();
-    if (audioCtx.state !== 'running') {
-      audioCtx.resume().then(() => createFixedTone(audioCtx.currentTime, 1.5));
-    } else {
-      createFixedTone(audioCtx.currentTime, 1.5);
-    }
+    createFixedTone(audioCtx.currentTime, 1.5);
     pulseTimerRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -432,19 +429,10 @@ function handleTimerDown(e) {
       if (timerWhistleBtn) timerWhistleBtn.classList.remove('timer-whistle-btn--pressed');
     }, 300);
   } else if (timerMode === 'triple') {
-    unlockAudio();
-    ensureAudio();
-    const play = () => {
-      const now = audioCtx.currentTime;
-      createFixedTone(now, 0.25);
-      createFixedTone(now + 0.35, 0.25);
-      createFixedTone(now + 0.7, 0.5);
-    };
-    if (audioCtx.state !== 'running') {
-      audioCtx.resume().then(play);
-    } else {
-      play();
-    }
+    const now = audioCtx.currentTime;
+    createFixedTone(now, 0.25);
+    createFixedTone(now + 0.35, 0.25);
+    createFixedTone(now + 0.7, 0.5);
     pulseTimerRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -565,8 +553,11 @@ function init() {
 
   if (!fabBtn || !panel || !whistleBtn) return;
 
-  // FAB 클릭
-  fabBtn.addEventListener('click', togglePanel);
+  // FAB 클릭 — 패널 토글 + AudioContext 미리 활성화 (모바일 필수)
+  fabBtn.addEventListener('click', () => {
+    togglePanel();
+    unlockAudio();
+  });
 
   // 패널 바깥 클릭으로 닫기
   document.addEventListener('click', e => {

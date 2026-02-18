@@ -61,4 +61,18 @@ export function generateId(prefix = '') {
   return prefix ? `${prefix}_${id}` : id;
 }
 
+/**
+ * 모든 pet_ 접두사 localStorage 키 삭제 (계정 전환/로그아웃 시)
+ */
+export function clearAll() {
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(PREFIX)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
 export { PREFIX };

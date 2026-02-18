@@ -120,6 +120,8 @@ async function bootstrapAfterAuth() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       try {
+        FirestoreSync.stop();
+        Store.clearAllData();
         await AuthManager.signOut();
         window.location.replace('login.html');
       } catch (error) {
