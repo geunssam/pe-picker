@@ -180,10 +180,10 @@ export async function init() {
   const uid = getCurrentUserId();
   if (!uid || currentUserId === uid) return;
 
-  // 사용자 전환 감지 — 이전 사용자의 localStorage 데이터 완전 삭제
+  // 사용자 전환 감지 — 저장된 UID와 다르면 (또는 없으면) 무조건 초기화
   const storedUid = localStorage.getItem(USER_ID_KEY);
-  if (storedUid && storedUid !== uid) {
-    console.log('[FirestoreSync] 사용자 변경 감지 — 이전 사용자 데이터 초기화');
+  if (storedUid !== uid) {
+    console.log('[FirestoreSync] 사용자 변경 감지 — localStorage 초기화');
     Store.clearAllData();
   }
   localStorage.setItem(USER_ID_KEY, uid);
