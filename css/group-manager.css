@@ -18,26 +18,28 @@
 }
 
 /* === 모둠 카드 === */
-.gm-group-card {
+.gm-team-card {
   background: var(--bg-white);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
   opacity: 0;
 }
 
-.gm-group-card.revealed {
+.gm-team-card.revealed {
   opacity: 1;
   animation: cardReveal 0.5s ease forwards;
 }
 
-.gm-group-card:hover {
+.gm-team-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.gm-group-header {
+.gm-team-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -47,7 +49,7 @@
   color: var(--text-white);
 }
 
-.gm-group-members {
+.gm-team-members {
   padding: var(--space-md) var(--space-lg);
   display: flex;
   flex-wrap: wrap;
@@ -71,23 +73,55 @@
 }
 
 /* === 모둠 색상 === */
-.gm-color-1 .gm-group-header { background: var(--group-1); }
-.gm-color-2 .gm-group-header { background: var(--group-2); }
-.gm-color-3 .gm-group-header { background: var(--group-3); }
-.gm-color-4 .gm-group-header { background: var(--group-4); }
-.gm-color-5 .gm-group-header { background: var(--group-5); }
-.gm-color-6 .gm-group-header { background: var(--group-6); }
-.gm-color-7 .gm-group-header { background: var(--group-7); }
-.gm-color-8 .gm-group-header { background: var(--group-8); }
+.gm-color-1 .gm-team-header {
+  background: var(--team-1);
+}
+.gm-color-2 .gm-team-header {
+  background: var(--team-2);
+}
+.gm-color-3 .gm-team-header {
+  background: var(--team-3);
+}
+.gm-color-4 .gm-team-header {
+  background: var(--team-4);
+}
+.gm-color-5 .gm-team-header {
+  background: var(--team-5);
+}
+.gm-color-6 .gm-team-header {
+  background: var(--team-6);
+}
+.gm-color-7 .gm-team-header {
+  background: var(--team-7);
+}
+.gm-color-8 .gm-team-header {
+  background: var(--team-8);
+}
 
-.gm-color-1 .gm-member-tag { background: rgba(59, 130, 246, 0.1); }
-.gm-color-2 .gm-member-tag { background: rgba(16, 185, 129, 0.1); }
-.gm-color-3 .gm-member-tag { background: rgba(245, 158, 11, 0.1); }
-.gm-color-4 .gm-member-tag { background: rgba(239, 68, 68, 0.1); }
-.gm-color-5 .gm-member-tag { background: rgba(139, 92, 246, 0.1); }
-.gm-color-6 .gm-member-tag { background: rgba(236, 72, 153, 0.1); }
-.gm-color-7 .gm-member-tag { background: rgba(6, 182, 212, 0.1); }
-.gm-color-8 .gm-member-tag { background: rgba(132, 204, 22, 0.1); }
+.gm-color-1 .gm-member-tag {
+  background: rgba(59, 130, 246, 0.1);
+}
+.gm-color-2 .gm-member-tag {
+  background: rgba(16, 185, 129, 0.1);
+}
+.gm-color-3 .gm-member-tag {
+  background: rgba(245, 158, 11, 0.1);
+}
+.gm-color-4 .gm-member-tag {
+  background: rgba(239, 68, 68, 0.1);
+}
+.gm-color-5 .gm-member-tag {
+  background: rgba(139, 92, 246, 0.1);
+}
+.gm-color-6 .gm-member-tag {
+  background: rgba(236, 72, 153, 0.1);
+}
+.gm-color-7 .gm-member-tag {
+  background: rgba(6, 182, 212, 0.1);
+}
+.gm-color-8 .gm-member-tag {
+  background: rgba(132, 204, 22, 0.1);
+}
 
 /* === 쿠키 영역 === */
 .gm-cookie-area {
@@ -269,7 +303,7 @@
   font-weight: 600;
 }
 
-.gm-radio-compact input[type="radio"] {
+.gm-radio-compact input[type='radio'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -289,7 +323,7 @@
   font-size: var(--font-size-xs);
 }
 
-.gm-checkbox-compact input[type="checkbox"] {
+.gm-checkbox-compact input[type='checkbox'] {
   width: 14px;
   height: 14px;
 }

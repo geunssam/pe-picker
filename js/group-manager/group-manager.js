@@ -45,14 +45,14 @@ function init() {
   // 모둠 구성 방식 라디오 버튼 이벤트
   document.getElementById('gm-mode-random')?.addEventListener('change', function () {
     if (this.checked) {
-      document.getElementById('gm-use-fixed-groups').checked = false;
+      document.getElementById('gm-use-fixed-teams').checked = false;
       document.getElementById('gm-fixed-mode-info').style.display = 'none';
     }
   });
 
   document.getElementById('gm-mode-fixed')?.addEventListener('change', function () {
     if (this.checked) {
-      document.getElementById('gm-use-fixed-groups').checked = true;
+      document.getElementById('gm-use-fixed-teams').checked = true;
       document.getElementById('gm-fixed-mode-info').style.display = 'block';
     }
   });
@@ -106,7 +106,7 @@ function init() {
   initTimer();
 
   // 기존 모둠 복원
-  const saved = Store.getCurrentGroups();
+  const saved = Store.getCurrentTeams();
   if (saved.length > 0) {
     currentGroups = saved;
     currentPhase = 2;
@@ -190,7 +190,7 @@ function resetGame() {
   if (pauseBtn) pauseBtn.style.display = 'none';
 
   // 저장 초기화
-  Store.saveCurrentGroups([]);
+  Store.saveCurrentTeams([]);
 
   // 결과 영역 비우기
   const container = document.getElementById('gm-groups-container');
@@ -386,7 +386,7 @@ async function pickGroups() {
   // 고정 모둠 사용 여부 확인
   const namingMode = document.getElementById('gm-naming-mode')?.value;
   const isFixedGroups =
-    namingMode === 'class' && document.getElementById('gm-use-fixed-groups')?.checked;
+    namingMode === 'class' && document.getElementById('gm-use-fixed-teams')?.checked;
 
   if (isFixedGroups) {
     // 고정 모둠 모드: 인원수 체크(부족/남음) 무시하고 바로 실행
@@ -503,7 +503,7 @@ async function executeGroupPick(students, groupSize, groupCount) {
   // 고정 모둠 모드 확인
   const namingMode = document.getElementById('gm-naming-mode')?.value;
   const isFixedGroups =
-    namingMode === 'class' && document.getElementById('gm-use-fixed-groups')?.checked;
+    namingMode === 'class' && document.getElementById('gm-use-fixed-teams')?.checked;
   const classId =
     document.getElementById('gm-class-name-select')?.value || Store.getSelectedClassId();
   const cls = Store.getClassById(classId);
@@ -513,7 +513,7 @@ async function executeGroupPick(students, groupSize, groupCount) {
 
   currentGroups = [];
 
-  if (isFixedGroups && cls && cls.groups) {
+  if (isFixedGroups && cls && cls.teams) {
     // === 고정 모둠 로직 ===
     // 현재 존재하는 학생(students)만 필터링해서 고정 모둠 형태로 배치
 
@@ -522,8 +522,8 @@ async function executeGroupPick(students, groupSize, groupCount) {
 
     for (let i = 0; i < groupCount; i++) {
       // 저장된 모둠원 중 현재 '참가자 카드'에 있는 학생만 필터링 (결석 처리)
-      // cls.groups[i]가 없을 수도 있음
-      const savedMembers = cls.groups[i] || [];
+      // cls.teams[i]가 없을 수도 있음
+      const savedMembers = cls.teams[i] || [];
 
       // 문자열 또는 객체 처리
       const activeMembers = savedMembers.filter(m => {
@@ -592,7 +592,7 @@ async function executeGroupPick(students, groupSize, groupCount) {
   updateGmUI();
 
   await GroupManagerUI.renderGroupsWithAnimation(currentGroups);
-  Store.saveCurrentGroups(currentGroups);
+  Store.saveCurrentTeams(currentGroups);
 
   if (!isFixedGroups) {
     // 랜덤 모드일 때만 안내 (고정 모둠은 항상 불균형할 수 있음)
@@ -613,7 +613,7 @@ function addCookie(groupId) {
   if (!group) return;
   group.cookies++;
   GroupManagerUI.updateCookieDisplay(groupId, group.cookies);
-  Store.saveCurrentGroups(currentGroups);
+  Store.saveCurrentTeams(currentGroups);
 }
 
 function removeCookie(groupId) {
@@ -621,7 +621,7 @@ function removeCookie(groupId) {
   if (!group || group.cookies <= 0) return;
   group.cookies--;
   GroupManagerUI.updateCookieDisplay(groupId, group.cookies);
-  Store.saveCurrentGroups(currentGroups);
+  Store.saveCurrentTeams(currentGroups);
 }
 
 // === 타이머 ===
@@ -727,7 +727,7 @@ function handleNamingModeChange(e) {
     // 고정 모둠 라디오 버튼 상태 확인
     const isFixed = document.getElementById('gm-mode-fixed')?.checked;
     if (isFixed) {
-      document.getElementById('gm-use-fixed-groups').checked = true;
+      document.getElementById('gm-use-fixed-teams').checked = true;
       document.getElementById('gm-fixed-mode-info').style.display = 'block';
     }
   } else {
@@ -739,7 +739,7 @@ function handleNamingModeChange(e) {
     }
 
     // 학급 설정이 아닐 때는 고정 모둠 모드 해제
-    document.getElementById('gm-use-fixed-groups').checked = false;
+    document.getElementById('gm-use-fixed-teams').checked = false;
     document.getElementById('gm-mode-random').checked = true;
     document.getElementById('gm-fixed-mode-info').style.display = 'none';
   }
@@ -750,12 +750,12 @@ function handleClassNameSelectChange(e) {
   if (!classId) return;
 
   const cls = Store.getClassById(classId);
-  if (!cls || !cls.groupNames) return;
+  if (!cls || !cls.teamNames) return;
 
   // 커스텀 입력 필드에 학급 모둠 이름 채우기
   const inputs = document.querySelectorAll('.gm-custom-name');
   inputs.forEach((input, idx) => {
-    input.value = cls.groupNames[idx] || '';
+    input.value = cls.teamNames[idx] || '';
   });
 }
 
@@ -773,8 +773,8 @@ function getGroupNames(count) {
 
     if (classId) {
       const cls = Store.getClassById(classId);
-      if (cls && cls.groupNames) {
-        let availableNames = [...cls.groupNames];
+      if (cls && cls.teamNames) {
+        let availableNames = [...cls.teamNames];
 
         if (isRandom) {
           // 랜덤 섞기
@@ -785,7 +785,7 @@ function getGroupNames(count) {
       }
     }
     // 학급이 선택되지 않았으면 기본값
-    let defaultNames = Store.getDefaultGroupNames();
+    let defaultNames = Store.getDefaultTeamNames();
     if (isRandom) {
       defaultNames = UI.shuffleArray(defaultNames);
     }

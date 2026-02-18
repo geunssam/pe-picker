@@ -27,23 +27,23 @@ function getById(id) {
  * 학급 추가
  * @param {string} name - 학급명
  * @param {Array} students - 학생 배열
- * @param {Array} [groupNames] - 모둠명 배열
- * @param {Array} [groups] - 모둠 배열
- * @param {number} [groupCount=6] - 모둠 수
+ * @param {Array} [teamNames] - 모둠명 배열
+ * @param {Array} [teams] - 모둠 배열
+ * @param {number} [teamCount=6] - 모둠 수
  * @returns {Object} 생성된 학급 객체
  */
-function create(name, students, groupNames = null, groups = null, groupCount = 6) {
+function create(name, students, teamNames = null, teams = null, teamCount = 6) {
   const classes = getAll();
-  const defaultNames = SettingsRepo.getDefaultGroupNames();
+  const defaultNames = SettingsRepo.getDefaultTeamNames();
 
   const newClass = {
     // Date.now() 단독 사용 시 같은 ms에 생성된 학급 ID가 충돌할 수 있음
     id: generateId(),
     name,
     students,
-    groupNames: groupNames || defaultNames.slice(0, groupCount),
-    groups: groups || [],
-    groupCount,
+    teamNames: teamNames || defaultNames.slice(0, teamCount),
+    teams: teams || [],
+    teamCount,
     createdAt: new Date().toISOString(),
   };
 
@@ -57,20 +57,20 @@ function create(name, students, groupNames = null, groups = null, groupCount = 6
  * @param {string} id - 학급 ID
  * @param {string} name - 학급명
  * @param {Array} students - 학생 배열
- * @param {Array} [groupNames] - 모둠명 배열
- * @param {Array} [groups] - 모둠 배열
- * @param {number} [groupCount] - 모둠 수
+ * @param {Array} [teamNames] - 모둠명 배열
+ * @param {Array} [teams] - 모둠 배열
+ * @param {number} [teamCount] - 모둠 수
  * @returns {Object|null} 수정된 학급 또는 null
  */
-function update(id, name, students, groupNames = null, groups = null, groupCount = null) {
+function update(id, name, students, teamNames = null, teams = null, teamCount = null) {
   const classes = getAll();
   const idx = classes.findIndex(c => c.id === id);
   if (idx === -1) return null;
 
   const updated = { ...classes[idx], name, students };
-  if (groupNames !== null) updated.groupNames = groupNames;
-  if (groups !== null) updated.groups = groups;
-  if (groupCount !== null) updated.groupCount = groupCount;
+  if (teamNames !== null) updated.teamNames = teamNames;
+  if (teams !== null) updated.teams = teams;
+  if (teamCount !== null) updated.teamCount = teamCount;
 
   classes[idx] = updated;
   set(KEYS.CLASSES, classes);

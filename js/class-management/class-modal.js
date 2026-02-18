@@ -7,7 +7,7 @@ import { UI } from '../shared/ui-utils.js';
 import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
 import {
   initializeModalState,
-  ensureModalGroupCount,
+  ensureModalTeamCount,
   sanitizeModalZones,
   renderModalEditor,
 } from './modal-editor.js';
@@ -20,7 +20,7 @@ export function openModal(classId, callback) {
 
   const titleEl = document.getElementById('class-modal-title');
   const nameInput = document.getElementById('class-name-input');
-  const groupCountInput = document.getElementById('class-group-count');
+  const teamCountInput = document.getElementById('class-team-count');
   const legacyInput = document.getElementById('class-students-input');
 
   if (legacyInput) legacyInput.style.display = 'none';
@@ -31,8 +31,8 @@ export function openModal(classId, callback) {
       titleEl.textContent = '학급 편집';
       nameInput.value = cls.name;
 
-      const count = cls.groupCount || cls.groups?.length || 6;
-      if (groupCountInput) groupCountInput.value = ensureModalGroupCount(count);
+      const count = cls.teamCount || cls.teams?.length || 6;
+      if (teamCountInput) teamCountInput.value = ensureModalTeamCount(count);
 
       initializeModalState(cls, count);
     }
@@ -40,8 +40,8 @@ export function openModal(classId, callback) {
     titleEl.textContent = '새 학급 추가';
     nameInput.value = '';
 
-    const count = ensureModalGroupCount(6);
-    if (groupCountInput) groupCountInput.value = count;
+    const count = ensureModalTeamCount(6);
+    if (teamCountInput) teamCountInput.value = count;
 
     initializeModalState(null, count);
   }
@@ -65,12 +65,12 @@ export function closeModal() {
 
   state.modalStudents = [];
   state.modalUnassigned = [];
-  state.modalGroups = [];
-  state.modalGroupNames = [];
+  state.modalTeams = [];
+  state.modalTeamNames = [];
   state.bulkModalRows = [];
 
   const rosterEl = document.getElementById('class-student-roster');
-  const boardEl = document.getElementById('class-group-assign-board');
+  const boardEl = document.getElementById('class-team-assign-board');
   if (rosterEl) rosterEl.innerHTML = '';
   if (boardEl) boardEl.innerHTML = '';
 }
@@ -79,15 +79,15 @@ export async function saveClass() {
   const nameInput = document.getElementById('class-name-input');
   const className = nameInput?.value.trim();
   const saveBtn = document.getElementById('class-modal-save');
-  const groupCountInput = document.getElementById('class-group-count');
+  const teamCountInput = document.getElementById('class-team-count');
 
   if (!className) {
     UI.showToast('학급 이름을 입력하세요', 'error');
     return;
   }
 
-  const groupCount = ensureModalGroupCount(parseInt(groupCountInput?.value, 10) || 6);
-  if (groupCountInput) groupCountInput.value = groupCount;
+  const teamCount = ensureModalTeamCount(parseInt(teamCountInput?.value, 10) || 6);
+  if (teamCountInput) teamCountInput.value = teamCount;
 
   sanitizeModalZones();
 
@@ -116,47 +116,49 @@ export async function saveClass() {
   const validIdSet = new Set(validStudents.map(student => student.id));
   const nameById = new Map(validStudents.map(student => [student.id, student.name]));
 
-  const finalGroups = state.modalGroups.slice(0, groupCount).map(group =>
+  const finalTeams = state.modalTeams.slice(0, teamCount).map(group =>
     group
       .filter(studentId => validIdSet.has(studentId))
       .map(studentId => nameById.get(studentId))
       .filter(Boolean)
   );
 
-  const finalGroupNames = Array.from({ length: groupCount }, (_, idx) => {
-    const raw = (state.modalGroupNames[idx] || '').trim();
+  const finalTeamNames = Array.from({ length: teamCount }, (_, idx) => {
+    const raw = (state.modalTeamNames[idx] || '').trim();
     return raw || `${idx + 1}모둠`;
   });
 
   if (saveBtn) saveBtn.disabled = true;
 
   try {
-    let targetClassId = state.editingClassId;
+    let targetClass = null;
 
     if (state.editingClassId) {
-      Store.updateClass(
+      targetClass = Store.updateClass(
         state.editingClassId,
         className,
         validStudents,
-        finalGroupNames,
-        finalGroups,
-        groupCount
+        finalTeamNames,
+        finalTeams,
+        teamCount
       );
       UI.showToast(`${className} 수정 완료`, 'success');
     } else {
       const created = Store.addClass(
         className,
         validStudents,
-        finalGroupNames,
-        finalGroups,
-        groupCount
+        finalTeamNames,
+        finalTeams,
+        teamCount
       );
-      targetClassId = created?.id || null;
+      targetClass = created;
       UI.showToast(`${className} 추가 완료`, 'success');
     }
 
-    if (targetClassId) {
-      await syncClassToFirestore(targetClassId);
+    if (targetClass) {
+      syncClassToFirestore(targetClass).catch(error => {
+        console.warn('[ClassModal] Firestore sync skipped:', error);
+      });
     }
 
     closeModal();

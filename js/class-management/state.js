@@ -8,8 +8,8 @@ export const state = {
   initialized: false,
   modalStudents: [],
   modalUnassigned: [],
-  modalGroups: [],
-  modalGroupNames: [],
+  modalTeams: [],
+  modalTeamNames: [],
   draggedStudentId: null,
   bulkModalRows: [],
 };

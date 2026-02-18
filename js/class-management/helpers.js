@@ -10,44 +10,10 @@ export function sanitizeGender(value) {
   return '';
 }
 
-export function getGoogleSyncContext() {
-  const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
-  if (!user || user.mode !== 'google' || !user.uid) return null;
-
-  const db = window.FirebaseConfig ? window.FirebaseConfig.getFirestore() : null;
-  if (!db) return null;
-
-  return { user, db };
-}
-
 export function normalizeStudentName(student) {
   if (typeof student === 'string') return student.trim();
   if (student && typeof student.name === 'string') return student.name.trim();
   return '';
-}
-
-export function normalizeGroupMembers(groups) {
-  if (!Array.isArray(groups)) return [];
-  return groups.map(group =>
-    Array.isArray(group) ? group.map(member => normalizeStudentName(member)).filter(Boolean) : []
-  );
-}
-
-export function encodeGroupsForFirestore(groups) {
-  const encoded = {};
-  if (!Array.isArray(groups)) return encoded;
-
-  groups.forEach((members, idx) => {
-    const key = `g${idx}`;
-    encoded[key] = Array.isArray(members) ? members.filter(Boolean) : [];
-  });
-
-  return encoded;
-}
-
-export function extractGradeFromClassName(className) {
-  const matched = className.match(/(\d+)/);
-  return matched ? matched[1] : '';
 }
 
 export function sortStudentsByNumber(a, b) {

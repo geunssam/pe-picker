@@ -5,35 +5,35 @@
 
 :root {
   /* === Colors === */
-  --color-primary: #7C9EF5;
-  --color-primary-dark: #5B7FE0;
-  --color-primary-light: #A5BDF8;
-  --color-secondary: #F5A67C;
-  --color-secondary-dark: #E08A5B;
-  --color-success: #7CE0A3;
-  --color-success-dark: #5BC882;
-  --color-warning: #F5E07C;
-  --color-warning-dark: #E0C85B;
-  --color-danger: #F57C7C;
-  --color-danger-dark: #E05B5B;
+  --color-primary: #7c9ef5;
+  --color-primary-dark: #5b7fe0;
+  --color-primary-light: #a5bdf8;
+  --color-secondary: #f5a67c;
+  --color-secondary-dark: #e08a5b;
+  --color-success: #7ce0a3;
+  --color-success-dark: #5bc882;
+  --color-warning: #f5e07c;
+  --color-warning-dark: #e0c85b;
+  --color-danger: #f57c7c;
+  --color-danger-dark: #e05b5b;
 
   /* === Background === */
-  --bg-cream: #FFF9F0;
-  --bg-white: #FFFFFF;
+  --bg-cream: #fff9f0;
+  --bg-white: #ffffff;
   --bg-card: rgba(255, 255, 255, 0.85);
 
   /* === Text === */
-  --text-primary: #1A1A2E;
-  --text-secondary: #4A4A6A;
-  --text-tertiary: #8A8AAA;
-  --text-white: #FFFFFF;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-tertiary: #8a8aaa;
+  --text-white: #ffffff;
 
   /* === Gradient === */
-  --gradient-primary: linear-gradient(135deg, #7C9EF5, #A78BFA);
-  --gradient-secondary: linear-gradient(135deg, #F5A67C, #F5C07C);
-  --gradient-success: linear-gradient(135deg, #7CE0A3, #7CF5C0);
-  --gradient-danger: linear-gradient(135deg, #F57C7C, #FA7CA0);
-  --gradient-bg: linear-gradient(180deg, #FFF9F0 0%, #F0E6FF 100%);
+  --gradient-primary: linear-gradient(135deg, #7c9ef5, #a78bfa);
+  --gradient-secondary: linear-gradient(135deg, #f5a67c, #f5c07c);
+  --gradient-success: linear-gradient(135deg, #7ce0a3, #7cf5c0);
+  --gradient-danger: linear-gradient(135deg, #f57c7c, #fa7ca0);
+  --gradient-bg: linear-gradient(180deg, #fff9f0 0%, #f0e6ff 100%);
 
   /* === Glass === */
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -82,15 +82,15 @@
   --z-toast: 300;
   --z-fullscreen: 400;
 
-  /* === Group Colors === */
-  --group-1: #3B82F6;
-  --group-2: #10B981;
-  --group-3: #F59E0B;
-  --group-4: #EF4444;
-  --group-5: #8B5CF6;
-  --group-6: #EC4899;
-  --group-7: #06B6D4;
-  --group-8: #84CC16;
+  /* === Team Colors === */
+  --team-1: #3b82f6;
+  --team-2: #10b981;
+  --team-3: #f59e0b;
+  --team-4: #ef4444;
+  --team-5: #8b5cf6;
+  --team-6: #ec4899;
+  --team-7: #06b6d4;
+  --team-8: #84cc16;
 
   /* === Safe Area (iOS) === */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -103,7 +103,9 @@
 }
 
 /* === Reset & Base === */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -135,7 +137,9 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .glass-card:hover {
@@ -230,7 +234,9 @@ body {
   background: var(--bg-white);
   color: var(--text-primary);
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .input:focus {

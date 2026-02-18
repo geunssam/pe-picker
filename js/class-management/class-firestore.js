@@ -1,134 +1,93 @@
-/**
- * 학급 데이터 Firestore 동기화
- */
-import { Store } from '../shared/store.js';
+import { withTimeout } from '../shared/promise-utils.js';
+import { AuthManager } from '../auth-manager.js';
+import { getFirestoreInstance } from '../firebase-config.js';
 import {
-  getGoogleSyncContext,
-  normalizeStudentName,
-  normalizeGroupMembers,
-  encodeGroupsForFirestore,
-  extractGradeFromClassName,
-  sortStudentsByNumber,
-  sanitizeGender,
-} from './helpers.js';
-import { getGroupIndexByStudentName } from './modal-editor.js';
+  doc,
+  setDoc,
+  deleteDoc,
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-export async function syncClassToFirestore(classId) {
-  const context = getGoogleSyncContext();
-  if (!context) return;
+const FIRESTORE_TIMEOUT_MS = 10000;
 
-  const { user, db } = context;
-  const cls = Store.getClassById(classId);
-  if (!cls) return;
-
-  const classRef = db.collection('users').doc(user.uid).collection('classes').doc(classId);
-  const userRef = db.collection('users').doc(user.uid);
-
-  const normalizedStudents = (cls.students || [])
-    .map((student, index) => {
-      const name = normalizeStudentName(student);
-      if (!name) return null;
-
-      const numberRaw = typeof student === 'object' ? parseInt(student.number, 10) : NaN;
-
-      return {
-        name,
-        number: Number.isFinite(numberRaw) && numberRaw > 0 ? numberRaw : index + 1,
-        gender: typeof student === 'object' ? sanitizeGender(student.gender) : '',
-        sportsAbility:
-          typeof student === 'object' && typeof student.sportsAbility === 'string'
-            ? student.sportsAbility
-            : '',
-        tags: typeof student === 'object' && Array.isArray(student.tags) ? student.tags : [],
-        note: typeof student === 'object' && typeof student.note === 'string' ? student.note : '',
-      };
-    })
-    .filter(Boolean)
-    .sort(sortStudentsByNumber)
-    .map((student, idx) => ({ ...student, number: idx + 1 }));
-
-  const groups = normalizeGroupMembers(cls.groups || []);
-  const groupsForFirestore = encodeGroupsForFirestore(groups);
-  const groupCount = cls.groupCount || (groups.length > 0 ? groups.length : 6);
-  const groupNames =
-    Array.isArray(cls.groupNames) && cls.groupNames.length > 0
-      ? cls.groupNames
-      : Store.getDefaultGroupNames().slice(0, groupCount);
-
-  const existingStudents = await classRef.collection('students').get();
-  const batch = db.batch();
-
-  batch.set(
-    classRef,
-    {
-      name: cls.name,
-      year: new Date().getFullYear(),
-      grade: extractGradeFromClassName(cls.name),
-      studentCount: normalizedStudents.length,
-      groupNames,
-      groups: groupsForFirestore,
-      groupCount,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  existingStudents.forEach(doc => batch.delete(doc.ref));
-
-  normalizedStudents.forEach(student => {
-    const studentRef = classRef
-      .collection('students')
-      .doc(`student-${String(student.number).padStart(3, '0')}`);
-    batch.set(studentRef, {
-      name: student.name,
-      number: student.number,
-      gender: student.gender,
-      sportsAbility: student.sportsAbility,
-      tags: student.tags,
-      note: student.note,
-      groupIndex: getGroupIndexByStudentName(groups, student.name),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-  });
-
-  if (Store.getSelectedClassId() === classId) {
-    batch.set(
-      userRef,
-      {
-        selectedClassId: classId,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-  }
-
-  await batch.commit();
+function getFirestoreDb() {
+  return getFirestoreInstance();
 }
 
-export async function deleteClassFromFirestore(classId, selectedWasDeleted) {
-  const context = getGoogleSyncContext();
-  if (!context) return;
+function getUserId() {
+  const user = AuthManager.getCurrentUser();
+  return user?.uid || null;
+}
 
-  const { user, db } = context;
-  const userRef = db.collection('users').doc(user.uid);
-  const classRef = userRef.collection('classes').doc(classId);
-
-  const existingStudents = await classRef.collection('students').get();
-  const batch = db.batch();
-
-  existingStudents.forEach(doc => batch.delete(doc.ref));
-  batch.delete(classRef);
-
-  if (selectedWasDeleted) {
-    batch.set(
-      userRef,
-      {
-        selectedClassId: null,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+function sanitizeClassData(classData) {
+  if (!classData || typeof classData !== 'object') {
+    return null;
   }
 
-  await batch.commit();
+  const {
+    id,
+    name = '학급',
+    students = [],
+    teamNames = [],
+    teams = [],
+    teamCount = 6,
+    createdAt,
+    year,
+    grade,
+  } = classData;
+
+  const safeTeamNames = Array.isArray(teamNames) ? teamNames : [];
+  const safeTeams = Array.isArray(teams) ? teams : [];
+  // Firestore는 중첩 배열(nested arrays)을 지원하지 않으므로 각 모둠을 JSON 문자열로 인코딩
+  const encodedTeams = safeTeams.map(g => (Array.isArray(g) ? JSON.stringify(g) : '[]'));
+  const safeStudents = Array.isArray(students)
+    ? students.map(student => ({
+        id: student.id || '',
+        name: student.name || '',
+        number: parseInt(student.number, 10) || 0,
+        gender: student.gender || '',
+        sportsAbility: student.sportsAbility || '',
+        tags: Array.isArray(student.tags) ? student.tags : [],
+        note: student.note || '',
+      }))
+    : [];
+
+  return {
+    name,
+    students: safeStudents,
+    teamNames: safeTeamNames,
+    teams: encodedTeams,
+    teamCount: parseInt(teamCount, 10) || safeTeams.length || 6,
+    studentCount: safeStudents.length,
+    year: parseInt(year, 10) || new Date().getFullYear(),
+    grade: grade || '',
+    createdAt: createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export async function syncClassToFirestore(classData) {
+  if (!classData || !classData.id) return null;
+
+  const db = getFirestoreDb();
+  const userId = getUserId();
+  if (!db || !userId) return null;
+
+  const payload = sanitizeClassData(classData);
+  const ref = doc(db, 'users', userId, 'classes', classData.id);
+  try {
+    await withTimeout(setDoc(ref, payload, { merge: true }), FIRESTORE_TIMEOUT_MS, '클래스 동기화');
+  } catch (error) {
+    console.error('[Firestore] 클래스 동기화 실패:', error);
+    throw error;
+  }
+  return classData.id;
+}
+
+export async function deleteClassFromFirestore(classId) {
+  const db = getFirestoreDb();
+  const userId = getUserId();
+  if (!db || !userId || !classId) return;
+
+  const ref = doc(db, 'users', userId, 'classes', classId);
+  await withTimeout(deleteDoc(ref), FIRESTORE_TIMEOUT_MS, '클래스 삭제 동기화');
 }

@@ -9,7 +9,7 @@ export function onSettingsPageEnter() {
 
   const infoContainer = document.getElementById('settings-current-class');
   if (infoContainer && cls) {
-    const gc = cls.groupCount || cls.groups?.length || 6;
+    const gc = cls.teamCount || cls.teams?.length || 6;
     infoContainer.innerHTML = `
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); text-align: center;">
         <div>
@@ -29,7 +29,7 @@ export function onSettingsPageEnter() {
   }
 
   renderSettingsStudentList();
-  loadDefaultGroupNames();
+  loadDefaultTeamNames();
 }
 
 export function renderSettingsStudentList() {
@@ -43,26 +43,26 @@ export function renderSettingsStudentList() {
     return;
   }
 
-  const gc = cls.groupCount || cls.groups?.length || 6;
+  const gc = cls.teamCount || cls.teams?.length || 6;
 
   const minRows = 6;
   let maxMembers = minRows;
   for (let i = 0; i < gc; i++) {
-    const len = cls.groups && cls.groups[i] ? cls.groups[i].length : 0;
+    const len = cls.teams && cls.teams[i] ? cls.teams[i].length : 0;
     if (len > maxMembers) maxMembers = len;
   }
 
   let headerCells = '';
   for (let i = 0; i < gc; i++) {
-    const groupName = (cls.groupNames && cls.groupNames[i]) || `${i + 1}모둠`;
-    headerCells += `<th>${UI.escapeHtml(groupName)}</th>`;
+    const teamName = (cls.teamNames && cls.teamNames[i]) || `${i + 1}모둠`;
+    headerCells += `<th>${UI.escapeHtml(teamName)}</th>`;
   }
 
   let bodyRows = '';
   for (let row = 0; row < maxMembers; row++) {
     let cells = '';
     for (let col = 0; col < gc; col++) {
-      const members = (cls.groups && cls.groups[col]) || [];
+      const members = (cls.teams && cls.teams[col]) || [];
       const member = members[row];
       if (member) {
         const name = typeof member === 'string' ? member : member.name;
@@ -88,11 +88,11 @@ export function renderSettingsStudentList() {
   `;
 }
 
-export function loadDefaultGroupNames() {
-  const container = document.getElementById('default-group-names-list');
+export function loadDefaultTeamNames() {
+  const container = document.getElementById('default-team-names-list');
   if (!container) return;
 
-  const names = Store.getDefaultGroupNames();
+  const names = Store.getDefaultTeamNames();
   container.innerHTML = '';
 
   names.forEach((name, index) => {
@@ -114,8 +114,8 @@ function createPillInput(container, value, index) {
   container.appendChild(input);
 }
 
-export function addDefaultGroupName() {
-  const container = document.getElementById('default-group-names-list');
+export function addDefaultTeamName() {
+  const container = document.getElementById('default-team-names-list');
   if (!container) return;
 
   const current = container.querySelectorAll('.pill-input').length;
@@ -128,8 +128,8 @@ export function addDefaultGroupName() {
   container.lastElementChild?.focus();
 }
 
-export function removeDefaultGroupName() {
-  const container = document.getElementById('default-group-names-list');
+export function removeDefaultTeamName() {
+  const container = document.getElementById('default-team-names-list');
   if (!container) return;
 
   const selected = container.querySelectorAll('.pill-input.selected');
@@ -147,8 +147,8 @@ export function removeDefaultGroupName() {
   selected.forEach(el => el.remove());
 }
 
-export function saveDefaultGroupNamesHandler() {
-  const container = document.getElementById('default-group-names-list');
+export function saveDefaultTeamNamesHandler() {
+  const container = document.getElementById('default-team-names-list');
   if (!container) return;
 
   const inputs = container.querySelectorAll('.pill-input');
@@ -164,6 +164,6 @@ export function saveDefaultGroupNamesHandler() {
     return;
   }
 
-  Store.saveDefaultGroupNames(names);
+  Store.saveDefaultTeamNames(names);
   UI.showToast('기본 모둠 이름 저장 완료', 'success');
 }

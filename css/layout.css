@@ -15,6 +15,52 @@
   position: relative;
 }
 
+.startup-splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fullscreen);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-bg);
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    visibility 0.45s ease;
+}
+
+.startup-splash--hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.startup-splash__inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  animation: startupReveal 0.45s ease forwards;
+}
+
+.startup-splash__logo {
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--space-sm);
+  filter: drop-shadow(0 8px 20px rgba(124, 158, 245, 0.35));
+}
+
+.startup-splash__title {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.startup-splash__subtitle {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+}
+
 .app-container.no-navbar {
   padding-top: var(--space-lg);
 }
@@ -580,6 +626,13 @@
   width: 100%;
 }
 
+.landing-logout-btn {
+  width: 100%;
+  margin-top: var(--space-xs);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
 /* === Timetable Modal === */
 .timetable-modal {
   max-width: 560px;
@@ -795,20 +848,20 @@
   box-shadow: 0 0 0 3px rgba(124, 158, 245, 0.14);
 }
 
-.class-group-assign-board {
+.class-team-assign-board {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-sm);
 }
 
-.cm-group-column {
+.cm-team-column {
   border: 1px solid rgba(124, 158, 245, 0.22);
   border-radius: var(--radius-md);
   background: var(--bg-white);
   overflow: hidden;
 }
 
-.cm-group-header {
+.cm-team-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -818,13 +871,13 @@
   background: rgba(124, 158, 245, 0.05);
 }
 
-.cm-group-count {
+.cm-team-count {
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
-.cm-group-name-input {
+.cm-team-name-input {
   width: 100%;
   border: 1px solid rgba(124, 158, 245, 0.25);
   border-radius: var(--radius-sm);
@@ -837,12 +890,12 @@
   outline: none;
 }
 
-.cm-group-name-input:focus {
+.cm-team-name-input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(124, 158, 245, 0.14);
 }
 
-.cm-group-list {
+.cm-team-list {
   min-height: 112px;
   padding: var(--space-sm);
   display: flex;
@@ -1254,7 +1307,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .class-group-assign-board {
+  .class-team-assign-board {
     grid-template-columns: 1fr;
   }
 

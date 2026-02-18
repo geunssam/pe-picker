@@ -1,5 +1,5 @@
 /**
- * CSV/구글시트 가져오기 + 일괄등록 모달
+ * CSV 가져오기 + 일괄등록 모달
  */
 import { state } from './state.js';
 import { UI } from '../shared/ui-utils.js';
@@ -212,61 +212,4 @@ export function downloadCSVTemplate() {
   URL.revokeObjectURL(link.href);
 
   UI.showToast('명렬표 템플릿 다운로드 완료', 'success');
-}
-
-export function importFromGoogleSheets() {
-  const showGuide = confirm(
-    '📊 구글 시트에서 명렬표 가져오기\n\n' + '✅ 확인: 가이드 보기\n' + '❌ 취소: URL 바로 입력'
-  );
-
-  if (showGuide) {
-    alert(
-      '📝 구글 시트 작성 가이드\n\n' +
-        '1) 열 예시: 번호, 이름, 성별\n' +
-        '2) 공유 설정: 링크가 있는 모든 사용자(뷰어)\n' +
-        '3) 시트 URL을 복사해 다시 가져오기 버튼을 눌러주세요'
-    );
-
-    window.open('https://sheets.google.com/create', '_blank');
-    UI.showToast('새 탭에서 구글 시트를 열었습니다', 'success');
-    return;
-  }
-
-  const url = prompt(
-    '구글 스프레드시트 URL을 입력하세요.\n\n' +
-      '예시:\nhttps://docs.google.com/spreadsheets/d/1abc.../edit'
-  );
-
-  if (!url) return;
-
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!match) {
-    UI.showToast('올바른 구글 시트 URL이 아닙니다', 'error');
-    return;
-  }
-
-  const sheetId = match[1];
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-
-  UI.showToast('구글 시트에서 데이터를 가져오는 중...', 'info');
-
-  fetch(csvUrl, { mode: 'cors' })
-    .then(response => {
-      if (!response.ok) throw new Error('시트를 불러올 수 없습니다');
-      return response.text();
-    })
-    .then(content => {
-      const rows = parseCSV(content);
-      if (rows.length === 0) {
-        UI.showToast('학생을 찾을 수 없습니다', 'error');
-        return;
-      }
-
-      const count = applyImportedStudents(rows);
-      if (count > 0) UI.showToast(`${count}명 가져오기 완료`, 'success');
-    })
-    .catch(error => {
-      console.error('구글 시트 가져오기 오류:', error);
-      UI.showToast('구글 시트를 불러올 수 없습니다. 공개 설정을 확인하세요.', 'error');
-    });
 }

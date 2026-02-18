@@ -19,14 +19,14 @@ export function getStudentById(studentId) {
 
 export function removeStudentFromAllZones(studentId) {
   state.modalUnassigned = state.modalUnassigned.filter(id => id !== studentId);
-  state.modalGroups = state.modalGroups.map(group => group.filter(id => id !== studentId));
+  state.modalTeams = state.modalTeams.map(group => group.filter(id => id !== studentId));
 }
 
 export function sanitizeModalZones() {
   const existingIds = new Set(state.modalStudents.map(student => student.id));
   const used = new Set();
 
-  state.modalGroups = state.modalGroups.map(group => {
+  state.modalTeams = state.modalTeams.map(group => {
     const next = [];
     group.forEach(studentId => {
       if (!existingIds.has(studentId)) return;
@@ -54,27 +54,27 @@ export function sanitizeModalZones() {
   state.modalUnassigned = nextUnassigned;
 }
 
-export function ensureModalGroupCount(groupCount) {
-  const count = Math.max(2, Math.min(8, parseInt(groupCount, 10) || 6));
-  const defaultNames = Store.getDefaultGroupNames();
+export function ensureModalTeamCount(teamCount) {
+  const count = Math.max(2, Math.min(8, parseInt(teamCount, 10) || 6));
+  const defaultNames = Store.getDefaultTeamNames();
 
-  if (state.modalGroups.length > count) {
-    const removedGroups = state.modalGroups.slice(count);
-    const movedToUnassigned = removedGroups.flat();
-    state.modalGroups = state.modalGroups.slice(0, count);
+  if (state.modalTeams.length > count) {
+    const removedTeams = state.modalTeams.slice(count);
+    const movedToUnassigned = removedTeams.flat();
+    state.modalTeams = state.modalTeams.slice(0, count);
     state.modalUnassigned = [...state.modalUnassigned, ...movedToUnassigned];
   } else {
-    while (state.modalGroups.length < count) {
-      state.modalGroups.push([]);
+    while (state.modalTeams.length < count) {
+      state.modalTeams.push([]);
     }
   }
 
-  if (state.modalGroupNames.length > count) {
-    state.modalGroupNames = state.modalGroupNames.slice(0, count);
+  if (state.modalTeamNames.length > count) {
+    state.modalTeamNames = state.modalTeamNames.slice(0, count);
   } else {
-    while (state.modalGroupNames.length < count) {
-      const idx = state.modalGroupNames.length;
-      state.modalGroupNames.push(defaultNames[idx] || `${idx + 1}모둠`);
+    while (state.modalTeamNames.length < count) {
+      const idx = state.modalTeamNames.length;
+      state.modalTeamNames.push(defaultNames[idx] || `${idx + 1}모둠`);
     }
   }
 
@@ -82,17 +82,17 @@ export function ensureModalGroupCount(groupCount) {
   return count;
 }
 
-export function initializeModalState(cls, groupCount) {
+export function initializeModalState(cls, teamCount) {
   state.modalStudents = [];
   state.modalUnassigned = [];
-  state.modalGroups = [];
-  state.modalGroupNames = [];
+  state.modalTeams = [];
+  state.modalTeamNames = [];
 
-  const count = ensureModalGroupCount(groupCount);
-  const defaultNames = Store.getDefaultGroupNames();
+  const count = ensureModalTeamCount(teamCount);
+  const defaultNames = Store.getDefaultTeamNames();
 
   for (let i = 0; i < count; i++) {
-    state.modalGroupNames[i] = (cls?.groupNames?.[i] || defaultNames[i] || `${i + 1}모둠`).trim();
+    state.modalTeamNames[i] = (cls?.teamNames?.[i] || defaultNames[i] || `${i + 1}모둠`).trim();
   }
 
   if (!cls) return;
@@ -103,9 +103,9 @@ export function initializeModalState(cls, groupCount) {
     state.modalStudents = sourceStudents.map((student, idx) =>
       createModalStudent(student, idx + 1)
     );
-  } else if (Array.isArray(cls.groups)) {
+  } else if (Array.isArray(cls.teams)) {
     const flattened = [];
-    cls.groups.forEach(group => {
+    cls.teams.forEach(group => {
       if (!Array.isArray(group)) return;
       group.forEach(member => {
         const name = normalizeStudentName(member);
@@ -125,11 +125,11 @@ export function initializeModalState(cls, groupCount) {
 
   const usedIds = new Set();
 
-  if (Array.isArray(cls.groups) && cls.groups.length > 0) {
-    for (let groupIdx = 0; groupIdx < count; groupIdx++) {
-      const groupMembers = Array.isArray(cls.groups[groupIdx]) ? cls.groups[groupIdx] : [];
+  if (Array.isArray(cls.teams) && cls.teams.length > 0) {
+    for (let teamIdx = 0; teamIdx < count; teamIdx++) {
+      const teamMembers = Array.isArray(cls.teams[teamIdx]) ? cls.teams[teamIdx] : [];
 
-      groupMembers.forEach(member => {
+      teamMembers.forEach(member => {
         const memberName = normalizeStudentName(member);
         if (!memberName) return;
 
@@ -137,14 +137,14 @@ export function initializeModalState(cls, groupCount) {
           student => !usedIds.has(student.id) && student.name === memberName
         );
         if (matched) {
-          state.modalGroups[groupIdx].push(matched.id);
+          state.modalTeams[teamIdx].push(matched.id);
           usedIds.add(matched.id);
           return;
         }
 
         const fallback = createModalStudent({ name: memberName }, state.modalStudents.length + 1);
         state.modalStudents.push(fallback);
-        state.modalGroups[groupIdx].push(fallback.id);
+        state.modalTeams[teamIdx].push(fallback.id);
         usedIds.add(fallback.id);
       });
     }
@@ -220,11 +220,11 @@ export function applyImportedStudents(importedRows) {
   state.modalStudents = nextStudents;
   state.modalUnassigned = state.modalStudents.map(student => student.id);
 
-  const groupCountInput = document.getElementById('class-group-count');
-  const groupCount = ensureModalGroupCount(parseInt(groupCountInput?.value, 10) || 6);
-  if (groupCountInput) groupCountInput.value = groupCount;
+  const teamCountInput = document.getElementById('class-team-count');
+  const teamCount = ensureModalTeamCount(parseInt(teamCountInput?.value, 10) || 6);
+  if (teamCountInput) teamCountInput.value = teamCount;
 
-  state.modalGroups = Array.from({ length: groupCount }, () => []);
+  state.modalTeams = Array.from({ length: teamCount }, () => []);
 
   sanitizeModalZones();
   renderModalEditor();
@@ -288,24 +288,24 @@ export function renderRosterSection() {
   if (countEl) countEl.textContent = `${state.modalUnassigned.length}명`;
 }
 
-export function renderGroupSection() {
-  const boardEl = document.getElementById('class-group-assign-board');
+export function renderTeamSection() {
+  const boardEl = document.getElementById('class-team-assign-board');
   if (!boardEl) return;
 
-  const columnsHTML = state.modalGroups
-    .map((groupStudentIds, groupIdx) => {
-      const groupName = state.modalGroupNames[groupIdx] || `${groupIdx + 1}모둠`;
-      const cardsHTML = groupStudentIds
+  const columnsHTML = state.modalTeams
+    .map((teamStudentIds, teamIdx) => {
+      const teamName = state.modalTeamNames[teamIdx] || `${teamIdx + 1}모둠`;
+      const cardsHTML = teamStudentIds
         .map(studentId => renderStudentCardHTML(getStudentById(studentId)))
         .join('');
 
       return `
-        <div class="cm-group-column">
-          <div class="cm-group-header">
-            <input type="text" class="cm-group-name-input" data-group-index="${groupIdx}" maxlength="10" value="${UI.escapeHtml(groupName)}" placeholder="${groupIdx + 1}모둠">
-            <span class="cm-group-count">${groupStudentIds.length}명</span>
+        <div class="cm-team-column">
+          <div class="cm-team-header">
+            <input type="text" class="cm-team-name-input" data-group-index="${teamIdx}" maxlength="10" value="${UI.escapeHtml(teamName)}" placeholder="${teamIdx + 1}모둠">
+            <span class="cm-team-count">${teamStudentIds.length}명</span>
           </div>
-          <div class="cm-group-list cm-drop-zone" data-zone-type="group" data-group-index="${groupIdx}">
+          <div class="cm-team-list cm-drop-zone" data-zone-type="group" data-group-index="${teamIdx}">
             ${cardsHTML || '<div class="cm-empty-zone">여기에 학생 카드를 드래그하세요</div>'}
           </div>
         </div>
@@ -347,9 +347,9 @@ function moveStudentToZone(studentId, zoneType, groupIndex) {
     zoneType === 'group' &&
     Number.isInteger(groupIndex) &&
     groupIndex >= 0 &&
-    groupIndex < state.modalGroups.length
+    groupIndex < state.modalTeams.length
   ) {
-    state.modalGroups[groupIndex].push(studentId);
+    state.modalTeams[groupIndex].push(studentId);
   } else {
     state.modalUnassigned.push(studentId);
   }
@@ -392,7 +392,7 @@ function bindDragAndDrop() {
 
 export function renderModalEditor() {
   renderRosterSection();
-  renderGroupSection();
+  renderTeamSection();
   bindDragAndDrop();
 }
 
@@ -402,10 +402,10 @@ export function handleModalInput(event) {
   const target = event.target;
   const card = target.closest('.cm-student-card');
 
-  if (target.classList.contains('cm-group-name-input')) {
-    const groupIdx = parseInt(target.dataset.groupIndex, 10);
-    if (Number.isFinite(groupIdx) && groupIdx >= 0 && groupIdx < state.modalGroupNames.length) {
-      state.modalGroupNames[groupIdx] = target.value;
+  if (target.classList.contains('cm-team-name-input')) {
+    const teamIdx = parseInt(target.dataset.groupIndex, 10);
+    if (Number.isFinite(teamIdx) && teamIdx >= 0 && teamIdx < state.modalTeamNames.length) {
+      state.modalTeamNames[teamIdx] = target.value;
     }
     return;
   }
@@ -434,10 +434,10 @@ export function handleModalClick(event) {
   removeStudent(studentId);
 }
 
-export function onGroupCountChange() {
-  const groupCountInput = document.getElementById('class-group-count');
-  if (!groupCountInput) return;
-  const count = ensureModalGroupCount(groupCountInput.value);
-  groupCountInput.value = count;
+export function onTeamCountChange() {
+  const teamCountInput = document.getElementById('class-team-count');
+  if (!teamCountInput) return;
+  const count = ensureModalTeamCount(teamCountInput.value);
+  teamCountInput.value = count;
   renderModalEditor();
 }

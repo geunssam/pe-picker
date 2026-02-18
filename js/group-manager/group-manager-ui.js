@@ -19,7 +19,7 @@ function renderGroups(groups, animate = false) {
 
   if (!animate) {
     // 즉시 표시
-    container.querySelectorAll('.gm-group-card').forEach(card => {
+    container.querySelectorAll('.gm-team-card').forEach(card => {
       card.classList.add('revealed');
     });
     container.querySelectorAll('.gm-member-tag').forEach(tag => {
@@ -35,7 +35,7 @@ async function renderGroupsWithAnimation(groups) {
 
   container.innerHTML = groups.map(group => createGroupCardHTML(group)).join('');
 
-  const cards = container.querySelectorAll('.gm-group-card');
+  const cards = container.querySelectorAll('.gm-team-card');
 
   for (let i = 0; i < cards.length; i++) {
     await UI.sleep(120);
@@ -59,8 +59,8 @@ function createGroupCardHTML(group) {
     .join('');
 
   return `
-    <div class="gm-group-card gm-color-${colorIdx}" data-group-id="${group.id}">
-      <div class="gm-group-header">
+    <div class="gm-team-card gm-color-${colorIdx}" data-group-id="${group.id}">
+      <div class="gm-team-header">
         <span>${UI.escapeHtml(groupName)} (${group.members.length}명)</span>
         <div class="gm-cookie-area">
           <button class="gm-cookie-btn" onclick="GroupManager.removeCookie(${group.id})">−</button>
@@ -68,7 +68,7 @@ function createGroupCardHTML(group) {
           <button class="gm-cookie-btn" onclick="GroupManager.addCookie(${group.id})">+</button>
         </div>
       </div>
-      <div class="gm-group-members">
+      <div class="gm-team-members">
         ${membersHTML}
       </div>
     </div>

@@ -5,3 +5,6 @@ dist/
 .DS_Store
 *.log
 .netlify/
+.bkit/
+docs/.pdca-*
+docs/.bkit-*

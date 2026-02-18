@@ -8,7 +8,7 @@ const PREFIX = 'pet_';
 export const KEYS = {
   CLASSES: `${PREFIX}classes`,
   TAG_GAME: `${PREFIX}tag_game`,
-  CURRENT_GROUPS: `${PREFIX}current_groups`,
+  CURRENT_TEAMS: `${PREFIX}current_teams`,
   SETTINGS: `${PREFIX}settings`,
   COOKIE_HISTORY: `${PREFIX}cookie_history`,
   SELECTED_CLASS: `${PREFIX}selected_class`,

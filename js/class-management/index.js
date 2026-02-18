@@ -9,12 +9,11 @@ import {
   addStudentCard,
   handleModalInput,
   handleModalClick,
-  onGroupCountChange,
+  onTeamCountChange,
 } from './modal-editor.js';
 import {
   handleCSVImport,
   downloadCSVTemplate,
-  importFromGoogleSheets,
   openBulkRegistrationModal,
   closeBulkRegistrationModal,
   applyBulkRegistrationModal,
@@ -27,10 +26,10 @@ import { renderLandingClassList, deleteClass, refreshAllSelects } from './landin
 import {
   onSettingsPageEnter,
   renderSettingsStudentList,
-  loadDefaultGroupNames,
-  addDefaultGroupName,
-  removeDefaultGroupName,
-  saveDefaultGroupNamesHandler,
+  loadDefaultTeamNames,
+  addDefaultTeamName,
+  removeDefaultTeamName,
+  saveDefaultTeamNamesHandler,
 } from './settings-page.js';
 
 function init() {
@@ -43,7 +42,6 @@ function init() {
   const csvBtn = document.getElementById('class-csv-import');
   const csvFile = document.getElementById('class-csv-file');
   const csvDownloadBtn = document.getElementById('class-csv-download');
-  const googleSheetsBtn = document.getElementById('class-google-sheets-import');
   const openBulkModalBtn = document.getElementById('class-open-bulk-modal');
   const bulkModalCloseBtn = document.getElementById('class-bulk-modal-close');
   const bulkModalCancelBtn = document.getElementById('class-bulk-modal-cancel');
@@ -58,7 +56,6 @@ function init() {
   if (csvBtn) csvBtn.addEventListener('click', () => csvFile?.click());
   if (csvFile) csvFile.addEventListener('change', handleCSVImport);
   if (csvDownloadBtn) csvDownloadBtn.addEventListener('click', downloadCSVTemplate);
-  if (googleSheetsBtn) googleSheetsBtn.addEventListener('click', importFromGoogleSheets);
   if (openBulkModalBtn) openBulkModalBtn.addEventListener('click', openBulkRegistrationModal);
   if (bulkModalCloseBtn) bulkModalCloseBtn.addEventListener('click', closeBulkRegistrationModal);
   if (bulkModalCancelBtn) bulkModalCancelBtn.addEventListener('click', closeBulkRegistrationModal);
@@ -67,9 +64,9 @@ function init() {
   if (bulkRowRemoveBtn) bulkRowRemoveBtn.addEventListener('click', removeBulkModalRow);
   if (addStudentBtn) addStudentBtn.addEventListener('click', addStudentCard);
 
-  const groupCountInput = document.getElementById('class-group-count');
-  if (groupCountInput) {
-    groupCountInput.addEventListener('change', onGroupCountChange);
+  const teamCountInput = document.getElementById('class-team-count');
+  if (teamCountInput) {
+    teamCountInput.addEventListener('change', onTeamCountChange);
   }
 
   const modalEl = document.getElementById('class-modal');
@@ -85,14 +82,14 @@ function init() {
     bulkModalEl.addEventListener('change', handleBulkModalInput);
   }
 
-  const saveDefaultBtn = document.getElementById('save-default-group-names');
-  if (saveDefaultBtn) saveDefaultBtn.addEventListener('click', saveDefaultGroupNamesHandler);
+  const saveDefaultBtn = document.getElementById('save-default-team-names');
+  if (saveDefaultBtn) saveDefaultBtn.addEventListener('click', saveDefaultTeamNamesHandler);
 
-  const addDefaultBtn = document.getElementById('default-group-add');
-  if (addDefaultBtn) addDefaultBtn.addEventListener('click', addDefaultGroupName);
+  const addDefaultBtn = document.getElementById('default-team-add');
+  if (addDefaultBtn) addDefaultBtn.addEventListener('click', addDefaultTeamName);
 
-  const removeDefaultBtn = document.getElementById('default-group-remove');
-  if (removeDefaultBtn) removeDefaultBtn.addEventListener('click', removeDefaultGroupName);
+  const removeDefaultBtn = document.getElementById('default-team-remove');
+  if (removeDefaultBtn) removeDefaultBtn.addEventListener('click', removeDefaultTeamName);
 
   const resetBtn = document.getElementById('settings-reset-data');
   if (resetBtn) {
@@ -133,7 +130,7 @@ function init() {
     });
   }
 
-  loadDefaultGroupNames();
+  loadDefaultTeamNames();
 }
 
 function populateSelect(selectId, selectedId) {
@@ -173,5 +170,4 @@ export const ClassManager = {
   onSettingsPageEnter,
   renderSettingsStudentList,
   downloadCSVTemplate,
-  importFromGoogleSheets,
 };

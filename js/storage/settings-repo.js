@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
   defaultTime: 300,
   timerAlert: 'soundAndVisual',
   animationEnabled: true,
-  defaultGroupNames: ['하나', '믿음', '우정', '희망', '협력', '사랑', '소망', '열정'],
+  defaultTeamNames: ['하나', '믿음', '우정', '희망', '협력', '사랑', '소망', '열정'],
 };
 
 /**
@@ -34,24 +34,26 @@ function save(settings) {
  * 기본 모둠 이름 가져오기
  * @returns {Array<string>} 모둠 이름 배열
  */
-function getDefaultGroupNames() {
+function getDefaultTeamNames() {
   const settings = getAll();
-  return settings.defaultGroupNames || DEFAULT_SETTINGS.defaultGroupNames;
+  return (
+    settings.defaultTeamNames || settings.defaultGroupNames || DEFAULT_SETTINGS.defaultTeamNames
+  );
 }
 
 /**
  * 기본 모둠 이름 저장
  * @param {Array<string>} names - 모둠 이름 배열
  */
-function saveDefaultGroupNames(names) {
+function saveDefaultTeamNames(names) {
   const settings = getAll();
-  settings.defaultGroupNames = names;
+  settings.defaultTeamNames = names;
   save(settings);
 }
 
 export const SettingsRepo = {
   getAll,
   save,
-  getDefaultGroupNames,
-  saveDefaultGroupNames,
+  getDefaultTeamNames,
+  saveDefaultTeamNames,
 };

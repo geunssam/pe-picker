@@ -20,34 +20,34 @@ function shuffle(array) {
  * 학생을 섞어서 균등하게 배분
  *
  * @param {Array<string>} students - 학생 이름 배열
- * @param {number} groupSize - 모둠당 인원 수
- * @param {number} groupCount - 모둠 수
- * @param {Array<string>} [groupNames] - 모둠 이름 배열
+ * @param {number} teamSize - 모둠당 인원 수
+ * @param {number} teamCount - 모둠 수
+ * @param {Array<string>} [teamNames] - 모둠 이름 배열
  * @returns {Array<Object>} 모둠 배열
  *   - id: 모둠 번호 (1부터 시작)
  *   - name: 모둠 이름
  *   - members: 학생 이름 배열
  */
-function assignRandom(students, groupSize, groupCount, groupNames = []) {
+function assignRandom(students, teamSize, teamCount, teamNames = []) {
   const shuffled = shuffle(students);
   const groups = [];
 
   // 기본 배정
-  for (let i = 0; i < groupCount; i++) {
-    const start = i * groupSize;
+  for (let i = 0; i < teamCount; i++) {
+    const start = i * teamSize;
     groups.push({
       id: i + 1,
-      name: groupNames[i] || `${i + 1}모둠`,
-      members: shuffled.slice(start, start + groupSize),
+      name: teamNames[i] || `${i + 1}모둠`,
+      members: shuffled.slice(start, start + teamSize),
     });
   }
 
   // 남는 학생 → 랜덤 모둠에 분배
-  const remaining = shuffled.slice(groupCount * groupSize);
+  const remaining = shuffled.slice(teamCount * teamSize);
   if (remaining.length > 0) {
-    const randomIndices = shuffle([...Array(groupCount).keys()]);
+    const randomIndices = shuffle([...Array(teamCount).keys()]);
     remaining.forEach((name, i) => {
-      groups[randomIndices[i % groupCount]].members.push(name);
+      groups[randomIndices[i % teamCount]].members.push(name);
     });
   }
 
@@ -60,11 +60,11 @@ function assignRandom(students, groupSize, groupCount, groupNames = []) {
  *
  * @param {Array<string>} currentStudents - 현재 참가 학생
  * @param {Array<Array>} savedGroups - 저장된 모둠 배열
- * @param {Array<string>} [groupNames] - 모둠 이름 배열
+ * @param {Array<string>} [teamNames] - 모둠 이름 배열
  * @param {boolean} [markLeader=true] - 첫 번째 학생을 리더로 표시
  * @returns {Array<Object>} 모둠 배열
  */
-function assignFixed(currentStudents, savedGroups, groupNames = [], markLeader = true) {
+function assignFixed(currentStudents, savedGroups, teamNames = [], markLeader = true) {
   const studentSet = new Set(currentStudents);
   const groups = [];
 
@@ -87,7 +87,7 @@ function assignFixed(currentStudents, savedGroups, groupNames = [], markLeader =
 
     groups.push({
       id: i + 1,
-      name: groupNames[i] || `${i + 1}모둠`,
+      name: teamNames[i] || `${i + 1}모둠`,
       members: formattedMembers,
     });
   }
@@ -101,9 +101,9 @@ function assignFixed(currentStudents, savedGroups, groupNames = [], markLeader =
  *
  * @param {Object} config - 배정 설정
  * @param {Array<string>} config.students - 학생 이름 배열
- * @param {number} config.groupSize - 모둠당 인원 수
- * @param {number} config.groupCount - 모둠 수
- * @param {Array<string>} [config.groupNames] - 모둠 이름 배열
+ * @param {number} config.teamSize - 모둠당 인원 수
+ * @param {number} config.teamCount - 모둠 수
+ * @param {Array<string>} [config.teamNames] - 모둠 이름 배열
  * @param {boolean} [config.isFixed] - 고정 모둠 사용 여부
  * @param {Array<Array>} [config.savedGroups] - 저장된 모둠 (고정 모드)
  * @returns {Array<Object>} 모둠 배열
@@ -111,18 +111,18 @@ function assignFixed(currentStudents, savedGroups, groupNames = [], markLeader =
 function assign(config) {
   const {
     students,
-    groupSize,
-    groupCount,
-    groupNames = [],
+    teamSize,
+    teamCount,
+    teamNames = [],
     isFixed = false,
     savedGroups = [],
   } = config;
 
   if (isFixed && savedGroups.length > 0) {
-    return assignFixed(students, savedGroups, groupNames);
+    return assignFixed(students, savedGroups, teamNames);
   }
 
-  return assignRandom(students, groupSize, groupCount, groupNames);
+  return assignRandom(students, teamSize, teamCount, teamNames);
 }
 
 /**

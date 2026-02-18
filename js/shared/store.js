@@ -20,12 +20,12 @@ function saveClasses(classes) {
   set(KEYS.CLASSES, classes);
 }
 
-function addClass(name, students, groupNames, groups, groupCount) {
-  return ClassRepo.create(name, students, groupNames, groups, groupCount);
+function addClass(name, students, teamNames, teams, teamCount) {
+  return ClassRepo.create(name, students, teamNames, teams, teamCount);
 }
 
-function updateClass(id, name, students, groupNames, groups, groupCount) {
-  return ClassRepo.update(id, name, students, groupNames, groups, groupCount);
+function updateClass(id, name, students, teamNames, teams, teamCount) {
+  return ClassRepo.update(id, name, students, teamNames, teams, teamCount);
 }
 
 function deleteClass(id) {
@@ -66,16 +66,16 @@ function clearTagGameData() {
 }
 
 // === 모둠 관리 (GroupManagerRepo) ===
-function getCurrentGroups() {
-  return GroupManagerRepo.getCurrentGroups();
+function getCurrentTeams() {
+  return GroupManagerRepo.getCurrentTeams();
 }
 
-function saveCurrentGroups(groups) {
-  return GroupManagerRepo.saveCurrentGroups(groups);
+function saveCurrentTeams(teams) {
+  return GroupManagerRepo.saveCurrentTeams(teams);
 }
 
-function clearCurrentGroups() {
-  return GroupManagerRepo.clearCurrentGroups();
+function clearCurrentTeams() {
+  return GroupManagerRepo.clearCurrentTeams();
 }
 
 // === 쿠키 (GroupManagerRepo) ===
@@ -108,12 +108,12 @@ function saveSettings(settings) {
   return SettingsRepo.save(settings);
 }
 
-function getDefaultGroupNames() {
-  return SettingsRepo.getDefaultGroupNames();
+function getDefaultTeamNames() {
+  return SettingsRepo.getDefaultTeamNames();
 }
 
-function saveDefaultGroupNames(names) {
-  return SettingsRepo.saveDefaultGroupNames(names);
+function saveDefaultTeamNames(names) {
+  return SettingsRepo.saveDefaultTeamNames(names);
 }
 
 // === 교사 프로필 (TeacherRepo) ===
@@ -132,22 +132,70 @@ function isTeacherOnboarded() {
 // === 마이그레이션 ===
 
 /**
- * groupCount 필드 마이그레이션
+ * teamCount 필드 마이그레이션
  */
-function migrateGroupCount() {
+function migrateTeamCount() {
   const classes = getClasses();
   let changed = false;
 
   classes.forEach(c => {
-    if (c.groupCount === undefined) {
-      c.groupCount = c.groups && c.groups.length > 0 ? c.groups.length : 6;
+    if (c.teamCount === undefined) {
+      c.teamCount = c.teams && c.teams.length > 0 ? c.teams.length : 6;
       changed = true;
     }
   });
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] groupCount 마이그레이션 완료');
+    console.log('[Store] teamCount 마이그레이션 완료');
+  }
+}
+
+/**
+ * groups→teams 필드 마이그레이션
+ */
+function migrateGroupsToTeams() {
+  const classes = getClasses();
+  let changed = false;
+
+  classes.forEach(c => {
+    if ('groupNames' in c && !('teamNames' in c)) {
+      c.teamNames = c.groupNames;
+      delete c.groupNames;
+      changed = true;
+    }
+    if ('groups' in c && !('teams' in c)) {
+      c.teams = c.groups;
+      delete c.groups;
+      changed = true;
+    }
+    if ('groupCount' in c && !('teamCount' in c)) {
+      c.teamCount = c.groupCount;
+      delete c.groupCount;
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    saveClasses(classes);
+    console.log('[Store] groups→teams 마이그레이션 완료');
+  }
+
+  // 설정: defaultGroupNames→defaultTeamNames
+  const settings = getSettings();
+  if (settings?.defaultGroupNames && !settings.defaultTeamNames) {
+    settings.defaultTeamNames = settings.defaultGroupNames;
+    delete settings.defaultGroupNames;
+    saveSettings(settings);
+    console.log('[Store] defaultGroupNames→defaultTeamNames 마이그레이션 완료');
+  }
+
+  // localStorage 키: pet_current_groups → pet_current_teams
+  const oldTeams = get('pet_current_groups');
+  if (oldTeams && !get('pet_current_teams')) {
+    set('pet_current_teams', oldTeams);
+    localStorage.removeItem('pet_current_groups');
+    console.log('[Store] pet_current_groups→pet_current_teams 마이그레이션 완료');
   }
 }
 
@@ -253,8 +301,8 @@ function migrateFromLegacy() {
   }
 
   const legacyGroups = get('cgm_current_groups');
-  if (legacyGroups && !get(KEYS.CURRENT_GROUPS)) {
-    set(KEYS.CURRENT_GROUPS, legacyGroups);
+  if (legacyGroups && !get(KEYS.CURRENT_TEAMS)) {
+    set(KEYS.CURRENT_TEAMS, legacyGroups);
   }
 
   const legacySettings = get('cgm_settings');
@@ -274,8 +322,11 @@ function migrateFromLegacy() {
     console.log('[Store] tagGameData 마이그레이션 완료');
   }
 
-  // groupCount 마이그레이션
-  migrateGroupCount();
+  // groups→teams 마이그레이션
+  migrateGroupsToTeams();
+
+  // teamCount 마이그레이션
+  migrateTeamCount();
 
   // 학생 데이터 마이그레이션
   migrateStudentData();
@@ -303,14 +354,14 @@ export const Store = {
   saveTagGameData,
   clearTagGameData,
   // 모둠
-  getCurrentGroups,
-  saveCurrentGroups,
-  clearCurrentGroups,
+  getCurrentTeams,
+  saveCurrentTeams,
+  clearCurrentTeams,
   // 설정
   getSettings,
   saveSettings,
-  getDefaultGroupNames,
-  saveDefaultGroupNames,
+  getDefaultTeamNames,
+  saveDefaultTeamNames,
   // 쿠키
   getCookieHistory,
   addCookieRecord,

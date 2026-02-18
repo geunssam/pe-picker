@@ -24,7 +24,7 @@ export function renderLandingClassList() {
 
   container.innerHTML = classes
     .map(cls => {
-      const gc = cls.groupCount || cls.groups?.length || 6;
+      const gc = cls.teamCount || cls.teams?.length || 6;
       return `
         <div class="landing-class-card" onclick="App.onClassSelected('${cls.id}')">
           <div class="landing-card-info">
@@ -51,19 +51,14 @@ export async function deleteClass(id) {
 
   const selectedWasDeleted = Store.getSelectedClassId() === id;
 
-  try {
-    await deleteClassFromFirestore(id, selectedWasDeleted);
-  } catch (error) {
-    console.error('❌ Firestore 학급 삭제 실패:', error);
-    UI.showToast('클라우드 삭제에 실패했습니다. 다시 시도해주세요.', 'error');
-    return;
-  }
-
   if (selectedWasDeleted) {
     Store.clearSelectedClass();
   }
 
   Store.deleteClass(id);
+  deleteClassFromFirestore(id).catch(error => {
+    console.warn('[ClassManager] Firestore 클래스 삭제 동기화 실패:', error);
+  });
   UI.showToast('학급 삭제 완료', 'success');
   renderLandingClassList();
   refreshAllSelects();

@@ -11,23 +11,23 @@ import { KEYS, get, set, remove } from './base-repo.js';
  * 현재 모둠 가져오기
  * @returns {Array} 모둠 배열
  */
-function getCurrentGroups() {
-  return get(KEYS.CURRENT_GROUPS) || [];
+function getCurrentTeams() {
+  return get(KEYS.CURRENT_TEAMS) || [];
 }
 
 /**
  * 현재 모둠 저장
- * @param {Array} groups - 모둠 배열
+ * @param {Array} teams - 모둠 배열
  */
-function saveCurrentGroups(groups) {
-  set(KEYS.CURRENT_GROUPS, groups);
+function saveCurrentTeams(teams) {
+  set(KEYS.CURRENT_TEAMS, teams);
 }
 
 /**
  * 현재 모둠 초기화
  */
-function clearCurrentGroups() {
-  remove(KEYS.CURRENT_GROUPS);
+function clearCurrentTeams() {
+  remove(KEYS.CURRENT_TEAMS);
 }
 
 // === 쿠키 이력 ===
@@ -112,9 +112,9 @@ function clearCookieHistory(classId) {
 }
 
 export const GroupManagerRepo = {
-  getCurrentGroups,
-  saveCurrentGroups,
-  clearCurrentGroups,
+  getCurrentTeams,
+  saveCurrentTeams,
+  clearCurrentTeams,
   getCookieHistory,
   saveCookieHistory,
   addCookieRecord,

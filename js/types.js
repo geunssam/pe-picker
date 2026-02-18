@@ -21,9 +21,9 @@
  * @property {string} id - 학급 ID
  * @property {string} name - 학급명
  * @property {(Student|string)[]} students - 학생 배열 (확장형 또는 이름만)
- * @property {string[]} groupNames - 모둠 이름 배열
- * @property {Array<Array<Student|string>>} groups - 모둠 배열 (2차원)
- * @property {number} groupCount - 모둠 수
+ * @property {string[]} teamNames - 모둠 이름 배열
+ * @property {Array<Array<Student|string>>} teams - 모둠 배열 (2차원)
+ * @property {number} teamCount - 모둠 수
  * @property {string} createdAt - 생성 일시 (ISO 8601)
  */
 
@@ -69,7 +69,7 @@
  * @property {string} id - 기록 ID
  * @property {string} date - 기록 날짜 (ISO 8601)
  * @property {string} classId - 학급 ID
- * @property {Array<{id: number, members: string[], cookies: number}>} groups - 모둠 기록
+ * @property {Array<{id: number, members: string[], cookies: number}>} teams - 모둠 기록
  */
 
 /**
@@ -80,7 +80,7 @@
  * @property {number} defaultTime - 기본 시간 (초)
  * @property {string} timerAlert - 알림 방식 ('soundAndVisual'|'sound'|'visual'|'none')
  * @property {boolean} animationEnabled - 애니메이션 활성화
- * @property {string[]} defaultGroupNames - 기본 모둠 이름 배열
+ * @property {string[]} defaultTeamNames - 기본 모둠 이름 배열
  */
 
 /**
@@ -112,13 +112,13 @@
 
 /**
  * 모둠 배정 설정
- * @typedef {Object} GroupAssignConfig
+ * @typedef {Object} TeamAssignConfig
  * @property {string[]} students - 학생 이름 배열
- * @property {number} groupSize - 모둠당 인원 수
- * @property {number} groupCount - 모둠 수
- * @property {string[]} [groupNames] - 모둠 이름 배열
+ * @property {number} teamSize - 모둠당 인원 수
+ * @property {number} teamCount - 모둠 수
+ * @property {string[]} [teamNames] - 모둠 이름 배열
  * @property {boolean} [isFixed] - 고정 모둠 사용 여부
- * @property {Array<Array>} [savedGroups] - 저장된 모둠 (고정 모드)
+ * @property {Array<Array>} [savedTeams] - 저장된 모둠 (고정 모드)
  */
 
 /**
