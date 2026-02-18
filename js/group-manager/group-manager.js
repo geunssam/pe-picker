@@ -96,6 +96,10 @@ function init() {
     pendingPickData = null;
   });
 
+  // Phase 1 보조 버튼 (결과로 돌아가기, 초기화)
+  document.getElementById('gm-back-to-result-btn')?.addEventListener('click', backToResult);
+  document.getElementById('gm-reset-from-settings-btn')?.addEventListener('click', resetGame);
+
   // Phase 2 액션 버튼
   document.getElementById('gm-pick-again-btn')?.addEventListener('click', pickAgain);
   document.getElementById('gm-back-to-setup-btn')?.addEventListener('click', backToSetup);
@@ -159,6 +163,7 @@ function updateGmUI() {
 
   if (currentPhase === 1) {
     if (phase1) phase1.style.display = '';
+    updatePhase1Buttons();
   } else if (currentPhase === 2) {
     if (resultSection) resultSection.style.display = '';
     if (phase2Actions) phase2Actions.style.display = '';
@@ -170,6 +175,21 @@ function updateGmUI() {
 function backToSetup() {
   currentPhase = 1;
   updateGmUI();
+}
+
+function backToResult() {
+  if (currentGroups.length > 0) {
+    currentPhase = 2;
+    updateGmUI();
+  }
+}
+
+function updatePhase1Buttons() {
+  const backBtn = document.getElementById('gm-back-to-result-btn');
+  const resetBtn = document.getElementById('gm-reset-from-settings-btn');
+  const hasResults = currentGroups.length > 0;
+  if (backBtn) backBtn.style.display = hasResults ? '' : 'none';
+  if (resetBtn) resetBtn.style.display = hasResults ? '' : 'none';
 }
 
 function pickAgain() {

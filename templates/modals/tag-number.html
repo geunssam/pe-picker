@@ -1,0 +1,52 @@
+<!-- 번호순 생성 모달 (술래뽑기) -->
+<div id="tag-number-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">번호순 카드 생성</div>
+      <button class="modal-close" id="tag-number-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; gap: var(--space-md); align-items: center">
+        <div style="flex: 1">
+          <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+            >시작 번호</label
+          >
+          <input
+            class="input"
+            type="number"
+            id="tag-number-start"
+            value="1"
+            min="1"
+            max="99"
+            style="margin-top: var(--space-xs)"
+          />
+        </div>
+        <div style="flex: 1">
+          <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)">끝 번호</label>
+          <input
+            class="input"
+            type="number"
+            id="tag-number-end"
+            value="20"
+            min="1"
+            max="99"
+            style="margin-top: var(--space-xs)"
+          />
+        </div>
+      </div>
+      <div
+        style="
+          font-size: var(--font-size-xs);
+          color: var(--text-tertiary);
+          margin-top: var(--space-md);
+        "
+      >
+        💡 시작~끝 번호로 학생 카드를 생성합니다
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="tag-number-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="tag-number-modal-confirm">카드 생성</button>
+    </div>
+  </div>
+</div>

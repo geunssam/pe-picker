@@ -1,0 +1,43 @@
+<!-- 번호순 생성 모달 (모둠뽑기) -->
+<div id="gm-number-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">번호순 카드 생성</div>
+      <button class="modal-close" id="gm-number-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; gap: var(--space-md); align-items: center">
+        <div style="flex: 1">
+          <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+            >시작 번호</label
+          >
+          <input
+            class="input"
+            type="number"
+            id="gm-number-start"
+            value="1"
+            min="1"
+            max="99"
+            style="margin-top: var(--space-xs)"
+          />
+        </div>
+        <div style="flex: 1">
+          <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)">끝 번호</label>
+          <input
+            class="input"
+            type="number"
+            id="gm-number-end"
+            value="20"
+            min="1"
+            max="99"
+            style="margin-top: var(--space-xs)"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="gm-number-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="gm-number-modal-confirm">카드 생성</button>
+    </div>
+  </div>
+</div>

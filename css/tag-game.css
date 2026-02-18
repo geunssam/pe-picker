@@ -62,13 +62,18 @@
   justify-content: center;
 }
 
-/* === 액션 버튼 그룹 === */
+/* === 액션 버튼 그룹 (가로 1열) === */
 .tag-action-buttons {
   display: flex;
-  flex-direction: column;
   gap: var(--space-sm);
-  margin-top: var(--space-xl);
-  margin-bottom: var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.tag-action-buttons .btn {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  padding: var(--space-md) var(--space-sm);
+  white-space: nowrap;
 }
 
 /* === Phase 2 버튼 4열 그리드 === */

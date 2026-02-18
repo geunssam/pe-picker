@@ -1,0 +1,39 @@
+<!-- 학급 명렬표 모달 (Roster) -->
+<div id="class-roster-modal" class="modal-overlay">
+  <div class="modal timetable-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="roster-modal-title">학급 편집</div>
+      <button class="modal-close" id="roster-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto">
+      <div class="class-editor-section">
+        <label class="timetable-label">학급 이름</label>
+        <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반" />
+      </div>
+
+      <div class="class-editor-section">
+        <div class="class-editor-header">
+          <div class="class-editor-title">학생 명렬표</div>
+          <div class="class-editor-meta">
+            <button class="btn btn-sm btn-primary" id="class-open-bulk-modal" type="button">
+              일괄 등록
+            </button>
+          </div>
+        </div>
+        <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none" />
+        <div id="roster-registered-pills" class="roster-registered-pills">
+          <!-- JS에서 동적 생성: 등록된 학생 알약 카드 -->
+        </div>
+        <div id="roster-student-list" class="roster-input-list" style="grid-template-columns: 1fr">
+          <!-- JS에서 동적 생성: 빈 입력 카드 1개 -->
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer roster-modal-footer">
+      <button class="btn roster-btn-template" id="class-csv-download">📥 템플릿 다운</button>
+      <button class="btn roster-btn-csv" id="class-csv-import">📂 CSV 업로드</button>
+      <button class="btn roster-btn-cancel" id="roster-modal-cancel">취소</button>
+      <button class="btn roster-btn-save" id="roster-modal-save">저장</button>
+    </div>
+  </div>
+</div>

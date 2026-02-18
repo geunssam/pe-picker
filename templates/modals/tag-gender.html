@@ -1,0 +1,91 @@
+<!-- 성별 구분 모달 (술래뽑기) -->
+<div id="tag-gender-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">성별 구분 번호 입력</div>
+      <button class="modal-close" id="tag-gender-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: var(--space-lg)">
+        <div
+          class="setting-label"
+          style="margin-bottom: var(--space-sm); color: var(--color-primary)"
+        >
+          👦 남학생
+        </div>
+        <div style="display: flex; gap: var(--space-md); align-items: center">
+          <div style="flex: 1">
+            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+              >시작 번호</label
+            >
+            <input
+              class="input"
+              type="number"
+              id="tag-gender-male-start"
+              value="1"
+              min="1"
+              max="99"
+              style="margin-top: var(--space-xs)"
+            />
+          </div>
+          <div style="flex: 1">
+            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+              >끝 번호</label
+            >
+            <input
+              class="input"
+              type="number"
+              id="tag-gender-male-end"
+              value="7"
+              min="1"
+              max="99"
+              style="margin-top: var(--space-xs)"
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <div
+          class="setting-label"
+          style="margin-bottom: var(--space-sm); color: var(--color-danger)"
+        >
+          👧 여학생
+        </div>
+        <div style="display: flex; gap: var(--space-md); align-items: center">
+          <div style="flex: 1">
+            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+              >시작 번호</label
+            >
+            <input
+              class="input"
+              type="number"
+              id="tag-gender-female-start"
+              value="41"
+              min="1"
+              max="99"
+              style="margin-top: var(--space-xs)"
+            />
+          </div>
+          <div style="flex: 1">
+            <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)"
+              >끝 번호</label
+            >
+            <input
+              class="input"
+              type="number"
+              id="tag-gender-female-end"
+              value="45"
+              min="1"
+              max="99"
+              style="margin-top: var(--space-xs)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="tag-gender-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="tag-gender-modal-confirm">카드 생성</button>
+    </div>
+  </div>
+</div>

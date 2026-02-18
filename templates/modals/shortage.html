@@ -1,0 +1,20 @@
+<!-- 학생 부족 확인 모달 -->
+<div id="shortage-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">학생 수 부족</div>
+      <button class="modal-close" id="shortage-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p
+        id="shortage-message"
+        style="margin-bottom: var(--space-lg); color: var(--text-secondary)"
+      ></p>
+    </div>
+    <div class="modal-footer" style="flex-direction: column">
+      <button class="btn btn-primary" id="shortage-proceed" style="width: 100%"></button>
+      <button class="btn btn-secondary" id="shortage-alt" style="width: 100%"></button>
+      <button class="btn btn-secondary" id="shortage-cancel" style="width: 100%">취소</button>
+    </div>
+  </div>
+</div>

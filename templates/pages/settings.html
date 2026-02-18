@@ -1,0 +1,83 @@
+<div id="page-settings" class="page-view">
+  <div class="page-header">
+    <div>
+      <div class="page-title">학급 관리</div>
+      <div class="page-subtitle">현재 학급의 정보를 관리합니다</div>
+    </div>
+  </div>
+
+  <!-- 현재 학급 정보 -->
+  <div class="section">
+    <div id="settings-current-class" class="glass-card" style="padding: var(--space-lg)">
+      <!-- JS에서 동적 렌더링 -->
+    </div>
+  </div>
+
+  <!-- 학급 학생 목록 -->
+  <div class="section">
+    <div
+      class="section-title"
+      style="display: flex; justify-content: space-between; align-items: center"
+    >
+      <span>📋 학생 목록</span>
+      <button
+        class="btn btn-primary btn-sm"
+        id="settings-add-class"
+        style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
+      >
+        편집
+      </button>
+    </div>
+    <div class="glass-card" style="padding: var(--space-lg)">
+      <div id="settings-class-list" class="settings-class-list"></div>
+    </div>
+  </div>
+
+  <!-- 현재 모둠 설정 -->
+  <div class="section">
+    <div
+      class="section-title"
+      style="display: flex; justify-content: space-between; align-items: center"
+    >
+      <span>👥 모둠 설정</span>
+      <button
+        class="btn btn-primary btn-sm"
+        id="settings-edit-team"
+        style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
+      >
+        모둠 편집
+      </button>
+    </div>
+    <div class="glass-card" style="padding: var(--space-lg)">
+      <div id="settings-team-list"></div>
+    </div>
+  </div>
+
+  <!-- 앱 정보 -->
+  <div class="section">
+    <div class="section-title">ℹ️ 앱 정보</div>
+    <div class="glass-card" style="padding: var(--space-lg)">
+      <div class="setting-row">
+        <div class="setting-label">표시 이름</div>
+        <div style="display: flex; align-items: center; gap: var(--space-xs)">
+          <input
+            type="text"
+            id="settings-teacher-name"
+            class="input input-sm"
+            placeholder="선생님 이름"
+            maxlength="20"
+            style="width: 120px; text-align: right"
+          />
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">체육 수업 도우미</div>
+        <div style="font-size: var(--font-size-sm); color: var(--text-tertiary)">v2.0.0</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">데이터 초기화</div>
+        <button class="btn btn-sm btn-danger" id="settings-reset-data">초기화</button>
+      </div>
+    </div>
+  </div>
+</div>

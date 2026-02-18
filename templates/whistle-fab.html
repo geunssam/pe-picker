@@ -1,0 +1,43 @@
+<!-- Whistle FAB -->
+<button id="whistle-fab" class="whistle-fab" style="display: none" aria-label="휘슬 열기">
+  📣
+</button>
+
+<div id="whistle-panel" class="whistle-panel">
+  <div class="whistle-panel__header">
+    <span class="whistle-panel__title">만능 휘슬</span>
+    <button id="whistle-panel-close" class="whistle-panel__close" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="whistle-mode-row">
+    <button class="whistle-mode-btn whistle-mode-btn--active" data-mode="hold">꾹 누르기</button>
+    <button class="whistle-mode-btn" data-mode="long">길게 삐———</button>
+    <button class="whistle-mode-btn" data-mode="triple">삐삐삐!</button>
+  </div>
+
+  <div class="whistle-btn-wrap">
+    <button class="whistle-main-btn" id="whistle-main-btn">
+      <span class="whistle-main-btn__icon">📣</span>
+      <span class="whistle-main-btn__label" id="whistle-btn-label">꾹 누르기</span>
+    </button>
+    <div class="whistle-ring" id="whistle-ring1"></div>
+    <div class="whistle-ring" id="whistle-ring2"></div>
+  </div>
+
+  <div class="whistle-volume-row">
+    <span class="whistle-vol-icon">🔈</span>
+    <input
+      type="range"
+      id="whistle-vol"
+      class="whistle-vol-slider"
+      min="0"
+      max="100"
+      step="1"
+      value="100"
+    />
+    <span class="whistle-vol-icon">🔊</span>
+    <span class="whistle-vol-pct" id="whistle-vol-label">100%</span>
+  </div>
+
+  <p class="whistle-hint" id="whistle-hint">누르고 있는 동안 소리가 납니다</p>
+</div>

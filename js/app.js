@@ -2,6 +2,7 @@
    PE Picker - App (라우터 + 초기화)
    ============================================ */
 
+import { mountTemplates } from './template-loader.js';
 import { Store } from './shared/store.js';
 import { AuthManager } from './auth-manager.js';
 import { FirestoreSync } from './firestore-sync.js';
@@ -26,6 +27,7 @@ let currentRoute = null;
 let isBootstrapped = false;
 
 function init() {
+  mountTemplates();
   Store.migrateFromLegacy();
   AuthManager.init(onAuthStateChanged);
   window.addEventListener('pet-data-updated', onStoreDataUpdated);

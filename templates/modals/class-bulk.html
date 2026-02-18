@@ -1,0 +1,26 @@
+<!-- 번호순 일괄 등록 모달 (학생 명렬표) -->
+<div id="class-bulk-modal" class="modal-overlay">
+  <div class="modal class-bulk-modal">
+    <div class="modal-header">
+      <div class="modal-title">번호순 일괄 등록</div>
+      <button class="modal-close" id="class-bulk-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="class-bulk-modal-toolbar">
+        <button class="btn btn-sm btn-secondary" id="class-bulk-row-add" type="button">
+          + 학생 추가
+        </button>
+        <button class="btn btn-sm btn-secondary" id="class-bulk-row-remove" type="button">
+          − 마지막 학생 삭제
+        </button>
+      </div>
+      <div id="class-bulk-card-list" class="class-bulk-card-list">
+        <!-- JS에서 동적 생성: roster-input-card 형태 -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="class-bulk-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="class-bulk-modal-apply">적용</button>
+    </div>
+  </div>
+</div>

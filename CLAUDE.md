@@ -14,8 +14,8 @@ Vanilla JS + Firebase Auth/Firestore 기반의 PWA로, Netlify에 배포됩니�
 ### 레이어 구조
 
 ```
-Presentation  →  index.html, login.html, css/
-Application   →  app.js, tag-game/, group-manager/, class-management/, wizard.js
+Presentation  →  index.html (셸), templates/ (HTML 조각), login.html, css/
+Application   →  app.js, template-loader.js, tag-game/, group-manager/, class-management/, wizard.js
 Domain        →  core/tag-picker.js, core/group-picker.js (순수 알고리즘, 부수효과 없음)
 Infrastructure →  storage/*-repo.js → Store facade (shared/store.js)
 Firebase      →  firebase-config.js, auth-manager.js, firestore-sync.js
@@ -30,18 +30,42 @@ Firebase      →  firebase-config.js, auth-manager.js, firestore-sync.js
 
 ### 핵심 패턴
 
-| 패턴         | 위치                        | 설명                                  |
-| ------------ | --------------------------- | ------------------------------------- |
-| Repository   | `storage/*-repo.js`         | localStorage CRUD 캡슐화              |
-| Facade       | `shared/store.js`           | 모든 Repo를 단일 API로 통합           |
-| Shared State | `class-management/state.js` | 모듈 간 공유 상태 (참조로 import)     |
-| Fisher-Yates | `shared/ui-utils.js`        | 정확한 셔플 알고리즘 (유일한 shuffle) |
+| 패턴          | 위치                               | 설명                                  |
+| ------------- | ---------------------------------- | ------------------------------------- |
+| HTML Template | `templates/`, `template-loader.js` | Vite `?raw` import로 HTML 조각 조립   |
+| Repository    | `storage/*-repo.js`                | localStorage CRUD 캡슐화              |
+| Facade        | `shared/store.js`                  | 모든 Repo를 단일 API로 통합           |
+| Shared State  | `class-management/state.js`        | 모듈 간 공유 상태 (참조로 import)     |
+| Fisher-Yates  | `shared/ui-utils.js`               | 정확한 셔플 알고리즘 (유일한 shuffle) |
 
 ### 폴더 구조
 
 ```
+templates/                         # HTML 조각 (Vite ?raw import용)
+├── navbar.html                    # 상단 네비바
+├── whistle-fab.html               # 휘슬 FAB + 패널
+├── pages/
+│   ├── class-selector.html        # 랜딩 페이지
+│   ├── tag-game.html              # 술래뽑기
+│   ├── group-manager.html         # 모둠뽑기
+│   ├── settings.html              # 학급 관리
+│   └── wizard.html                # 온보딩 위저드
+└── modals/
+    ├── class-roster.html          # 명렬표 모달
+    ├── class-team.html            # 모둠 편집 모달
+    ├── class-bulk.html            # 일괄 등록 모달
+    ├── tag-number.html            # 번호순 생성 (술래)
+    ├── tag-gender.html            # 성별 구분 (술래)
+    ├── manual-input.html          # 수동 입력
+    ├── gm-number.html             # 번호순 생성 (모둠)
+    ├── gm-gender.html             # 성별 구분 (모둠)
+    ├── overflow.html              # 남는 학생
+    ├── shortage.html              # 부족 학생
+    └── empty-students.html        # 빈 학생
+
 js/
 ├── app.js                     # 메인 진입점 (라우팅, 초기화)
+├── template-loader.js         # HTML 템플릿 ?raw import → DOM 삽입
 ├── login-main.js              # 로그인 진입점
 ├── types.js                   # JSDoc 타입 정의
 ├── firebase-config.js         # Firebase 초기화
@@ -167,6 +191,7 @@ refactor: ClassManager → class-management/ 모듈 분리
 - `withTimeout()` 중복 정의 → `promise-utils.js`에서 import
 - `pet_` 접두사 없는 localStorage 키 사용
 - Firebase modular SDK (v9+) 사용 → compat SDK 유지 (전환 시 전체 코드 변경 필요)
+- `index.html`에 직접 HTML 추가 → `templates/` 폴더에 `.html` 조각 생성 후 `template-loader.js`에 import 추가
 
 ### 주의할 것
 
@@ -175,6 +200,8 @@ refactor: ClassManager → class-management/ 모듈 분리
 - Firestore 호출은 항상 `withTimeout`으로 감싸기 (오프라인 대비)
 - 로컬 모드(비로그인)에서는 Firestore 호출 완전 건너뛰기
 - `class-management/state.js`의 상태 객체는 참조로 공유 — 직접 변경 시 모든 모듈에 반영됨
+- `mountTemplates()`는 `app.js`의 `init()` 최상단에서 호출 — 다른 모듈의 `getElementById`보다 먼저 실행되어야 함
+- `templates/*.html` 파일은 순수 HTML 조각 (`<!DOCTYPE>` 없음, `<html>`/`<body>` 없음)
 
 ## 테스트 체크리스트
 

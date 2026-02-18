@@ -7,6 +7,25 @@ import { UI } from '../shared/ui-utils.js';
 export function onSettingsPageEnter() {
   const cls = Store.getSelectedClass();
 
+  // 교사 이름 입력 필드
+  const nameInput = document.getElementById('settings-teacher-name');
+  if (nameInput) {
+    const profile = Store.getTeacherProfile();
+    nameInput.value = profile?.teacherName || '';
+    // 중복 리스너 방지
+    if (!nameInput._bound) {
+      nameInput._bound = true;
+      nameInput.addEventListener('change', () => {
+        const newName = nameInput.value.trim();
+        const p = Store.getTeacherProfile() || {};
+        Store.saveTeacherProfile({ ...p, teacherName: newName });
+        const el = document.getElementById('navbar-profile-name');
+        if (el) el.textContent = newName;
+        UI.showToast('이름이 변경되었습니다', 'success');
+      });
+    }
+  }
+
   const infoContainer = document.getElementById('settings-current-class');
   if (infoContainer && cls) {
     const gc = cls.teamCount || cls.teams?.length || 6;
