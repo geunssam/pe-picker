@@ -393,15 +393,31 @@
             <div class="tag-timer-label">남은 시간</div>
             <div id="tag-timer-display" class="tag-timer-display timer-normal">00:00</div>
           </div>
-          <div class="tag-timer-controls">
-            <button class="btn btn-secondary" id="tag-timer-pause">⏸️ 일시정지</button>
+          <!-- 전체화면 타이머 내 휘슬 버튼 -->
+          <div id="tag-timer-whistle" class="timer-whistle-wrap">
+            <button class="timer-whistle-btn" id="tag-timer-whistle-btn">
+              <span class="timer-whistle-btn__icon">📣</span>
+            </button>
+            <div class="timer-whistle-ring" id="tag-timer-whistle-ring1"></div>
+            <div class="timer-whistle-ring" id="tag-timer-whistle-ring2"></div>
+            <div class="timer-whistle-mode-row">
+              <button class="timer-whistle-mode" data-mode="hold" data-whistle-mode>꾹</button>
+              <button
+                class="timer-whistle-mode timer-whistle-mode--active"
+                data-mode="long"
+                data-whistle-mode
+              >
+                삐—
+              </button>
+              <button class="timer-whistle-mode" data-mode="triple" data-whistle-mode>
+                삐삐삐
+              </button>
+            </div>
           </div>
           <div class="tag-timer-sub-controls">
-            <button class="btn btn-sm btn-secondary" id="tag-timer-minimize">축소</button>
-            <button class="btn btn-sm btn-secondary" id="tag-timer-maximize">전체화면</button>
-            <button class="btn btn-sm btn-secondary" id="tag-timer-back-result">결과보기</button>
-            <button class="btn btn-sm btn-secondary" id="tag-timer-back-setup">설정</button>
-            <button class="btn btn-sm btn-danger" id="tag-timer-new-game">초기화</button>
+            <button class="btn btn-sm btn-secondary" id="tag-timer-fullscreen-toggle">축소</button>
+            <button class="btn btn-sm btn-secondary" id="tag-timer-pause">⏸️ 일시정지</button>
+            <button class="btn btn-sm btn-danger" id="tag-timer-end">타이머 종료</button>
           </div>
         </div>
       </div>
@@ -1346,6 +1362,52 @@
           <button class="btn btn-primary" id="gm-gender-modal-confirm">카드 생성</button>
         </div>
       </div>
+    </div>
+
+    <!-- ====== Whistle FAB ====== -->
+    <button id="whistle-fab" class="whistle-fab" style="display: none" aria-label="휘슬 열기">
+      📣
+    </button>
+
+    <div id="whistle-panel" class="whistle-panel">
+      <div class="whistle-panel__header">
+        <span class="whistle-panel__title">만능 휘슬</span>
+        <button id="whistle-panel-close" class="whistle-panel__close" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="whistle-mode-row">
+        <button class="whistle-mode-btn whistle-mode-btn--active" data-mode="hold">
+          꾹 누르기
+        </button>
+        <button class="whistle-mode-btn" data-mode="long">길게 삐———</button>
+        <button class="whistle-mode-btn" data-mode="triple">삐삐삐!</button>
+      </div>
+
+      <div class="whistle-btn-wrap">
+        <button class="whistle-main-btn" id="whistle-main-btn">
+          <span class="whistle-main-btn__icon">📣</span>
+          <span class="whistle-main-btn__label" id="whistle-btn-label">꾹 누르기</span>
+        </button>
+        <div class="whistle-ring" id="whistle-ring1"></div>
+        <div class="whistle-ring" id="whistle-ring2"></div>
+      </div>
+
+      <div class="whistle-volume-row">
+        <span class="whistle-vol-icon">🔈</span>
+        <input
+          type="range"
+          id="whistle-vol"
+          class="whistle-vol-slider"
+          min="0"
+          max="100"
+          step="1"
+          value="100"
+        />
+        <span class="whistle-vol-icon">🔊</span>
+        <span class="whistle-vol-pct" id="whistle-vol-label">100%</span>
+      </div>
+
+      <p class="whistle-hint" id="whistle-hint">누르고 있는 동안 소리가 납니다</p>
     </div>
 
     <!-- Scripts -->

@@ -9,6 +9,7 @@ import { ClassManager } from './class-management/index.js';
 import { TagGame } from './tag-game/tag-game.js';
 import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
+import { Whistle } from './shared/whistle.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', icon: '🎯', requiresClass: false },
@@ -132,6 +133,7 @@ async function bootstrapAfterAuth() {
   ClassManager.init();
   TagGame.init();
   GroupManager.init();
+  Whistle.init();
 
   if (!hasClassData) {
     activateRoute('wizard');
@@ -201,6 +203,7 @@ function activateRoute(route) {
   if (route === 'wizard' || route === 'class-selector') {
     if (navbar) navbar.style.display = 'none';
     if (container) container.classList.add('no-navbar');
+    Whistle.hide();
     if (route === 'class-selector') {
       ClassManager.renderLandingClassList();
     }
@@ -211,6 +214,7 @@ function activateRoute(route) {
   } else {
     if (navbar) navbar.style.display = '';
     if (container) container.classList.remove('no-navbar');
+    Whistle.show();
 
     const cls = Store.getSelectedClass();
     const nameEl = document.getElementById('navbar-class-name');

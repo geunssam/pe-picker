@@ -127,11 +127,8 @@ function setupEventListeners() {
 
   // 타이머 Phase 버튼들
   $('tag-timer-pause')?.addEventListener('click', toggleTimer);
-  $('tag-timer-minimize')?.addEventListener('click', exitFullscreen);
-  $('tag-timer-maximize')?.addEventListener('click', enterFullscreen);
-  $('tag-timer-back-result')?.addEventListener('click', backToResult);
-  $('tag-timer-back-setup')?.addEventListener('click', backToSetup);
-  $('tag-timer-new-game')?.addEventListener('click', startNewGame);
+  $('tag-timer-fullscreen-toggle')?.addEventListener('click', toggleFullscreen);
+  $('tag-timer-end')?.addEventListener('click', endTimer);
 
   // 폴딩 토글
   document.querySelectorAll('.tag-collapse-toggle').forEach(btn => {
@@ -590,6 +587,8 @@ function enterFullscreen() {
   if (el) el.classList.add('timer-fullscreen');
   document.body.style.overflow = 'hidden';
   isFullscreen = true;
+  const btn = $('tag-timer-fullscreen-toggle');
+  if (btn) btn.textContent = '축소';
 }
 
 function exitFullscreen() {
@@ -597,6 +596,16 @@ function exitFullscreen() {
   if (el) el.classList.remove('timer-fullscreen');
   document.body.style.overflow = '';
   isFullscreen = false;
+  const btn = $('tag-timer-fullscreen-toggle');
+  if (btn) btn.textContent = '전체화면';
+}
+
+function toggleFullscreen() {
+  if (isFullscreen) {
+    exitFullscreen();
+  } else {
+    enterFullscreen();
+  }
 }
 
 // ========== 화면 전환 ==========
@@ -607,6 +616,17 @@ function showSettings() {
 }
 
 function backToResult() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  isTimerRunning = false;
+  exitFullscreen();
+  currentPhase = 2;
+  updateUI();
+}
+
+function endTimer() {
   if (timer) {
     clearInterval(timer);
     timer = null;
