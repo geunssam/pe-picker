@@ -63,7 +63,6 @@ export function mountTemplates() {
     gmGenderHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 
-  // 4. Whistle FAB — body 끝 (scripts 앞)
-  const scriptTag = document.querySelector('script[src*="app.js"]');
-  scriptTag.insertAdjacentHTML('beforebegin', whistleFabHtml);
+  // 4. Whistle FAB — body 끝에 삽입
+  document.body.insertAdjacentHTML('beforeend', whistleFabHtml);
 }
