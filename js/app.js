@@ -80,6 +80,25 @@ async function bootstrapAfterAuth() {
 
   hideStartupSplash();
 
+  // 프로필 이름 + 이미지 세팅
+  const user = AuthManager.getCurrentUser();
+  const profileNameEl = document.getElementById('navbar-profile-name');
+  const profileImg = document.getElementById('navbar-profile-img');
+
+  if (profileNameEl) {
+    const teacher = Store.getTeacherProfile();
+    const teacherName = teacher?.teacherName;
+    // 위저드 이름이 없거나 기본값이면 구글 프로필명 사용
+    const name =
+      teacherName && teacherName !== '체육 선생님' ? teacherName : user?.displayName || '';
+    profileNameEl.textContent = name;
+  }
+
+  if (profileImg && user?.photoURL) {
+    profileImg.src = user.photoURL;
+    profileImg.style.display = '';
+  }
+
   window.addEventListener('hashchange', handleRouteChange);
 
   document.querySelectorAll('.navbar-tab').forEach(btn => {
