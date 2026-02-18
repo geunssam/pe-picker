@@ -375,6 +375,49 @@
   flex: 1;
 }
 
+/* === Roster 모달 하단 버튼 (파스텔 4색) === */
+.roster-modal-footer {
+  display: flex;
+  gap: 6px;
+  padding: var(--space-md) var(--space-lg);
+}
+
+.roster-modal-footer .btn {
+  flex: 1;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  padding: 10px 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.roster-modal-footer .btn:hover {
+  filter: brightness(0.94);
+}
+
+.roster-btn-template {
+  background: #d4edda;
+  color: #2d6a4f;
+}
+
+.roster-btn-csv {
+  background: #e8daef;
+  color: #6c3483;
+}
+
+.roster-btn-cancel {
+  background: #fce4ec;
+  color: #c0392b;
+}
+
+.roster-btn-save {
+  background: #d6eaf8;
+  color: #2471a3;
+}
+
 /* === Toast === */
 .toast-container {
   position: fixed;
@@ -736,6 +779,7 @@
   font-weight: 700;
   color: var(--text-secondary);
   margin-bottom: var(--space-sm);
+  text-align: center;
 }
 
 .class-editor-header {
@@ -767,16 +811,7 @@
   font-size: var(--font-size-xs);
 }
 
-.class-student-roster {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-sm);
-  min-height: 112px;
-  padding: var(--space-sm);
-  border: 1px solid rgba(124, 158, 245, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(124, 158, 245, 0.03);
-}
+/* .class-student-roster: 삭제됨 (roster-input-list로 교체) */
 
 .class-bulk-modal {
   max-width: 720px;
@@ -787,6 +822,15 @@
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
+}
+
+.class-bulk-card-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--space-xs);
 }
 
 .class-bulk-table-wrap {
@@ -849,9 +893,7 @@
 }
 
 .class-team-assign-board {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-sm);
+  /* 시트 테이블 래퍼 */
 }
 
 .cm-team-column {
@@ -924,105 +966,428 @@
   background: rgba(124, 158, 245, 0.03);
 }
 
-.cm-student-card {
-  border: 1px solid rgba(124, 158, 245, 0.24);
-  border-radius: var(--radius-sm);
-  background: var(--bg-white);
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  cursor: grab;
-}
-
-.cm-student-card:active {
-  cursor: grabbing;
-}
-
-.cm-student-card.is-dragging {
-  opacity: 0.45;
-}
-
-.cm-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cm-card-drag {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  letter-spacing: 1px;
-  user-select: none;
-}
-
-.cm-remove-student-btn {
-  border: none;
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--color-danger);
-  border-radius: var(--radius-full);
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  text-align: center;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.cm-remove-student-btn:hover {
-  background: rgba(239, 68, 68, 0.18);
-}
-
-.cm-card-fields {
+/* === Roster 모달: 가로 카드 × 3열 그리드 === */
+.roster-input-list {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
 }
 
-.cm-card-field {
+.roster-input-card {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.cm-card-field span {
-  font-size: 10px;
-  color: var(--text-tertiary);
-  font-weight: 600;
-  line-height: 1;
-}
-
-.cm-student-no {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: rgba(124, 158, 245, 0.12);
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
+  gap: 4px;
+  border: 1px solid rgba(124, 158, 245, 0.22);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  padding: 4px 6px;
+  height: 34px;
 }
 
-.cm-card-field input,
-.cm-card-field select {
-  width: 100%;
-  border: 1px solid rgba(124, 158, 245, 0.24);
-  border-radius: 8px;
-  padding: 6px 6px;
+.roster-number {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  min-width: 18px;
+  text-align: center;
+}
+
+.roster-name-input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  max-width: 48px;
+  border: none;
+  border-bottom: 1px solid rgba(124, 158, 245, 0.2);
+  border-radius: 0;
+  padding: 1px 2px;
   font-family: var(--font-family);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-primary);
-  background: var(--bg-white);
+  background: transparent;
   outline: none;
 }
 
-.cm-card-field input:focus,
-.cm-card-field select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(124, 158, 245, 0.14);
+.roster-name-input:focus {
+  border-bottom-color: var(--color-primary);
+}
+
+.roster-gender-toggle {
+  display: flex;
+  border: 1px solid rgba(124, 158, 245, 0.18);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.roster-gender-toggle button {
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0 5px;
+  font-family: var(--font-family);
+  transition: all 0.15s;
+}
+
+.roster-gender-toggle button.active-male {
+  background: rgba(100, 149, 237, 0.18);
+  color: #4a7fd0;
+}
+
+.roster-gender-toggle button.active-female {
+  background: rgba(255, 105, 180, 0.18);
+  color: #d0548e;
+}
+
+.roster-remove-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  border-radius: var(--radius-full);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.roster-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+/* Roster 학생 추가 카드 (큰 입력 카드) */
+.roster-add-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px dashed rgba(124, 158, 245, 0.35);
+  border-radius: var(--radius-lg);
+  background: rgba(124, 158, 245, 0.04);
+  padding: 10px 14px;
+  height: 52px;
+  margin-top: var(--space-sm);
+}
+
+.roster-add-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  min-width: 24px;
+  text-align: center;
+}
+
+.roster-add-name {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-bottom: 2px solid rgba(124, 158, 245, 0.25);
+  border-radius: 0;
+  padding: 4px 6px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: transparent;
+  outline: none;
+}
+
+.roster-add-name:focus {
+  border-bottom-color: var(--color-primary);
+}
+
+.roster-add-name::placeholder {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+.roster-add-gender {
+  display: flex;
+  border: 1px solid rgba(124, 158, 245, 0.22);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.roster-add-gender .roster-gender-btn {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0 10px;
+  font-family: var(--font-family);
+  transition: all 0.15s;
+}
+
+.roster-add-gender .roster-gender-btn.active-male {
+  background: rgba(100, 149, 237, 0.18);
+  color: #4a7fd0;
+}
+
+.roster-add-gender .roster-gender-btn.active-female {
+  background: rgba(255, 105, 180, 0.18);
+  color: #d0548e;
+}
+
+.roster-add-btn {
+  flex-shrink: 0;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  padding: 0 16px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.roster-add-btn:hover {
+  background: var(--color-primary-hover, #5a7de8);
+}
+
+.roster-add-btn:active {
+  transform: scale(0.97);
+}
+
+/* Roster 알약 미리보기 */
+.roster-pill-preview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  min-height: 40px;
+  padding: var(--space-sm);
+  border: 1px dashed rgba(124, 158, 245, 0.25);
+  border-radius: var(--radius-md);
+  background: rgba(124, 158, 245, 0.03);
+}
+
+.roster-pill-preview .tag-student-card {
+  width: auto;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--radius-md);
+}
+
+.roster-pill-preview .tag-student-card span {
+  font-size: 11px;
+}
+
+.roster-pill-preview:empty::after {
+  content: '학생을 입력하면 여기에 표시됩니다';
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+
+/* Roster 등록된 학생 pill 목록 (입력 카드 대신) */
+.roster-registered-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: var(--space-sm);
+}
+
+.roster-registered-pills .tag-student-card {
+  width: auto;
+  height: 28px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  cursor: default;
+  position: relative;
+}
+
+.roster-registered-pills .tag-student-card span {
+  font-size: 11px;
+}
+
+.roster-registered-pills .roster-pill-remove {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  display: none;
+}
+
+.roster-registered-pills .tag-student-card:hover .roster-pill-remove {
+  display: block;
+}
+
+.roster-registered-pills .tag-student-card:hover .roster-pill-remove:hover {
+  color: var(--color-danger);
+}
+
+/* === 설정 페이지: 학생 카드 그리드 === */
+.settings-student-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xs);
+}
+
+.settings-student-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-tertiary);
+  padding: var(--space-xl) var(--space-lg);
+  font-size: var(--font-size-sm);
+}
+
+.settings-student-empty-icon {
+  font-size: 36px;
+  margin-bottom: var(--space-sm);
+  opacity: 0.5;
+}
+
+/* === Team 모달: 모둠 이름 행 === */
+.team-name-inputs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  justify-content: center;
+}
+
+.team-name-inputs-row .cm-team-name-input {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* === Team 모달: 미배정 풀 — 5열 그리드 === */
+.team-unassigned-pool {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  min-height: 48px;
+  padding: var(--space-sm);
+  border: 1px solid rgba(124, 158, 245, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(124, 158, 245, 0.03);
+}
+
+.team-unassigned-pool:empty::after {
+  content: '모든 학생이 모둠에 배정되었습니다';
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-sm);
+}
+
+/* Team 모달 내 알약 카드 축소 */
+.team-unassigned-pool .tag-student-card,
+.team-sheet .tag-student-card {
+  width: auto;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: var(--radius-md);
+}
+
+.team-unassigned-pool .tag-student-card span,
+.team-sheet .tag-student-card span {
+  font-size: 11px;
+}
+
+/* === Team 시트(표) 스타일 === */
+.team-sheet-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid rgba(124, 158, 245, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.team-sheet {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.team-sheet th {
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(124, 158, 245, 0.06);
+  border-bottom: 1px solid rgba(124, 158, 245, 0.15);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.team-sheet-count {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.team-sheet td {
+  padding: 2px;
+  border: 1px solid rgba(124, 158, 245, 0.08);
+  height: 30px;
+  vertical-align: middle;
+}
+
+.team-sheet-empty-cell {
+  border: 1px dashed rgba(124, 158, 245, 0.18);
+  border-radius: var(--radius-sm);
+  height: 22px;
+  opacity: 0.4;
+}
+
+/* === Team 모달: 드래그 영역 === */
+.tm-drop-zone {
+  transition: background var(--transition-fast);
+}
+
+.tm-drop-zone.tm-drop-over {
+  background: rgba(124, 158, 245, 0.15);
+}
+
+/* Team 모달에서 알약 카드 draggable 스타일 */
+.tm-drop-zone .tag-student-card,
+.team-unassigned-pool .tag-student-card {
+  cursor: grab;
+}
+
+.tm-drop-zone .tag-student-card:active,
+.team-unassigned-pool .tag-student-card:active {
+  cursor: grabbing;
+}
+
+.tm-drop-zone .tag-student-card.is-dragging,
+.team-unassigned-pool .tag-student-card.is-dragging {
+  opacity: 0.45;
 }
 
 .timetable-scroll {
@@ -1303,8 +1668,12 @@
     grid-template-columns: 1fr;
   }
 
-  .class-student-roster {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .roster-input-list {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-student-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .class-team-assign-board {

@@ -35,7 +35,8 @@ export function renderLandingClassList() {
             </div>
           </div>
           <div class="landing-card-actions" onclick="event.stopPropagation();">
-            <button class="btn btn-sm btn-secondary" onclick="ClassManager.openModal('${cls.id}', ClassManager.renderLandingClassList)">편집</button>
+            <button class="btn btn-sm btn-secondary" onclick="ClassManager.openRosterModal('${cls.id}', ClassManager.renderLandingClassList)">편집</button>
+            <button class="btn btn-sm btn-primary" onclick="ClassManager.openTeamModal('${cls.id}', ClassManager.renderLandingClassList)">모둠</button>
             <button class="btn btn-sm btn-danger" onclick="ClassManager.deleteClass('${cls.id}')">삭제</button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 /**
- * 설정 페이지 UI + 기본 모둠이름 관리
+ * 설정 페이지 UI
  */
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
@@ -29,7 +29,7 @@ export function onSettingsPageEnter() {
   }
 
   renderSettingsStudentList();
-  loadDefaultTeamNames();
+  renderSettingsTeamTable();
 }
 
 export function renderSettingsStudentList() {
@@ -37,18 +37,67 @@ export function renderSettingsStudentList() {
   if (!container) return;
 
   const cls = Store.getSelectedClass();
+  if (!cls || !Array.isArray(cls.students) || cls.students.length === 0) {
+    container.innerHTML = `
+      <div class="settings-student-grid">
+        <div class="settings-student-empty">
+          <div class="settings-student-empty-icon">📝</div>
+          <div>학생을 등록해주세요</div>
+          <div style="margin-top: var(--space-xs); font-size: var(--font-size-xs);">
+            위의 편집 버튼을 눌러 학생을 추가할 수 있습니다
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const cards = cls.students.map(s => {
+    const name = typeof s === 'string' ? s : s.name || '';
+    const number = typeof s === 'object' ? s.number || '' : '';
+    const gender = typeof s === 'object' ? s.gender || '' : '';
+    const genderClass =
+      gender === 'male' ? ' gender-male' : gender === 'female' ? ' gender-female' : '';
+    return `<div class="tag-student-card${genderClass}">
+      <span>${number ? number + '. ' : ''}${UI.escapeHtml(name)}</span>
+    </div>`;
+  });
+
+  container.innerHTML = `
+    <div class="settings-student-grid">${cards.join('')}</div>
+  `;
+}
+
+export function renderSettingsTeamTable() {
+  const container = document.getElementById('settings-team-list');
+  if (!container) return;
+
+  const cls = Store.getSelectedClass();
   if (!cls) {
     container.innerHTML =
-      '<div style="text-align: center; color: var(--text-tertiary); padding: var(--space-lg); font-size: var(--font-size-sm);">학급 정보가 없습니다</div>';
+      '<div style="text-align:center;color:var(--text-tertiary);padding:var(--space-lg);font-size:var(--font-size-sm);">학급 정보가 없습니다</div>';
     return;
   }
 
   const gc = cls.teamCount || cls.teams?.length || 6;
+  const hasTeams = Array.isArray(cls.teams) && cls.teams.some(t => t && t.length > 0);
 
-  const minRows = 6;
-  let maxMembers = minRows;
+  if (!hasTeams) {
+    container.innerHTML = `
+      <div style="text-align:center;color:var(--text-tertiary);padding:var(--space-xl);font-size:var(--font-size-sm);">
+        <div style="font-size:36px;margin-bottom:var(--space-sm);opacity:0.5;">👥</div>
+        <div>모둠이 아직 설정되지 않았습니다</div>
+        <div style="margin-top:var(--space-xs);font-size:var(--font-size-xs);">
+          모둠 편집 버튼을 눌러 학생을 모둠에 배정하세요
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  let maxMembers = 3;
   for (let i = 0; i < gc; i++) {
-    const len = cls.teams && cls.teams[i] ? cls.teams[i].length : 0;
+    const len = cls.teams[i] ? cls.teams[i].length : 0;
     if (len > maxMembers) maxMembers = len;
   }
 
@@ -86,84 +135,4 @@ export function renderSettingsStudentList() {
       </table>
     </div>
   `;
-}
-
-export function loadDefaultTeamNames() {
-  const container = document.getElementById('default-team-names-list');
-  if (!container) return;
-
-  const names = Store.getDefaultTeamNames();
-  container.innerHTML = '';
-
-  names.forEach((name, index) => {
-    createPillInput(container, name, index);
-  });
-}
-
-function createPillInput(container, value, index) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'pill-input';
-  input.maxLength = 10;
-  input.placeholder = `${index + 1}모둠`;
-  input.value = value || '';
-  input.dataset.idx = index;
-  input.addEventListener('click', () => {
-    input.classList.toggle('selected');
-  });
-  container.appendChild(input);
-}
-
-export function addDefaultTeamName() {
-  const container = document.getElementById('default-team-names-list');
-  if (!container) return;
-
-  const current = container.querySelectorAll('.pill-input').length;
-  if (current >= 8) {
-    UI.showToast('최대 8개까지 추가할 수 있습니다', 'error');
-    return;
-  }
-
-  createPillInput(container, '', current);
-  container.lastElementChild?.focus();
-}
-
-export function removeDefaultTeamName() {
-  const container = document.getElementById('default-team-names-list');
-  if (!container) return;
-
-  const selected = container.querySelectorAll('.pill-input.selected');
-  if (selected.length === 0) {
-    UI.showToast('삭제할 모둠을 먼저 선택하세요', 'info');
-    return;
-  }
-
-  const total = container.querySelectorAll('.pill-input').length;
-  if (total - selected.length < 2) {
-    UI.showToast('최소 2개는 유지해야 합니다', 'error');
-    return;
-  }
-
-  selected.forEach(el => el.remove());
-}
-
-export function saveDefaultTeamNamesHandler() {
-  const container = document.getElementById('default-team-names-list');
-  if (!container) return;
-
-  const inputs = container.querySelectorAll('.pill-input');
-  const names = [];
-
-  inputs.forEach((input, index) => {
-    const value = input.value.trim();
-    names.push(value || `${index + 1}모둠`);
-  });
-
-  if (names.length === 0) {
-    UI.showToast('최소 1개 이상의 모둠 이름을 입력하세요', 'error');
-    return;
-  }
-
-  Store.saveDefaultTeamNames(names);
-  UI.showToast('기본 모둠 이름 저장 완료', 'success');
 }

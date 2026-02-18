@@ -1,111 +1,93 @@
 /**
- * 학급 모달 열기/닫기/저장
+ * 학급 모달 열기/닫기/저장 — Roster + Team 2분할
  */
 import { state } from './state.js';
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
 import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
 import {
-  initializeModalState,
-  ensureModalTeamCount,
-  sanitizeModalZones,
-  renderModalEditor,
+  initializeRosterState,
+  renderRosterEditor,
+  initializeTeamState,
+  ensureTeamCount,
+  sanitizeTeamZones,
+  renderTeamEditor,
 } from './modal-editor.js';
 import { closeBulkRegistrationModal } from './csv-import.js';
 import { syncClassToFirestore } from './class-firestore.js';
 
-export function openModal(classId, callback) {
+// ========== Roster 모달 ==========
+
+export function openRosterModal(classId, callback) {
   state.editingClassId = classId;
-  state.onSaveCallback = callback || null;
+  state.rosterCallback = callback || null;
 
-  const titleEl = document.getElementById('class-modal-title');
+  const titleEl = document.getElementById('roster-modal-title');
   const nameInput = document.getElementById('class-name-input');
-  const teamCountInput = document.getElementById('class-team-count');
-  const legacyInput = document.getElementById('class-students-input');
-
-  if (legacyInput) legacyInput.style.display = 'none';
 
   if (classId) {
     const cls = Store.getClassById(classId);
     if (cls) {
-      titleEl.textContent = '학급 편집';
-      nameInput.value = cls.name;
-
-      const count = cls.teamCount || cls.teams?.length || 6;
-      if (teamCountInput) teamCountInput.value = ensureModalTeamCount(count);
-
-      initializeModalState(cls, count);
+      if (titleEl) titleEl.textContent = '학급 편집';
+      if (nameInput) nameInput.value = cls.name;
+      initializeRosterState(cls);
     }
   } else {
-    titleEl.textContent = '새 학급 추가';
-    nameInput.value = '';
-
-    const count = ensureModalTeamCount(6);
-    if (teamCountInput) teamCountInput.value = count;
-
-    initializeModalState(null, count);
+    if (titleEl) titleEl.textContent = '새 학급 추가';
+    if (nameInput) nameInput.value = '';
+    initializeRosterState(null);
   }
 
-  renderModalEditor();
-  UI.showModal('class-modal');
+  renderRosterEditor();
+  UI.showModal('class-roster-modal');
 }
 
-export function closeModal() {
-  UI.hideModal('class-modal');
+export function closeRosterModal() {
+  UI.hideModal('class-roster-modal');
 
   state.editingClassId = null;
-  state.draggedStudentId = null;
   closeBulkRegistrationModal();
 
   const csvFile = document.getElementById('class-csv-file');
-  const saveBtn = document.getElementById('class-modal-save');
+  const saveBtn = document.getElementById('roster-modal-save');
 
   if (csvFile) csvFile.value = '';
   if (saveBtn) saveBtn.disabled = false;
 
-  state.modalStudents = [];
-  state.modalUnassigned = [];
-  state.modalTeams = [];
-  state.modalTeamNames = [];
+  state.rosterStudents = [];
   state.bulkModalRows = [];
 
-  const rosterEl = document.getElementById('class-student-roster');
-  const boardEl = document.getElementById('class-team-assign-board');
-  if (rosterEl) rosterEl.innerHTML = '';
-  if (boardEl) boardEl.innerHTML = '';
+  const listEl = document.getElementById('roster-student-list');
+  const previewEl = document.getElementById('roster-pill-preview');
+  if (listEl) listEl.innerHTML = '';
+  if (previewEl) previewEl.innerHTML = '';
 }
 
-export async function saveClass() {
+export async function saveRoster() {
   const nameInput = document.getElementById('class-name-input');
   const className = nameInput?.value.trim();
-  const saveBtn = document.getElementById('class-modal-save');
-  const teamCountInput = document.getElementById('class-team-count');
+  const saveBtn = document.getElementById('roster-modal-save');
 
   if (!className) {
     UI.showToast('학급 이름을 입력하세요', 'error');
     return;
   }
 
-  const teamCount = ensureModalTeamCount(parseInt(teamCountInput?.value, 10) || 6);
-  if (teamCountInput) teamCountInput.value = teamCount;
-
-  sanitizeModalZones();
-
-  const validStudents = state.modalStudents
-    .map(student => ({
-      ...student,
-      name: (student.name || '').trim(),
-      number: parseInt(student.number, 10),
-      gender: sanitizeGender(student.gender),
+  const validStudents = state.rosterStudents
+    .map(s => ({
+      ...s,
+      name: (s.name || '').trim(),
+      number: parseInt(s.number, 10),
+      gender: sanitizeGender(s.gender),
     }))
-    .filter(student => student.name.length > 0)
+    .filter(s => s.name.length > 0)
     .sort(sortStudentsByNumber)
-    .map((student, idx) => ({
-      ...student,
+    .map((s, idx) => ({
+      ...s,
       number: idx + 1,
-      sportsAbility: student.sportsAbility || '',
-      tags: Array.isArray(student.tags) ? student.tags : [],
-      note: student.note || '',
+      sportsAbility: s.sportsAbility || '',
+      tags: Array.isArray(s.tags) ? s.tags : [],
+      note: s.note || '',
     }));
 
   if (validStudents.length === 0) {
@@ -113,58 +95,139 @@ export async function saveClass() {
     return;
   }
 
-  const validIdSet = new Set(validStudents.map(student => student.id));
-  const nameById = new Map(validStudents.map(student => [student.id, student.name]));
-
-  const finalTeams = state.modalTeams.slice(0, teamCount).map(group =>
-    group
-      .filter(studentId => validIdSet.has(studentId))
-      .map(studentId => nameById.get(studentId))
-      .filter(Boolean)
-  );
-
-  const finalTeamNames = Array.from({ length: teamCount }, (_, idx) => {
-    const raw = (state.modalTeamNames[idx] || '').trim();
-    return raw || `${idx + 1}모둠`;
-  });
-
   if (saveBtn) saveBtn.disabled = true;
 
   try {
     let targetClass = null;
 
     if (state.editingClassId) {
+      // 기존 학급 수정 — team 데이터 보존
+      const existing = Store.getClassById(state.editingClassId);
       targetClass = Store.updateClass(
         state.editingClassId,
         className,
         validStudents,
-        finalTeamNames,
-        finalTeams,
-        teamCount
+        existing?.teamNames || [],
+        existing?.teams || [],
+        existing?.teamCount || 6
       );
       UI.showToast(`${className} 수정 완료`, 'success');
     } else {
-      const created = Store.addClass(
-        className,
-        validStudents,
-        finalTeamNames,
-        finalTeams,
-        teamCount
-      );
-      targetClass = created;
+      // 새 학급 추가 — team 기본값
+      targetClass = Store.addClass(className, validStudents, [], [], 6);
       UI.showToast(`${className} 추가 완료`, 'success');
     }
 
     if (targetClass) {
-      syncClassToFirestore(targetClass).catch(error => {
-        console.warn('[ClassModal] Firestore sync skipped:', error);
+      syncClassToFirestore(targetClass).catch(err => {
+        console.warn('[ClassModal] Firestore sync skipped:', err);
       });
     }
 
-    closeModal();
-    if (state.onSaveCallback) state.onSaveCallback();
+    const cb = state.rosterCallback;
+    closeRosterModal();
+    if (cb) cb();
   } catch (error) {
-    console.error('❌ 학급 저장 실패:', error);
+    console.error('학급 저장 실패:', error);
+    UI.showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+// ========== Team 모달 ==========
+
+export function openTeamModal(classId, callback) {
+  state.editingClassId = classId;
+  state.teamCallback = callback || null;
+
+  const cls = Store.getClassById(classId);
+  if (!cls) {
+    UI.showToast('학급을 찾을 수 없습니다', 'error');
+    return;
+  }
+
+  const titleEl = document.getElementById('team-modal-title');
+  if (titleEl) titleEl.textContent = `${cls.name} - 모둠 편집`;
+
+  const countInput = document.getElementById('team-modal-count');
+  const teamCount = cls.teamCount || cls.teams?.length || 6;
+  if (countInput) countInput.value = teamCount;
+
+  initializeTeamState(cls);
+  renderTeamEditor();
+  UI.showModal('class-team-modal');
+}
+
+export function closeTeamModal() {
+  UI.hideModal('class-team-modal');
+
+  state.editingClassId = null;
+  state.teamDraggedId = null;
+
+  state.teamStudents = [];
+  state.teamUnassigned = [];
+  state.teamTeams = [];
+  state.teamTeamNames = [];
+
+  const poolEl = document.getElementById('team-unassigned-pool');
+  const boardEl = document.getElementById('team-assign-board');
+  if (poolEl) poolEl.innerHTML = '';
+  if (boardEl) boardEl.innerHTML = '';
+}
+
+export async function saveTeams() {
+  const saveBtn = document.getElementById('team-modal-save');
+  const countInput = document.getElementById('team-modal-count');
+  const teamCount = ensureTeamCount(parseInt(countInput?.value, 10) || 6);
+  if (countInput) countInput.value = teamCount;
+
+  sanitizeTeamZones();
+
+  // 학생 이름 맵 (ID → name)
+  const nameById = new Map(state.teamStudents.map(s => [s.id, s.name]));
+
+  const finalTeams = state.teamTeams
+    .slice(0, teamCount)
+    .map(group => group.map(id => nameById.get(id)).filter(Boolean));
+
+  const finalTeamNames = Array.from({ length: teamCount }, (_, idx) => {
+    const raw = (state.teamTeamNames[idx] || '').trim();
+    return raw || `${idx + 1}모둠`;
+  });
+
+  if (saveBtn) saveBtn.disabled = true;
+
+  try {
+    // 기존 name/students 보존
+    const existing = Store.getClassById(state.editingClassId);
+    if (!existing) {
+      UI.showToast('학급을 찾을 수 없습니다', 'error');
+      if (saveBtn) saveBtn.disabled = false;
+      return;
+    }
+
+    const targetClass = Store.updateClass(
+      state.editingClassId,
+      existing.name,
+      existing.students,
+      finalTeamNames,
+      finalTeams,
+      teamCount
+    );
+
+    UI.showToast('모둠 편집 완료', 'success');
+
+    if (targetClass) {
+      syncClassToFirestore(targetClass).catch(err => {
+        console.warn('[ClassModal] Firestore sync skipped:', err);
+      });
+    }
+
+    const cb = state.teamCallback;
+    closeTeamModal();
+    if (cb) cb();
+  } catch (error) {
+    console.error('모둠 저장 실패:', error);
     UI.showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
     if (saveBtn) saveBtn.disabled = false;
   }

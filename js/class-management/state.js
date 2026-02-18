@@ -4,12 +4,16 @@
  */
 export const state = {
   editingClassId: null,
-  onSaveCallback: null,
   initialized: false,
-  modalStudents: [],
-  modalUnassigned: [],
-  modalTeams: [],
-  modalTeamNames: [],
-  draggedStudentId: null,
+  // Roster 모달
+  rosterCallback: null,
+  rosterStudents: [],
   bulkModalRows: [],
+  // Team 모달
+  teamCallback: null,
+  teamStudents: [],
+  teamUnassigned: [],
+  teamTeams: [],
+  teamTeamNames: [],
+  teamDraggedId: null,
 };

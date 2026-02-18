@@ -6,9 +6,10 @@ import { state } from './state.js';
 import { Store } from '../shared/store.js';
 import { normalizeStudentName } from './helpers.js';
 import {
-  addStudentCard,
-  handleModalInput,
-  handleModalClick,
+  handleRosterInput,
+  handleRosterClick,
+  handleRosterKeydown,
+  handleTeamInput,
   onTeamCountChange,
 } from './modal-editor.js';
 import {
@@ -20,77 +21,88 @@ import {
   addBulkModalRow,
   removeBulkModalRow,
   handleBulkModalInput,
+  handleBulkModalClick,
 } from './csv-import.js';
-import { openModal, closeModal, saveClass } from './class-modal.js';
+import {
+  openRosterModal,
+  closeRosterModal,
+  saveRoster,
+  openTeamModal,
+  closeTeamModal,
+  saveTeams,
+} from './class-modal.js';
 import { renderLandingClassList, deleteClass, refreshAllSelects } from './landing-page.js';
 import {
   onSettingsPageEnter,
   renderSettingsStudentList,
-  loadDefaultTeamNames,
-  addDefaultTeamName,
-  removeDefaultTeamName,
-  saveDefaultTeamNamesHandler,
+  renderSettingsTeamTable,
 } from './settings-page.js';
 
 function init() {
   if (state.initialized) return;
   state.initialized = true;
 
-  const closeBtn = document.getElementById('class-modal-close');
-  const cancelBtn = document.getElementById('class-modal-cancel');
-  const saveBtn = document.getElementById('class-modal-save');
+  // === Roster 모달 바인딩 ===
+  const rosterCloseBtn = document.getElementById('roster-modal-close');
+  const rosterCancelBtn = document.getElementById('roster-modal-cancel');
+  const rosterSaveBtn = document.getElementById('roster-modal-save');
   const csvBtn = document.getElementById('class-csv-import');
   const csvFile = document.getElementById('class-csv-file');
   const csvDownloadBtn = document.getElementById('class-csv-download');
   const openBulkModalBtn = document.getElementById('class-open-bulk-modal');
+
+  if (rosterCloseBtn) rosterCloseBtn.addEventListener('click', closeRosterModal);
+  if (rosterCancelBtn) rosterCancelBtn.addEventListener('click', closeRosterModal);
+  if (rosterSaveBtn) rosterSaveBtn.addEventListener('click', saveRoster);
+  if (csvBtn) csvBtn.addEventListener('click', () => csvFile?.click());
+  if (csvFile) csvFile.addEventListener('change', handleCSVImport);
+  if (csvDownloadBtn) csvDownloadBtn.addEventListener('click', downloadCSVTemplate);
+  if (openBulkModalBtn) openBulkModalBtn.addEventListener('click', openBulkRegistrationModal);
+
+  const rosterModalEl = document.getElementById('class-roster-modal');
+  if (rosterModalEl) {
+    rosterModalEl.addEventListener('input', handleRosterInput);
+    rosterModalEl.addEventListener('click', handleRosterClick);
+    rosterModalEl.addEventListener('keydown', handleRosterKeydown);
+  }
+
+  // === Team 모달 바인딩 ===
+  const teamCloseBtn = document.getElementById('team-modal-close');
+  const teamCancelBtn = document.getElementById('team-modal-cancel');
+  const teamSaveBtn = document.getElementById('team-modal-save');
+  const teamCountInput = document.getElementById('team-modal-count');
+
+  if (teamCloseBtn) teamCloseBtn.addEventListener('click', closeTeamModal);
+  if (teamCancelBtn) teamCancelBtn.addEventListener('click', closeTeamModal);
+  if (teamSaveBtn) teamSaveBtn.addEventListener('click', saveTeams);
+  if (teamCountInput) teamCountInput.addEventListener('change', onTeamCountChange);
+
+  const teamModalEl = document.getElementById('class-team-modal');
+  if (teamModalEl) {
+    teamModalEl.addEventListener('input', handleTeamInput);
+    teamModalEl.addEventListener('change', handleTeamInput);
+  }
+
+  // === 일괄등록 모달 바인딩 ===
   const bulkModalCloseBtn = document.getElementById('class-bulk-modal-close');
   const bulkModalCancelBtn = document.getElementById('class-bulk-modal-cancel');
   const bulkModalApplyBtn = document.getElementById('class-bulk-modal-apply');
   const bulkRowAddBtn = document.getElementById('class-bulk-row-add');
   const bulkRowRemoveBtn = document.getElementById('class-bulk-row-remove');
-  const addStudentBtn = document.getElementById('class-add-student-card');
 
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-  if (saveBtn) saveBtn.addEventListener('click', saveClass);
-  if (csvBtn) csvBtn.addEventListener('click', () => csvFile?.click());
-  if (csvFile) csvFile.addEventListener('change', handleCSVImport);
-  if (csvDownloadBtn) csvDownloadBtn.addEventListener('click', downloadCSVTemplate);
-  if (openBulkModalBtn) openBulkModalBtn.addEventListener('click', openBulkRegistrationModal);
   if (bulkModalCloseBtn) bulkModalCloseBtn.addEventListener('click', closeBulkRegistrationModal);
   if (bulkModalCancelBtn) bulkModalCancelBtn.addEventListener('click', closeBulkRegistrationModal);
   if (bulkModalApplyBtn) bulkModalApplyBtn.addEventListener('click', applyBulkRegistrationModal);
   if (bulkRowAddBtn) bulkRowAddBtn.addEventListener('click', addBulkModalRow);
   if (bulkRowRemoveBtn) bulkRowRemoveBtn.addEventListener('click', removeBulkModalRow);
-  if (addStudentBtn) addStudentBtn.addEventListener('click', addStudentCard);
-
-  const teamCountInput = document.getElementById('class-team-count');
-  if (teamCountInput) {
-    teamCountInput.addEventListener('change', onTeamCountChange);
-  }
-
-  const modalEl = document.getElementById('class-modal');
-  if (modalEl) {
-    modalEl.addEventListener('input', handleModalInput);
-    modalEl.addEventListener('change', handleModalInput);
-    modalEl.addEventListener('click', handleModalClick);
-  }
 
   const bulkModalEl = document.getElementById('class-bulk-modal');
   if (bulkModalEl) {
     bulkModalEl.addEventListener('input', handleBulkModalInput);
-    bulkModalEl.addEventListener('change', handleBulkModalInput);
+    bulkModalEl.addEventListener('click', handleBulkModalClick);
   }
 
-  const saveDefaultBtn = document.getElementById('save-default-team-names');
-  if (saveDefaultBtn) saveDefaultBtn.addEventListener('click', saveDefaultTeamNamesHandler);
-
-  const addDefaultBtn = document.getElementById('default-team-add');
-  if (addDefaultBtn) addDefaultBtn.addEventListener('click', addDefaultTeamName);
-
-  const removeDefaultBtn = document.getElementById('default-team-remove');
-  if (removeDefaultBtn) removeDefaultBtn.addEventListener('click', removeDefaultTeamName);
-
+  // === 설정 페이지 바인딩 ===
   const resetBtn = document.getElementById('settings-reset-data');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
@@ -106,13 +118,14 @@ function init() {
     });
   }
 
+  // === 설정 페이지 편집 버튼 → roster 모달 ===
   const editBtn = document.getElementById('settings-add-class');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
       const cls = Store.getSelectedClass();
       if (!cls) return;
 
-      openModal(cls.id, () => {
+      openRosterModal(cls.id, () => {
         onSettingsPageEnter();
         const nameEl = document.getElementById('navbar-class-name');
         const updatedCls = Store.getSelectedClass();
@@ -121,16 +134,28 @@ function init() {
     });
   }
 
-  const landingAddBtn = document.getElementById('landing-add-class');
-  if (landingAddBtn) {
-    landingAddBtn.addEventListener('click', () => {
-      openModal(null, () => {
-        renderLandingClassList();
+  // === 설정 페이지 모둠 편집 버튼 → team 모달 ===
+  const editTeamBtn = document.getElementById('settings-edit-team');
+  if (editTeamBtn) {
+    editTeamBtn.addEventListener('click', () => {
+      const cls = Store.getSelectedClass();
+      if (!cls) return;
+
+      openTeamModal(cls.id, () => {
+        onSettingsPageEnter();
       });
     });
   }
 
-  loadDefaultTeamNames();
+  // === 랜딩 페이지 새 학급 추가 ===
+  const landingAddBtn = document.getElementById('landing-add-class');
+  if (landingAddBtn) {
+    landingAddBtn.addEventListener('click', () => {
+      openRosterModal(null, () => {
+        renderLandingClassList();
+      });
+    });
+  }
 }
 
 function populateSelect(selectId, selectedId) {
@@ -162,12 +187,15 @@ export const ClassManager = {
   init,
   populateSelect,
   getStudentNames,
-  openModal,
-  closeModal,
+  openRosterModal,
+  closeRosterModal,
+  openTeamModal,
+  closeTeamModal,
   refreshAllSelects,
   renderLandingClassList,
   deleteClass,
   onSettingsPageEnter,
   renderSettingsStudentList,
+  renderSettingsTeamTable,
   downloadCSVTemplate,
 };

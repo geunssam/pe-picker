@@ -9,7 +9,7 @@ import { applyImportedStudents } from './modal-editor.js';
 // ===== 일괄등록 모달 =====
 
 export function buildBulkModalRowsFromStudents() {
-  const sortedStudents = [...state.modalStudents].sort(sortStudentsByNumber);
+  const sortedStudents = [...state.rosterStudents].sort(sortStudentsByNumber);
   const targetCount = sortedStudents.length > 0 ? sortedStudents.length : 20;
 
   const rows = [];
@@ -25,34 +25,24 @@ export function buildBulkModalRowsFromStudents() {
 }
 
 export function renderBulkModalRows() {
-  const bodyEl = document.getElementById('class-bulk-table-body');
-  if (!bodyEl) return;
+  const listEl = document.getElementById('class-bulk-card-list');
+  if (!listEl) return;
 
-  bodyEl.innerHTML = state.bulkModalRows
-    .map(
-      (row, idx) => `
-      <tr>
-        <td><span class="class-bulk-index">${idx + 1}</span></td>
-        <td>
-          <input
-            type="text"
-            class="class-bulk-name-input"
-            data-row-index="${idx}"
-            value="${UI.escapeHtml(row.name || '')}"
-            maxlength="20"
-            placeholder="학생 이름"
-          >
-        </td>
-        <td>
-          <select class="class-bulk-gender-select" data-row-index="${idx}">
-            <option value="" ${!row.gender ? 'selected' : ''}>-</option>
-            <option value="male" ${row.gender === 'male' ? 'selected' : ''}>남</option>
-            <option value="female" ${row.gender === 'female' ? 'selected' : ''}>여</option>
-          </select>
-        </td>
-      </tr>
-    `
-    )
+  listEl.innerHTML = state.bulkModalRows
+    .map((row, idx) => {
+      const maleActive = row.gender === 'male' ? ' active-male' : '';
+      const femaleActive = row.gender === 'female' ? ' active-female' : '';
+      return `<div class="roster-input-card" data-row-index="${idx}">
+          <span class="roster-number">${idx + 1}</span>
+          <input type="text" class="class-bulk-name-input roster-name-input" maxlength="20"
+                 data-row-index="${idx}"
+                 value="${UI.escapeHtml(row.name || '')}" placeholder="이름">
+          <div class="roster-gender-toggle">
+            <button type="button" class="roster-gender-btn class-bulk-gender-btn${maleActive}" data-gender="male" data-row-index="${idx}">남</button>
+            <button type="button" class="roster-gender-btn class-bulk-gender-btn${femaleActive}" data-gender="female" data-row-index="${idx}">여</button>
+          </div>
+        </div>`;
+    })
     .join('');
 }
 
@@ -86,13 +76,18 @@ export function removeBulkModalRow() {
 }
 
 export function applyBulkRegistrationModal() {
-  const bodyEl = document.getElementById('class-bulk-table-body');
-  if (!bodyEl) return;
+  const listEl = document.getElementById('class-bulk-card-list');
+  if (!listEl) return;
 
-  const rows = Array.from(bodyEl.querySelectorAll('tr')).map((rowEl, idx) => {
-    const name = rowEl.querySelector('.class-bulk-name-input')?.value?.trim() || '';
-    const gender = sanitizeGender(rowEl.querySelector('.class-bulk-gender-select')?.value || '');
-    return { number: idx + 1, name, gender };
+  const rows = Array.from(listEl.querySelectorAll('.roster-input-card')).map((cardEl, idx) => {
+    const name = cardEl.querySelector('.class-bulk-name-input')?.value?.trim() || '';
+    // 성별은 active 클래스에서 읽기
+    let gender = '';
+    const maleBtn = cardEl.querySelector('.class-bulk-gender-btn[data-gender="male"]');
+    const femaleBtn = cardEl.querySelector('.class-bulk-gender-btn[data-gender="female"]');
+    if (maleBtn?.classList.contains('active-male')) gender = 'male';
+    else if (femaleBtn?.classList.contains('active-female')) gender = 'female';
+    return { number: idx + 1, name, gender: sanitizeGender(gender) };
   });
 
   const count = applyImportedStudents(rows);
@@ -111,11 +106,35 @@ export function handleBulkModalInput(event) {
 
   if (target.classList.contains('class-bulk-name-input')) {
     state.bulkModalRows[rowIndex].name = target.value;
-    return;
   }
+}
 
-  if (target.classList.contains('class-bulk-gender-select')) {
-    state.bulkModalRows[rowIndex].gender = sanitizeGender(target.value);
+export function handleBulkModalClick(event) {
+  const target = event.target;
+  if (!target) return;
+
+  const genderBtn = target.closest('.class-bulk-gender-btn');
+  if (!genderBtn) return;
+
+  const rowIndex = parseInt(genderBtn.dataset.rowIndex, 10);
+  if (!Number.isFinite(rowIndex) || !state.bulkModalRows[rowIndex]) return;
+
+  const clickedGender = genderBtn.dataset.gender;
+  const card = genderBtn.closest('.roster-input-card');
+  if (!card) return;
+
+  // 모든 성별 버튼 해제
+  card.querySelectorAll('.class-bulk-gender-btn').forEach(btn => {
+    btn.classList.remove('active-male', 'active-female');
+  });
+
+  // 같은 성별이면 해제, 다르면 활성화
+  if (state.bulkModalRows[rowIndex].gender === clickedGender) {
+    state.bulkModalRows[rowIndex].gender = '';
+  } else {
+    state.bulkModalRows[rowIndex].gender = sanitizeGender(clickedGender);
+    const cls = clickedGender === 'male' ? 'active-male' : 'active-female';
+    genderBtn.classList.add(cls);
   }
 }
 
