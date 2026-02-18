@@ -153,6 +153,10 @@ export function openTeamModal(classId, callback) {
   const teamCount = cls.teamCount || cls.teams?.length || 6;
   if (countInput) countInput.value = teamCount;
 
+  // 저장 버튼 활성화 복원
+  const saveBtn = document.getElementById('team-modal-save');
+  if (saveBtn) saveBtn.disabled = false;
+
   initializeTeamState(cls);
   renderTeamEditor();
   UI.showModal('class-team-modal');
@@ -186,9 +190,12 @@ export async function saveTeams() {
   // 학생 이름 맵 (ID → name)
   const nameById = new Map(state.teamStudents.map(s => [s.id, s.name]));
 
-  const finalTeams = state.teamTeams
-    .slice(0, teamCount)
-    .map(group => group.map(id => nameById.get(id)).filter(Boolean));
+  const finalTeams = state.teamTeams.slice(0, teamCount).map(group =>
+    group.map(id => {
+      if (!id) return null;
+      return nameById.get(id) || null;
+    })
+  );
 
   const finalTeamNames = Array.from({ length: teamCount }, (_, idx) => {
     const raw = (state.teamTeamNames[idx] || '').trim();

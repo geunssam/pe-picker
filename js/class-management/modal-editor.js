@@ -330,16 +330,26 @@ export function initializeTeamState(cls) {
     for (let teamIdx = 0; teamIdx < count; teamIdx++) {
       const teamMembers = Array.isArray(cls.teams[teamIdx]) ? cls.teams[teamIdx] : [];
 
-      teamMembers.forEach(member => {
+      for (let slotIdx = 0; slotIdx < teamMembers.length; slotIdx++) {
+        const member = teamMembers[slotIdx];
+        if (!member) {
+          // null 슬롯(빈 자리) 보존
+          state.teamTeams[teamIdx].push(null);
+          continue;
+        }
         const memberName = normalizeStudentName(member);
-        if (!memberName) return;
-
+        if (!memberName) {
+          state.teamTeams[teamIdx].push(null);
+          continue;
+        }
         const matched = state.teamStudents.find(s => !usedIds.has(s.id) && s.name === memberName);
         if (matched) {
           state.teamTeams[teamIdx].push(matched.id);
           usedIds.add(matched.id);
+        } else {
+          state.teamTeams[teamIdx].push(null);
         }
-      });
+      }
     }
   }
 
