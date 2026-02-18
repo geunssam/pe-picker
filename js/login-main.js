@@ -1,6 +1,5 @@
 import { AuthManager } from './auth-manager.js';
 import { isFirebaseConfigReady } from './firebase-config.js';
-import { Store } from './shared/store.js';
 import { syncTeacherProfileToFirestore } from './firestore-sync.js';
 
 function setLoading(loading) {
@@ -39,9 +38,8 @@ function renderProfile() {
 }
 
 function goToNextStep() {
-  const profile = Store.getTeacherProfile() || {};
-  const target = profile.isOnboarded ? './index.html' : './index.html#wizard';
-  window.location.href = target;
+  // 항상 index.html로 이동 — app.js가 Firestore 동기화 후 wizard 여부를 판단
+  window.location.href = './index.html';
 }
 
 function bindLogout() {
