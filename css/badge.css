@@ -8,6 +8,7 @@
   max-width: 560px;
   max-height: 85vh;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .badge-section {
@@ -130,20 +131,21 @@
 @media (max-width: 480px) {
   .badge-type-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
 
   .badge-type-chip .badge-img {
-    width: 52px;
-    height: 52px;
+    width: 44px;
+    height: 44px;
   }
 
   .badge-type-chip .badge-name {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .badge-type-chip {
-    padding: 4px 2px;
+    padding: 3px 1px;
+    border-width: 1.5px;
   }
 }
 

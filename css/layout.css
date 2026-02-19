@@ -508,11 +508,11 @@
 }
 
 .fullscreen-timer .timer-display {
-  font-size: min(28vw, 30dvh, 200px);
+  font-size: min(22vw, 30dvh, 200px);
   font-weight: 800;
   color: var(--text-white);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.02em;
 }
 
 .fullscreen-timer .timer-display.timer-normal {

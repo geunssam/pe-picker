@@ -101,9 +101,9 @@ function ensureFullscreenDOM() {
   </div>
   <div class="fs-whistle-section">
     <div class="fs-whistle-modes">
-      <button class="fs-whistle-mode fs-whistle-mode--active" data-fs-whistle-mode data-mode="long">삐—</button>
+      <button class="fs-whistle-mode fs-whistle-mode--active" data-fs-whistle-mode data-mode="hold">꾹</button>
+      <button class="fs-whistle-mode" data-fs-whistle-mode data-mode="long">삐—</button>
       <button class="fs-whistle-mode" data-fs-whistle-mode data-mode="triple">삐삐삐</button>
-      <button class="fs-whistle-mode" data-fs-whistle-mode data-mode="hold">꾹</button>
     </div>
     <div class="timer-whistle-btn-wrap" style="position:relative; display:flex; align-items:center; justify-content:center">
       <button id="fs-timer-whistle-btn" class="timer-whistle-btn">${whistleSvg}</button>
