@@ -3,7 +3,7 @@
    리퀴드 글래스 디자인 + 모바일 컴팩트
    ============================================ */
 
-/* ===== Wizard Container (리퀴드 글래스 배경) ===== */
+/* ===== Wizard Container (3D 공간 배경) ===== */
 .wizard-container {
   min-height: 100vh;
   display: flex;
@@ -11,55 +11,109 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-xl);
-  background: #f2f4f8;
+  /* 밝은 기본 바탕 */
+  background: #eef0f5;
   position: relative;
   overflow: hidden;
+  /* 3D 공간 → 패널에 원근감 부여 */
+  perspective: 1200px;
 }
 
-/* 배경 블롭 — 리퀴드 글래스 입체감 */
-.wizard-container::before,
+/* 배경 컬러 블롭들 — 글래스 blur에 비쳐서 입체감 */
+.wizard-container::before {
+  content: '';
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  top: -10%;
+  left: -5%;
+  background: radial-gradient(circle, rgba(124, 158, 245, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
 .wizard-container::after {
   content: '';
   position: absolute;
+  width: 400px;
+  height: 400px;
+  bottom: -5%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 70%);
   border-radius: 50%;
-  filter: blur(80px);
   pointer-events: none;
-  z-index: 0;
+  filter: blur(40px);
 }
 
-.wizard-container::before {
-  width: 340px;
-  height: 340px;
-  background: rgba(124, 158, 245, 0.25);
-  top: -80px;
-  right: -60px;
-  animation: blobFloat 8s ease-in-out infinite alternate;
+/* ===== Wizard Panel (떠있는 글래스 패널) ===== */
+.wizard-panel {
+  width: 100%;
+  max-width: 500px;
+  /* 글래스 배경: 반투명 → 뒤의 블롭이 비침 */
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(255, 255, 255, 0.7) 40%,
+    rgba(248, 249, 255, 0.65) 100%
+  );
+  backdrop-filter: blur(30px) saturate(1.6);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  /* 방향성 테두리 */
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-top-color: rgba(255, 255, 255, 1);
+  border-left-color: rgba(255, 255, 255, 0.85);
+  border-bottom-color: rgba(170, 178, 205, 0.4);
+  border-right-color: rgba(170, 178, 205, 0.35);
+  border-radius: 28px;
+  padding: var(--space-xl) var(--space-xl) var(--space-lg);
+  /* 다층 그림자 */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 10px rgba(0, 0, 0, 0.05),
+    0 12px 28px rgba(80, 95, 155, 0.09),
+    0 24px 64px rgba(70, 85, 140, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 1),
+    inset 2px 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(100, 110, 160, 0.07);
+  position: relative;
+  z-index: 1;
+  /* 살짝 기울어진 3D — perspective와 함께 입체감 */
+  transform: rotateX(1deg);
+  transform-style: preserve-3d;
+  animation: panelFloat 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.wizard-container::after {
-  width: 280px;
-  height: 280px;
-  background: rgba(167, 139, 250, 0.2);
-  bottom: -60px;
-  left: -40px;
-  animation: blobFloat 10s ease-in-out infinite alternate-reverse;
+/* 바닥 그림자: 패널이 떠있는 증거 (타원형 blur) */
+.wizard-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -32px;
+  left: 10%;
+  width: 80%;
+  height: 32px;
+  background: radial-gradient(ellipse at center, rgba(60, 70, 120, 0.15) 0%, transparent 70%);
+  filter: blur(10px);
+  border-radius: 50%;
+  z-index: -1;
+  transform: translateZ(-1px);
 }
 
-@keyframes blobFloat {
-  0% {
-    transform: translate(0, 0) scale(1);
+@keyframes panelFloat {
+  from {
+    opacity: 0;
+    transform: rotateX(3deg) translateY(40px) scale(0.95);
   }
-  100% {
-    transform: translate(20px, -15px) scale(1.08);
+  to {
+    opacity: 1;
+    transform: rotateX(1deg) translateY(0) scale(1);
   }
 }
 
 /* ===== Header ===== */
 .wizard-header {
   text-align: center;
-  margin-bottom: var(--space-xl);
-  position: relative;
-  z-index: 1;
+  margin-bottom: var(--space-lg);
 }
 
 .wizard-logo {
@@ -87,18 +141,18 @@
 /* ===== Progress Bar ===== */
 .wizard-progress {
   width: 100%;
-  max-width: 460px;
-  margin-bottom: var(--space-xl);
-  position: relative;
-  z-index: 1;
+  margin-bottom: var(--space-lg);
 }
 
 .wizard-progress-track {
   height: 6px;
-  background: rgba(124, 158, 245, 0.15);
+  background: rgba(0, 0, 0, 0.04);
   border-radius: 9999px;
   overflow: hidden;
   margin-bottom: 6px;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .wizard-progress-fill {
@@ -116,34 +170,21 @@
   font-weight: 600;
 }
 
-/* ===== Wizard Steps (글래스 카드) ===== */
+/* ===== Wizard Steps (패널 내부 섹션) ===== */
 .wizard-step {
   display: none;
   width: 100%;
-  max-width: 460px;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: var(--radius-xl);
-  padding: var(--space-xl) var(--space-xl) var(--space-lg);
-  box-shadow:
-    0 8px 32px rgba(124, 158, 245, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  animation: slideUp 0.3s ease;
-  position: relative;
-  z-index: 1;
+  animation: stepFade 0.3s ease;
 }
 
 .wizard-step.active {
   display: block;
 }
 
-@keyframes slideUp {
+@keyframes stepFade {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -192,20 +233,22 @@
   align-items: center;
   gap: 6px;
   padding: var(--space-md) var(--space-sm);
-  border: 1.5px solid rgba(124, 158, 245, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.55);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .wizard-option-btn:hover {
-  border-color: var(--color-primary);
-  background: rgba(124, 158, 245, 0.06);
-  box-shadow: 0 4px 16px rgba(124, 158, 245, 0.12);
+  border-color: rgba(124, 158, 245, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 4px 12px rgba(124, 158, 245, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   transform: translateY(-1px);
 }
 
@@ -213,8 +256,8 @@
   border-color: var(--color-primary);
   background: rgba(124, 158, 245, 0.1);
   box-shadow:
-    0 4px 16px rgba(124, 158, 245, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    0 4px 16px rgba(124, 158, 245, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .wizard-option-icon {
@@ -253,9 +296,10 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-md);
-  background: rgba(124, 158, 245, 0.04);
-  border: 1px solid rgba(124, 158, 245, 0.1);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .wizard-list-item-sm {
@@ -294,11 +338,14 @@
   width: 34px;
   height: 34px;
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(124, 158, 245, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--text-secondary);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .wizard-counter-btn:hover {
@@ -372,7 +419,7 @@
 
 .wizard-teacher-section {
   padding-top: var(--space-md);
-  border-top: 1px solid rgba(124, 158, 245, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .wizard-label {
@@ -388,17 +435,23 @@
   padding: var(--space-md);
   font-size: var(--font-size-base);
   font-family: var(--font-family);
-  border: 1.5px solid rgba(124, 158, 245, 0.2);
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--text-primary);
-  transition: border-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .wizard-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(124, 158, 245, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 3px rgba(124, 158, 245, 0.12),
+    inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 /* ===== Navigation ===== */
@@ -457,23 +510,28 @@
 /* ===== Responsive: 모바일 컴팩트 ===== */
 @media (max-width: 640px) {
   .wizard-container {
-    padding: var(--space-md) var(--space-md);
+    padding: var(--space-sm);
     justify-content: flex-start;
-    padding-top: calc(var(--safe-top, 0px) + var(--space-lg));
+    padding-top: calc(var(--safe-top, 0px) + var(--space-md));
   }
 
-  .wizard-container::before {
-    width: 200px;
-    height: 200px;
-    top: -40px;
-    right: -40px;
+  .wizard-panel {
+    padding: var(--space-lg) var(--space-md) var(--space-md);
+    border-radius: 20px;
+    transform: rotateX(0.5deg);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.06),
+      0 4px 8px rgba(0, 0, 0, 0.04),
+      0 10px 24px rgba(80, 95, 155, 0.08),
+      0 20px 48px rgba(70, 85, 140, 0.1),
+      inset 0 2px 0 rgba(255, 255, 255, 1),
+      inset 2px 0 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(100, 110, 160, 0.06);
   }
 
-  .wizard-container::after {
-    width: 160px;
-    height: 160px;
-    bottom: -30px;
-    left: -30px;
+  .wizard-panel::after {
+    bottom: -24px;
+    height: 24px;
   }
 
   .wizard-header {
@@ -499,11 +557,6 @@
   .wizard-progress-track {
     height: 4px;
     margin-bottom: 4px;
-  }
-
-  .wizard-step {
-    padding: var(--space-lg) var(--space-md);
-    border-radius: var(--radius-lg);
   }
 
   .wizard-step-title {
