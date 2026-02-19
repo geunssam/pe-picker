@@ -29,43 +29,54 @@ function getState() {
 
 function setState(state) {
   if (!toolbar) return;
+  const prev = getState();
   toolbar.classList.remove('minimized', 'collapsed');
 
   if (state === 'minimized') {
     toolbar.classList.add('minimized');
+    toolbarDirection = 'up'; // 바닥 찍으면 다시 올라감
   } else if (state === 'collapsed') {
     toolbar.classList.add('collapsed');
+  } else {
+    // expanded 도달하면 다음엔 내려감
+    toolbarDirection = 'down';
   }
-  // expanded = 클래스 없음
 
-  // 화살표 방향 업데이트
+  // 화살표 방향: 다음 동작 기준
+  // expanded → 무조건 접기 / minimized → 무조건 펼치기
+  // collapsed → 진행 방향에 따라 결정
+  const willCollapse =
+    state === 'expanded' || (state === 'collapsed' && toolbarDirection === 'down');
+
   const iconSpan = toggleBtn?.querySelector('.toggle-icon');
   const textSpan = toggleBtn?.querySelector('.toggle-text');
 
   if (iconSpan) {
-    if (state === 'expanded') {
-      iconSpan.style.transform = 'rotate(180deg)'; // > (접기)
-    } else {
-      iconSpan.style.transform = 'rotate(0deg)'; // < (열기)
-    }
+    iconSpan.style.transform = willCollapse ? 'rotate(180deg)' : 'rotate(0deg)';
   }
   if (textSpan) {
-    textSpan.textContent = state === 'expanded' ? '접기' : '펼치기';
+    textSpan.textContent = willCollapse ? '접기' : '펼치기';
   }
 }
 
 function cycleToolbarState() {
   const current = getState();
 
-  // 3단 순환: minimized → collapsed → expanded → minimized
+  // 핑퐁 순환: minimized → collapsed → expanded → collapsed → minimized
   if (current === 'minimized') {
     setState('collapsed');
   } else if (current === 'collapsed') {
-    setState('expanded');
+    // 이전 상태에 따라 방향 결정
+    setState(toolbarDirection === 'up' ? 'expanded' : 'minimized');
   } else {
-    setState('minimized');
+    // expanded → collapsed (한 단계씩 내려감)
+    toolbarDirection = 'down';
+    setState('collapsed');
   }
 }
+
+// 툴바 순환 방향 추적
+let toolbarDirection = 'up';
 
 function initToolbarState() {
   if (isMobile()) {
