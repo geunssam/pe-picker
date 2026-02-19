@@ -135,12 +135,12 @@
   }
 
   .badge-type-chip .badge-img {
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
   }
 
   .badge-type-chip .badge-name {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .badge-type-chip {
@@ -1108,15 +1108,16 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-lg);
-  border: 2px solid var(--border-light);
+  padding: 4px 12px;
+  border: 1.5px solid var(--border-light);
   border-radius: var(--radius-full);
   background: var(--bg-white);
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-top: var(--space-md);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tag-badge-btn:hover {

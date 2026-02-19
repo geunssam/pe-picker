@@ -116,7 +116,13 @@
   <!-- ============ Phase 2: 결과 섹션 ============ -->
   <div id="tag-result-section" style="display: none">
     <div class="section">
-      <div class="section-title">🎯 뽑힌 결과</div>
+      <div
+        class="section-title"
+        style="display: flex; align-items: center; justify-content: space-between"
+      >
+        <span>🎯 뽑힌 결과</span>
+        <button class="tag-badge-btn" id="tag-badge-btn" style="display: none">🏅 뱃지 부여</button>
+      </div>
       <div id="tag-result-container" class="tag-result-container"></div>
     </div>
   </div>
@@ -158,11 +164,6 @@
         <div id="tag-history-angels" class="tag-collapse-content" style="display: none"></div>
       </div>
     </div>
-  </div>
-
-  <!-- Phase 2: 뱃지 부여 버튼 -->
-  <div id="tag-badge-area" style="display: none; text-align: center">
-    <button class="tag-badge-btn" id="tag-badge-btn">🏅 뱃지 부여</button>
   </div>
 
   <!-- Phase 2 전용 버튼 -->

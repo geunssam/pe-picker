@@ -774,7 +774,7 @@ function updateUI() {
   const roundDisplay = $('tag-round-display');
   const settingsBtn = $('tag-settings-btn');
   const saveBtn = $('tag-save-btn');
-  const badgeArea = $('tag-badge-area');
+  const badgeBtn = $('tag-badge-btn');
 
   // 모든 숨기기
   if (phase1) phase1.style.display = 'none';
@@ -786,7 +786,7 @@ function updateUI() {
   if (roundDisplay) roundDisplay.style.display = 'none';
   if (settingsBtn) settingsBtn.style.display = 'none';
   if (saveBtn) saveBtn.style.display = 'none';
-  if (badgeArea) badgeArea.style.display = 'none';
+  if (badgeBtn) badgeBtn.style.display = 'none';
 
   if (currentPhase === 1) {
     if (phase1) phase1.style.display = '';
@@ -803,7 +803,7 @@ function updateUI() {
       roundDisplay.textContent = `ROUND ${currentRound}`;
     }
     if (settingsBtn) settingsBtn.style.display = '';
-    if (badgeArea) badgeArea.style.display = '';
+    if (badgeBtn) badgeBtn.style.display = '';
 
     // 결과 렌더
     TagGameUI.renderResultCards(selectedIts, selectedAngels);
