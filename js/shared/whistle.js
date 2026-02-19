@@ -12,8 +12,7 @@ let currentMode = 'hold';
 let pressing = false;
 let firstUnlocked = false;
 
-// === DOM 참조 (FAB 패널) ===
-let fabBtn = null;
+// === DOM 참조 (패널) ===
 let panel = null;
 let whistleBtn = null;
 let ring1 = null;
@@ -459,13 +458,11 @@ let panelOpen = false;
 function togglePanel() {
   panelOpen = !panelOpen;
   if (panel) panel.classList.toggle('whistle-panel--open', panelOpen);
-  if (fabBtn) fabBtn.classList.toggle('whistle-fab--active', panelOpen);
 }
 
 function closePanel() {
   panelOpen = false;
   if (panel) panel.classList.remove('whistle-panel--open');
-  if (fabBtn) fabBtn.classList.remove('whistle-fab--active');
 }
 
 // === 모드 변경 ===
@@ -490,13 +487,12 @@ function setMode(mode) {
   }
 }
 
-// === 표시/숨김 ===
+// === 표시/숨김 (하위 호환) ===
 function show() {
-  if (fabBtn) fabBtn.style.display = '';
+  /* tools-fab.js가 관리 */
 }
 
 function hide() {
-  if (fabBtn) fabBtn.style.display = 'none';
   closePanel();
 }
 
@@ -541,7 +537,6 @@ function bindTimerWhistle(btnId, ring1Id, ring2Id) {
 
 // === 초기화 ===
 function init() {
-  fabBtn = document.getElementById('whistle-fab');
   panel = document.getElementById('whistle-panel');
   whistleBtn = document.getElementById('whistle-main-btn');
   ring1 = document.getElementById('whistle-ring1');
@@ -551,17 +546,12 @@ function init() {
   btnLabel = document.getElementById('whistle-btn-label');
   hintEl = document.getElementById('whistle-hint');
 
-  if (!fabBtn || !panel || !whistleBtn) return;
+  if (!panel || !whistleBtn) return;
 
-  // FAB 클릭 — 패널 토글 + AudioContext 미리 활성화 (모바일 필수)
-  fabBtn.addEventListener('click', () => {
-    togglePanel();
-    unlockAudio();
-  });
-
-  // 패널 바깥 클릭으로 닫기
+  // 패널 바깥 클릭으로 닫기 (tools-fab-container도 제외)
   document.addEventListener('click', e => {
-    if (panelOpen && !panel.contains(e.target) && !fabBtn.contains(e.target)) {
+    const toolsFab = document.getElementById('tools-fab-container');
+    if (panelOpen && !panel.contains(e.target) && (!toolsFab || !toolsFab.contains(e.target))) {
       closePanel();
     }
   });
@@ -645,6 +635,9 @@ export const Whistle = {
   destroy,
   show,
   hide,
+  togglePanel,
+  closePanel,
+  unlockAudio,
   bindTimerWhistle,
   setTimerMode,
 };

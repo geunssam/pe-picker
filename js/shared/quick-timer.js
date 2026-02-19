@@ -1,27 +1,23 @@
 /* ============================================
-   PE Picker - Quick Timer (퀵 타이머 FAB + 패널)
+   PE Picker - Quick Timer (퀵 타이머 패널)
    whistle.js → timer.js 단방향 의존
    ============================================ */
 
 import { TimerModule } from './timer.js';
 import { Whistle } from './whistle.js';
 
-let fabBtn = null;
 let panel = null;
 let panelOpen = false;
-let navbarBtn = null;
 
 // === 패널 열기/닫기 ===
 function openPanel() {
   panelOpen = true;
   if (panel) panel.classList.add('timer-panel--open');
-  if (fabBtn) fabBtn.classList.add('timer-fab--active');
 }
 
 function closePanel() {
   panelOpen = false;
   if (panel) panel.classList.remove('timer-panel--open');
-  if (fabBtn) fabBtn.classList.remove('timer-fab--active');
 }
 
 function togglePanel() {
@@ -33,6 +29,9 @@ function togglePanel() {
 function startQuickTimer(seconds) {
   if (!seconds || seconds <= 0) return;
   closePanel();
+
+  // AudioContext 미리 활성화 (사용자 제스처에서 호출 — 모바일 필수)
+  Whistle.unlockAudio();
 
   // 전체화면 DOM 보장
   TimerModule.ensureFullscreenDOM();
@@ -65,7 +64,6 @@ function bindFsWhistleOnce() {
       document.querySelectorAll('[data-fs-whistle-mode]').forEach(m => {
         m.classList.toggle('fs-whistle-mode--active', m.dataset.mode === mode);
       });
-      // whistle.js 내부의 timerMode 업데이트 (모듈 간 직접 접근 대신 이벤트 사용)
       Whistle.setTimerMode(mode);
     });
   });
@@ -97,40 +95,15 @@ function initSteppers() {
   });
 }
 
-// === 표시/숨김 ===
-function show() {
-  if (fabBtn) fabBtn.style.display = '';
-}
-
-function hide() {
-  if (fabBtn) fabBtn.style.display = 'none';
-  closePanel();
-}
-
 // === 초기화 ===
 function init() {
-  fabBtn = document.getElementById('timer-fab');
   panel = document.getElementById('timer-panel');
-  navbarBtn = document.getElementById('navbar-timer-btn');
-
-  if (!fabBtn || !panel) return;
-
-  // FAB 클릭 → 패널 토글
-  fabBtn.addEventListener('click', togglePanel);
-
-  // 네비바 타이머 버튼 → 패널 토글
-  if (navbarBtn) {
-    navbarBtn.addEventListener('click', togglePanel);
-  }
+  if (!panel) return;
 
   // 패널 바깥 클릭으로 닫기
   document.addEventListener('click', e => {
-    if (
-      panelOpen &&
-      !panel.contains(e.target) &&
-      !fabBtn.contains(e.target) &&
-      (!navbarBtn || !navbarBtn.contains(e.target))
-    ) {
+    const toolsFab = document.getElementById('tools-fab-container');
+    if (panelOpen && !panel.contains(e.target) && (!toolsFab || !toolsFab.contains(e.target))) {
       closePanel();
     }
   });
@@ -163,4 +136,4 @@ function init() {
   }
 }
 
-export const QuickTimer = { init, show, hide };
+export const QuickTimer = { init, show: () => {}, hide: closePanel, togglePanel, closePanel };

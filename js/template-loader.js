@@ -33,6 +33,9 @@ import whistleFabHtml from '../templates/whistle-fab.html?raw';
 // ── Timer FAB ──
 import timerFabHtml from '../templates/timer-fab.html?raw';
 
+// ── Tools FAB (Speed Dial) ──
+import toolsFabHtml from '../templates/tools-fab.html?raw';
+
 // ── Assets (Vite가 해시 경로로 변환) ──
 import logoUrl from '../assets/logo.png';
 
@@ -83,9 +86,12 @@ export function mountTemplates() {
     badgeAwardHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 
-  // 4. Whistle FAB — body 끝에 삽입
+  // 4. Whistle Panel — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', whistleFabHtml);
 
-  // 5. Timer FAB — body 끝에 삽입
+  // 5. Timer Panel — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', timerFabHtml);
+
+  // 6. Tools FAB (Speed Dial) — body 끝에 삽입
+  document.body.insertAdjacentHTML('beforeend', toolsFabHtml);
 }

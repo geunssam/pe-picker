@@ -12,6 +12,7 @@ import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
 import { Whistle } from './shared/whistle.js';
 import { QuickTimer } from './shared/quick-timer.js';
+import { ToolsFab } from './shared/tools-fab.js';
 import { BadgeManager } from './badge-manager/badge-manager.js';
 import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
 
@@ -181,6 +182,8 @@ async function bootstrapAfterAuth() {
   BadgeCollectionUI.init();
   Whistle.init();
   QuickTimer.init();
+  ToolsFab.init();
+  initHamburgerMenu();
 
   if (!hasClassData) {
     activateRoute('wizard');
@@ -250,8 +253,7 @@ function activateRoute(route) {
   if (route === 'wizard' || route === 'class-selector') {
     if (navbar) navbar.style.display = 'none';
     if (container) container.classList.add('no-navbar');
-    Whistle.hide();
-    QuickTimer.hide();
+    ToolsFab.hide();
     if (route === 'class-selector') {
       ClassManager.renderLandingClassList();
     }
@@ -262,8 +264,7 @@ function activateRoute(route) {
   } else {
     if (navbar) navbar.style.display = '';
     if (container) container.classList.remove('no-navbar');
-    Whistle.show();
-    QuickTimer.show();
+    ToolsFab.show();
 
     const cls = Store.getSelectedClass();
     const nameEl = document.getElementById('navbar-class-name');
@@ -284,6 +285,11 @@ function activateRoute(route) {
     btn.classList.toggle('active', btn.dataset.route === route);
   });
 
+  // 모바일 메뉴 활성 탭
+  document.querySelectorAll('.navbar-mobile-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.route === route);
+  });
+
   if (route === 'tag-game') {
     TagGame.onPageEnter();
   } else if (route === 'group-manager') {
@@ -293,6 +299,35 @@ function activateRoute(route) {
   } else if (route === 'settings') {
     ClassManager.onSettingsPageEnter();
   }
+}
+
+// === 모바일 햄버거 메뉴 ===
+function initHamburgerMenu() {
+  const hamburger = document.getElementById('navbar-hamburger');
+  const mobileMenu = document.getElementById('navbar-mobile-menu');
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', e => {
+    e.stopPropagation();
+    mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active');
+  });
+
+  mobileMenu.querySelectorAll('.navbar-mobile-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const route = btn.dataset.route;
+      if (route) navigateTo(route);
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active');
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.navbar-hamburger') && !e.target.closest('.navbar-mobile-menu')) {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active');
+    }
+  });
 }
 
 function onClassSelected(classId) {

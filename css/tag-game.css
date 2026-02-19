@@ -548,6 +548,19 @@
   .tag-student-cards {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .tag-student-gen-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tag-student-gen-buttons .btn {
+    padding: var(--space-sm) 4px;
+    font-size: 12px;
+  }
+
+  .tag-student-gen-buttons .btn:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 481px) and (max-width: 768px) {

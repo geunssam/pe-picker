@@ -252,28 +252,20 @@ function renderThermometer(classId) {
   const barFill = document.getElementById('thermo-bar-fill');
   if (barFill) barFill.style.height = `${temp}%`;
 
-  // 눈금 생성 (0~100, 10단위)
-  const scaleEl = document.getElementById('thermo-scale');
-  if (scaleEl) {
-    scaleEl.innerHTML = '';
-    for (let i = 100; i >= 0; i -= 10) {
-      const mark = document.createElement('div');
-      mark.className = 'thermo-scale-mark';
-      mark.innerHTML = `<span class="thermo-scale-label">${i}°C</span><span class="thermo-scale-tick"></span>`;
-      scaleEl.appendChild(mark);
-    }
-  }
-
-  // 마일스톤 (겹치지 않는 리스트형)
+  // 마일스톤 (온도계 좌우 교대 배치)
   const milestonesEl = document.getElementById('thermo-milestones');
   if (milestonesEl) {
-    const sorted = [...(settings.milestones || [])].sort((a, b) => b.temp - a.temp);
+    const sorted = [...(settings.milestones || [])].sort((a, b) => a.temp - b.temp);
+    const tubeHeight = 260;
+    const bulbOffset = 80;
     milestonesEl.innerHTML = sorted
-      .map(ms => {
+      .map((ms, i) => {
         const achieved = temp >= ms.temp;
-        let cls = 'thermo-ms-tag';
+        const side = i % 2 === 0 ? 'ms-left' : 'ms-right';
+        const bottomPx = bulbOffset + (ms.temp / 100) * tubeHeight;
+        let cls = 'thermo-ms-tag ' + side;
         if (achieved) cls += ' achieved';
-        return `<div class="${cls}">
+        return `<div class="${cls}" style="bottom: ${bottomPx}px">
         <span class="thermo-ms-reward">${UI.escapeHtml(ms.reward)}</span>
         <span class="thermo-ms-temp">${ms.temp}°C ${achieved ? '✅' : ''}</span>
       </div>`;

@@ -543,31 +543,28 @@
   font-weight: 700;
 }
 
-/* 비주얼 래퍼: 마일스톤열 + 본체열 을 나란히 */
+/* 비주얼 래퍼: 온도계 중앙, 마일스톤 좌우 교대 */
 .thermo-visual {
+  position: relative;
   display: flex;
   justify-content: center;
-  gap: var(--space-lg);
-  height: 340px; /* 고정 높이로 overflow 방지 */
+  height: 340px;
   overflow: visible;
 }
 
-/* === 마일스톤 열 (왼쪽) === */
+/* === 마일스톤 오버레이 === */
 .thermo-ms-col {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* 아래(0°C)부터 위(100°C)로 */
-  gap: var(--space-sm);
-  padding-bottom: 72px; /* bulb 높이 만큼 아래 여백 */
-  min-width: 100px;
-  max-width: 130px;
-  flex-shrink: 0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .thermo-ms-tag {
+  position: absolute;
   display: flex;
   flex-direction: column;
-  padding: 5px 10px;
+  padding: 4px 10px;
   background: #ffd6dd;
   border-radius: 6px;
   font-size: 11px;
@@ -575,11 +572,18 @@
   color: #8b4050;
   line-height: 1.3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  position: relative;
+  pointer-events: auto;
+  white-space: nowrap;
+  transform: translateY(50%);
 }
 
-/* 화살표 — 오른쪽을 가리키는 삼각형 */
-.thermo-ms-tag::after {
+/* 왼쪽 마일스톤 — 화살표 오른쪽 */
+.thermo-ms-tag.ms-left {
+  right: calc(50% + 32px);
+  text-align: right;
+}
+
+.thermo-ms-tag.ms-left::after {
   content: '';
   position: absolute;
   right: -6px;
@@ -589,13 +593,34 @@
   border-left-color: #ffd6dd;
 }
 
+/* 오른쪽 마일스톤 — 화살표 왼쪽 */
+.thermo-ms-tag.ms-right {
+  left: calc(50% + 32px);
+  text-align: left;
+}
+
+.thermo-ms-tag.ms-right::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #ffd6dd;
+}
+
+/* 달성한 마일스톤 */
 .thermo-ms-tag.achieved {
   background: #c8f7dc;
   color: #2d6b3f;
 }
 
-.thermo-ms-tag.achieved::after {
+.thermo-ms-tag.achieved.ms-left::after {
   border-left-color: #c8f7dc;
+}
+
+.thermo-ms-tag.achieved.ms-right::after {
+  border-right-color: #c8f7dc;
 }
 
 .thermo-ms-reward {
@@ -671,39 +696,9 @@
   z-index: 1;
 }
 
-/* 눈금 (오른쪽) */
+/* 눈금 — 마일스톤이 좌우로 표시되므로 숨김 */
 .thermo-scale {
-  position: absolute;
-  top: 0;
-  right: -52px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.thermo-scale-mark {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  height: 0;
-}
-
-.thermo-scale-tick {
-  width: 6px;
-  height: 1.5px;
-  background: #bbb;
-}
-
-.thermo-scale-label {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-  min-width: 34px;
-  text-align: right;
+  display: none;
 }
 
 /* 구 (bulb) */
