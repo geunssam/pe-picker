@@ -3,6 +3,7 @@
  */
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
+import { Icons } from '../shared/icons.js';
 import { deleteClassFromFirestore } from './class-firestore.js';
 
 export function renderLandingClassList() {
@@ -14,7 +15,7 @@ export function renderLandingClassList() {
   if (classes.length === 0) {
     container.innerHTML = `
       <div class="landing-empty">
-        <div class="landing-empty-icon">📚</div>
+        <div class="landing-empty-icon">${Icons.book(32)}</div>
         <div>등록된 학급이 없습니다</div>
         <div style="margin-top: var(--space-xs);">아래 버튼으로 첫 학급을 만들어보세요!</div>
       </div>
@@ -30,8 +31,8 @@ export function renderLandingClassList() {
           <div class="landing-card-info">
             <div class="landing-card-name">${UI.escapeHtml(cls.name)}</div>
             <div class="landing-card-meta">
-              <span>👤 ${cls.students.length}명</span>
-              <span>👥 ${gc}모둠</span>
+              <span>${Icons.user(14)} ${cls.students.length}명</span>
+              <span>${Icons.users(14)} ${gc}모둠</span>
             </div>
           </div>
           <div class="landing-card-actions" onclick="event.stopPropagation();">

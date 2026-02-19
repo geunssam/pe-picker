@@ -5,6 +5,7 @@
 
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
+import { Icons } from '../shared/icons.js';
 import { BADGE_TYPES, BADGE_KEYS, getLevelInfo, DEFAULT_THERMOSTAT } from './badge-config.js';
 import { FirestoreSync } from '../firestore-sync.js';
 
@@ -190,7 +191,7 @@ async function showBadgeAwardConfirm(badgeKey, student) {
   if (!cls) return;
 
   const confirmed = await UI.showConfirm(
-    `${badge.emoji} ${badge.name} 배지\n\n${badge.desc}\n\n${student.name}에게 부여할까요?`,
+    `${badge.name} 배지\n\n${badge.desc}\n\n${student.name}에게 부여할까요?`,
     { confirmText: '부여', cancelText: '취소' }
   );
 
@@ -207,7 +208,7 @@ async function showBadgeAwardConfirm(badgeKey, student) {
   // Firestore 동기화
   FirestoreSync.syncBadgeLogEntries(result.newEntries);
 
-  UI.showToast(`🏅 ${student.name}에게 ${badge.emoji}${badge.name} 배지 부여!`, 'success');
+  UI.showToast(`${student.name}에게 ${badge.name} 배지 부여!`, 'success');
 
   // 모달 내용 갱신
   renderStudentModalContent(cls, student);
@@ -274,7 +275,7 @@ function openBadgeGuide() {
       return `<div class="badge-guide-item">
         <img src="${badge.image}" alt="${badge.name}" />
         <div class="badge-guide-item-text">
-          <div class="badge-guide-item-name">${badge.emoji} ${badge.name}</div>
+          <div class="badge-guide-item-name">${badge.name}</div>
           <div class="badge-guide-item-desc">${badge.desc}</div>
         </div>
       </div>`;
@@ -344,7 +345,7 @@ function renderThermometer(classId) {
         if (achieved) cls += ' achieved';
         return `<div class="${cls}" style="bottom: ${bottomPx}px">
         <span class="thermo-ms-reward">${UI.escapeHtml(ms.reward)}</span>
-        <span class="thermo-ms-temp">${ms.temp}°C ${achieved ? '✅' : ''}</span>
+        <span class="thermo-ms-temp">${ms.temp}°C ${achieved ? Icons.check(12) : ''}</span>
       </div>`;
       })
       .join('');
@@ -441,11 +442,15 @@ function renderStudentRanking(classId) {
     return;
   }
 
-  const medals = ['🥇', '🥈', '🥉', '4', '5'];
+  const medalClasses = ['rank-medal--gold', 'rank-medal--silver', 'rank-medal--bronze'];
   list.innerHTML = ranking
     .map((r, i) => {
+      const rankDisplay =
+        i < 3
+          ? `<span class="rank-medal ${medalClasses[i]}">${i + 1}</span>`
+          : `<span class="badge-rank-num">${i + 1}</span>`;
       return `<div class="badge-ranking-item">
-      <span class="badge-rank-num">${medals[i] || i + 1}</span>
+      ${rankDisplay}
       <span class="badge-rank-name">${UI.escapeHtml(r.studentName)}</span>
       <span class="badge-rank-count">${r.count}개</span>
     </div>`;

@@ -17,12 +17,12 @@ import { BadgeManager } from './badge-manager/badge-manager.js';
 import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
 
 const ROUTES = {
-  wizard: { label: '학급 설정', icon: '🎯', requiresClass: false },
-  'class-selector': { label: '학급 선택', icon: '🏠', requiresClass: false },
-  'tag-game': { label: '술래뽑기', icon: '🎯', requiresClass: true },
-  'group-manager': { label: '모둠뽑기', icon: '👥', requiresClass: true },
-  'badge-collection': { label: '배지도감', icon: '🏅', requiresClass: true },
-  settings: { label: '설정', icon: '⚙️', requiresClass: true },
+  wizard: { label: '학급 설정', requiresClass: false },
+  'class-selector': { label: '학급 선택', requiresClass: false },
+  'tag-game': { label: '술래뽑기', requiresClass: true },
+  'group-manager': { label: '모둠뽑기', requiresClass: true },
+  'badge-collection': { label: '배지도감', requiresClass: true },
+  settings: { label: '설정', requiresClass: true },
 };
 
 const DEFAULT_ROUTE = 'class-selector';

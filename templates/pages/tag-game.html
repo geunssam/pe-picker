@@ -15,7 +15,25 @@
     <!-- 뽑기 설정 카드 -->
     <div class="section">
       <div class="section-title" style="justify-content: space-between">
-        <span>⚙️ 뽑기 설정</span>
+        <span
+          ><svg
+            class="icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+            />
+          </svg>
+          뽑기 설정</span
+        >
         <div style="display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0">
           <span
             style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 500"
@@ -68,16 +86,87 @@
 
     <!-- 뽑을 학생 설정 카드 -->
     <div class="section">
-      <div class="section-title">📋 뽑을 학생 설정</div>
+      <div class="section-title">
+        <svg
+          class="icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+        </svg>
+        뽑을 학생 설정
+      </div>
       <div class="glass-card" style="padding: var(--space-lg)">
         <!-- 학생 수 (hidden, JS에서 참조용) -->
         <input type="hidden" id="tag-student-count" value="20" />
 
         <!-- 3개 버튼: 번호순 생성 / 학급 불러오기 / 성별 구분 -->
         <div class="tag-student-gen-buttons">
-          <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">📝 번호순 생성</button>
-          <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">📋 학급 불러오기</button>
-          <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">👫 성별 구분</button>
+          <button class="btn btn-secondary btn-sm" id="tag-gen-by-number">
+            <svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="10" y1="6" x2="21" y2="6" />
+              <line x1="10" y1="12" x2="21" y2="12" />
+              <line x1="10" y1="18" x2="21" y2="18" />
+              <path d="M4 6h1v4" />
+              <path d="M4 10h2" />
+              <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+            </svg>
+            번호순 생성
+          </button>
+          <button class="btn btn-secondary btn-sm" id="tag-gen-by-class">
+            <svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            학급 불러오기
+          </button>
+          <button class="btn btn-secondary btn-sm" id="tag-gen-by-gender">
+            <svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            성별 구분
+          </button>
         </div>
 
         <!-- 학생 카드 영역 (조건부 표시) -->
@@ -104,12 +193,54 @@
 
   <!-- Phase 1 전용 버튼 -->
   <div id="tag-phase1-actions" class="tag-action-buttons">
-    <button class="btn btn-primary" id="tag-start-btn">🎮 술래 뽑기!</button>
+    <button class="btn btn-primary" id="tag-start-btn">
+      <svg
+        class="icon"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+      술래 뽑기!
+    </button>
     <button class="btn btn-secondary" id="tag-back-to-result-btn" style="display: none">
-      📊 결과로 돌아가기
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 20V10M18 20V4M6 20v-4" />
+      </svg>
+      결과로 돌아가기
     </button>
     <button class="btn btn-danger" id="tag-reset-from-settings-btn" style="display: none">
-      🧹 초기화
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <path d="M3 3v5h5" />
+      </svg>
+      초기화
     </button>
   </div>
 
@@ -120,8 +251,41 @@
         class="section-title"
         style="display: flex; align-items: center; justify-content: space-between"
       >
-        <span>🎯 뽑힌 결과</span>
-        <button class="tag-badge-btn" id="tag-badge-btn" style="display: none">🏅 배지 부여</button>
+        <span
+          ><svg
+            class="icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="6" />
+            <circle cx="12" cy="12" r="2" />
+          </svg>
+          뽑힌 결과</span
+        >
+        <button class="tag-badge-btn" id="tag-badge-btn" style="display: none">
+          <svg
+            class="icon"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="16" r="6" />
+            <path d="M8.523 11.11 7 2l5 3 5-3-1.523 9.11" />
+          </svg>
+          배지 부여
+        </button>
       </div>
       <div id="tag-result-container" class="tag-result-container"></div>
     </div>
@@ -133,14 +297,48 @@
     <div class="section">
       <div class="tag-collapsible">
         <button class="tag-collapse-toggle" data-target="tag-next-its">
-          <span>🏃 다음 술래 후보 (<span id="tag-next-its-count">0</span>명)</span>
+          <span
+            ><svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="5" r="2" />
+              <path d="m7 21 3-9m0 0 2-2 4-1m-6 3-2.5-3.5L10 7l4.5 1.5M17 21l-2-8" />
+            </svg>
+            다음 술래 후보 (<span id="tag-next-its-count">0</span>명)</span
+          >
           <span class="collapse-arrow">▼</span>
         </button>
         <div id="tag-next-its" class="tag-collapse-content" style="display: none"></div>
       </div>
       <div class="tag-collapsible">
         <button class="tag-collapse-toggle" data-target="tag-next-angels">
-          <span>😇 다음 천사 후보 (<span id="tag-next-angels-count">0</span>명)</span>
+          <span
+            ><svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 2a3 3 0 0 0 0 6 3 3 0 0 0 0-6z" />
+              <path d="M12 8c-3 0-5 2-5 5v6h10v-6c0-3-2-5-5-5z" />
+              <path d="M8 2.5C6.5 3.5 6 5 6 5" />
+              <path d="M16 2.5c1.5 1 2 2.5 2 2.5" />
+            </svg>
+            다음 천사 후보 (<span id="tag-next-angels-count">0</span>명)</span
+          >
           <span class="collapse-arrow">▼</span>
         </button>
         <div id="tag-next-angels" class="tag-collapse-content" style="display: none"></div>
@@ -151,14 +349,46 @@
     <div class="section">
       <div class="tag-collapsible">
         <button class="tag-collapse-toggle" data-target="tag-history-its">
-          <span>📜 지난 술래 (<span id="tag-history-its-count">0</span>명)</span>
+          <span
+            ><svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
+              <path d="M19 3H8a2 2 0 0 0-2 2v12" />
+            </svg>
+            지난 술래 (<span id="tag-history-its-count">0</span>명)</span
+          >
           <span class="collapse-arrow">▼</span>
         </button>
         <div id="tag-history-its" class="tag-collapse-content" style="display: none"></div>
       </div>
       <div class="tag-collapsible">
         <button class="tag-collapse-toggle" data-target="tag-history-angels">
-          <span>📜 지난 천사 (<span id="tag-history-angels-count">0</span>명)</span>
+          <span
+            ><svg
+              class="icon"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
+              <path d="M19 3H8a2 2 0 0 0-2 2v12" />
+            </svg>
+            지난 천사 (<span id="tag-history-angels-count">0</span>명)</span
+          >
           <span class="collapse-arrow">▼</span>
         </button>
         <div id="tag-history-angels" class="tag-collapse-content" style="display: none"></div>
@@ -168,10 +398,76 @@
 
   <!-- Phase 2 전용 버튼 -->
   <div id="tag-phase2-actions" class="tag-phase2-grid" style="display: none">
-    <button class="btn btn-primary" id="tag-timer-start-btn">🎮 게임 시작</button>
-    <button class="btn btn-secondary" id="tag-pick-again-btn">🎲 다시뽑기</button>
-    <button class="btn btn-secondary" id="tag-modify-btn">✏️ 설정</button>
-    <button class="btn btn-danger" id="tag-new-game-btn">🧹 초기화</button>
+    <button class="btn btn-primary" id="tag-timer-start-btn">
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+      게임 시작
+    </button>
+    <button class="btn btn-secondary" id="tag-pick-again-btn">
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22" />
+        <path d="m18 2 4 4-4 4" />
+        <path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" />
+        <path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8" />
+        <path d="m18 14 4 4-4 4" />
+      </svg>
+      다시뽑기
+    </button>
+    <button class="btn btn-secondary" id="tag-modify-btn">
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+        <path d="m15 5 4 4" />
+      </svg>
+      설정
+    </button>
+    <button class="btn btn-danger" id="tag-new-game-btn">
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <path d="M3 3v5h5" />
+      </svg>
+      초기화
+    </button>
   </div>
 
   <!-- ============ Phase 3: 타이머 ============ -->
@@ -183,7 +479,21 @@
     <!-- 전체화면 타이머 내 휘슬 버튼 -->
     <div id="tag-timer-whistle" class="timer-whistle-wrap">
       <button class="timer-whistle-btn" id="tag-timer-whistle-btn">
-        <span class="timer-whistle-btn__icon">📣</span>
+        <span class="timer-whistle-btn__icon"
+          ><svg
+            class="icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m3 11 18-5v12L3 13v-2z" />
+            <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></svg
+        ></span>
       </button>
       <div class="timer-whistle-ring" id="tag-timer-whistle-ring1"></div>
       <div class="timer-whistle-ring" id="tag-timer-whistle-ring2"></div>
@@ -201,7 +511,23 @@
     </div>
     <div class="tag-timer-sub-controls">
       <button class="btn btn-sm btn-secondary" id="tag-timer-fullscreen-toggle">축소</button>
-      <button class="btn btn-sm btn-secondary" id="tag-timer-pause">⏸️ 일시정지</button>
+      <button class="btn btn-sm btn-secondary" id="tag-timer-pause">
+        <svg
+          class="icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="6" y="4" width="4" height="16" />
+          <rect x="14" y="4" width="4" height="16" />
+        </svg>
+        일시정지
+      </button>
       <button class="btn btn-sm btn-danger" id="tag-timer-end">타이머 종료</button>
     </div>
   </div>

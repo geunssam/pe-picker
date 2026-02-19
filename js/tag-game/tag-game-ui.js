@@ -4,6 +4,7 @@
    ============================================ */
 
 import { UI } from '../shared/ui-utils.js';
+import { Icons } from '../shared/icons.js';
 
 // === 결과 카드 렌더 (원본 displayResults) ===
 function renderResultCards(its, angels) {
@@ -15,12 +16,12 @@ function renderResultCards(its, angels) {
   if (its.length > 0) {
     html += `
       <div class="tag-result-card">
-        <div class="result-role role-it">🏃 술래</div>
+        <div class="result-role role-it">${Icons.runner(16)} 술래</div>
         <div class="result-names">
           ${its
             .map(
               (name, i) =>
-                `<span class="result-name name-it" style="animation-delay: ${i * 0.1}s">🏃‍♂️ ${UI.escapeHtml(name)}</span>`
+                `<span class="result-name name-it" style="animation-delay: ${i * 0.1}s">${Icons.runner(14)} ${UI.escapeHtml(name)}</span>`
             )
             .join('')}
         </div>
@@ -31,12 +32,12 @@ function renderResultCards(its, angels) {
   if (angels.length > 0) {
     html += `
       <div class="tag-result-card">
-        <div class="result-role role-angel">😇 천사</div>
+        <div class="result-role role-angel">${Icons.angel(16)} 천사</div>
         <div class="result-names">
           ${angels
             .map(
               (name, i) =>
-                `<span class="result-name name-angel" style="animation-delay: ${i * 0.1}s">😇 ${UI.escapeHtml(name)}</span>`
+                `<span class="result-name name-angel" style="animation-delay: ${i * 0.1}s">${Icons.angel(14)} ${UI.escapeHtml(name)}</span>`
             )
             .join('')}
         </div>

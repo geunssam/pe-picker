@@ -281,8 +281,8 @@ function confirmAward() {
   FirestoreSync.syncBadgeLogEntries(result.newEntries);
 
   // 배지 이름 목록
-  const badgeNames = badgeTypes.map(k => BADGE_TYPES[k].emoji + BADGE_TYPES[k].name).join(', ');
-  UI.showToast(`🏅 ${count}개 배지 부여 완료! (${badgeNames})`, 'success');
+  const badgeNames = badgeTypes.map(k => BADGE_TYPES[k].name).join(', ');
+  UI.showToast(`${count}개 배지 부여 완료! (${badgeNames})`, 'success');
 
   closeModal();
 

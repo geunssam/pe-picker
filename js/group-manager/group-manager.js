@@ -8,6 +8,7 @@ import { UI } from '../shared/ui-utils.js';
 import { Sound } from '../shared/sound.js';
 import { GroupManagerUI } from './group-manager-ui.js';
 import { TimerModule } from '../shared/timer.js';
+import { Icons } from '../shared/icons.js';
 
 let currentGroups = [];
 let currentPhase = 1; // 1=설정, 2=결과
@@ -441,7 +442,7 @@ function updateCalcInfo() {
 
   if (!calcEl) return;
   if (total === 0) {
-    calcEl.innerHTML = '👆 위의 버튼으로 학생을 먼저 설정하세요';
+    calcEl.innerHTML = '위의 버튼으로 학생을 먼저 설정하세요';
     calcEl.style.background = 'rgba(124, 158, 245, 0.05)';
     calcEl.style.color = 'var(--text-tertiary)';
     return;
@@ -584,7 +585,7 @@ function onOverflowConfirm() {
 
 // === 모둠 구성 실행 ===
 async function executeGroupPick(students, groupSize, groupCount) {
-  UI.showPickingOverlay('🎲', '모둠을 구성하는 중...');
+  UI.showPickingOverlay(Icons.shuffle(32), '모둠을 구성하는 중...');
   Sound.playClick();
   await UI.sleep(1200);
 
@@ -688,18 +689,18 @@ async function executeGroupPick(students, groupSize, groupCount) {
   const resultTitle = document.querySelector('#gm-result-section .section-title');
   if (resultTitle) {
     if (!isFixedGroups) {
-      resultTitle.textContent = '🎯 랜덤 모둠 뽑기 결과 (🔀 섞음)';
+      resultTitle.innerHTML = `${Icons.target(16)} 랜덤 모둠 뽑기 결과 (섞음)`;
     } else {
       const so = document.getElementById('gm-fixed-shuffle-order')?.checked;
       const sm = document.getElementById('gm-fixed-shuffle-members')?.checked;
       if (so && sm) {
-        resultTitle.textContent = '🎯 고정 모둠 뽑기 결과 (🔀 순서+멤버 섞음)';
+        resultTitle.innerHTML = `${Icons.target(16)} 고정 모둠 뽑기 결과 (순서+멤버 섞음)`;
       } else if (so) {
-        resultTitle.textContent = '🎯 고정 모둠 순서 뽑기 결과 (🔀 순서 섞음)';
+        resultTitle.innerHTML = `${Icons.target(16)} 고정 모둠 순서 뽑기 결과 (순서 섞음)`;
       } else if (sm) {
-        resultTitle.textContent = '🎯 고정 모둠 내 순서 뽑기 결과 (🔀 멤버 섞음)';
+        resultTitle.innerHTML = `${Icons.target(16)} 고정 모둠 내 순서 뽑기 결과 (멤버 섞음)`;
       } else {
-        resultTitle.textContent = '🎯 고정 모둠 구성 결과 (📌 고정)';
+        resultTitle.innerHTML = `${Icons.target(16)} 고정 모둠 구성 결과 (${Icons.pin(14)} 고정)`;
       }
     }
   }
@@ -790,7 +791,7 @@ function startTimer() {
         // 전체화면이면 2초 후 자동 닫기
         if (gmFullscreen) {
           const fsToggle = document.getElementById('gm-timer-fs-toggle');
-          if (fsToggle) fsToggle.textContent = '▶️ 시작';
+          if (fsToggle) fsToggle.innerHTML = `${Icons.play(12)} 시작`;
           setTimeout(exitGmFullscreen, 2000);
         }
       },
@@ -855,13 +856,15 @@ function enterGmFullscreen() {
   // 전체화면 토글 버튼 상태
   const fsToggle = document.getElementById('gm-timer-fs-toggle');
   if (fsToggle) {
-    fsToggle.textContent = timer?.isRunning ? '⏸️ 일시정지' : '▶️ 시작';
+    fsToggle.innerHTML = timer?.isRunning
+      ? `${Icons.pause(12)} 일시정지`
+      : `${Icons.play(12)} 시작`;
   }
 
   // 타이머가 안 돌고 있으면 자동 시작
   if (!timer || !timer.isRunning) {
     startTimer();
-    if (fsToggle) fsToggle.textContent = '⏸️ 일시정지';
+    if (fsToggle) fsToggle.innerHTML = `${Icons.pause(12)} 일시정지`;
   }
 }
 
@@ -879,10 +882,10 @@ function toggleFsTimer() {
   const fsToggle = document.getElementById('gm-timer-fs-toggle');
   if (timer?.isRunning) {
     pauseTimer();
-    if (fsToggle) fsToggle.textContent = '▶️ 시작';
+    if (fsToggle) fsToggle.innerHTML = `${Icons.play(12)} 시작`;
   } else {
     startTimer();
-    if (fsToggle) fsToggle.textContent = '⏸️ 일시정지';
+    if (fsToggle) fsToggle.innerHTML = `${Icons.pause(12)} 일시정지`;
   }
 }
 

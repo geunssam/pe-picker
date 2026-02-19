@@ -38,12 +38,12 @@ function hideModal(id) {
 }
 
 // === Picking Overlay ===
-function showPickingOverlay(emoji = '🎲', text = '뽑는 중...') {
+function showPickingOverlay(icon = '', text = '뽑는 중...') {
   const overlay = document.getElementById('picking-overlay');
-  const emojiEl = document.getElementById('picking-emoji');
+  const iconEl = document.getElementById('picking-emoji');
   const textEl = document.getElementById('picking-text');
   if (overlay) {
-    emojiEl.textContent = emoji;
+    iconEl.innerHTML = icon;
     textEl.textContent = text;
     overlay.classList.add('show');
   }

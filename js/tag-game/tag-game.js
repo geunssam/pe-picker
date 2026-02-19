@@ -9,6 +9,7 @@ import { UI } from '../shared/ui-utils.js';
 import { Sound } from '../shared/sound.js';
 import { IosUtils } from '../shared/ios-utils.js';
 import { TagGameUI } from './tag-game-ui.js';
+import { Icons } from '../shared/icons.js';
 
 // --- 게임 상태 (원본 동일) ---
 let currentPhase = 1;
@@ -541,7 +542,7 @@ function checkExhaustion() {
   ) {
     // 모든 후보 소진
     setTimeout(() => {
-      UI.showToast('🎉 모든 역할의 후보가 소진되었습니다!', 'success');
+      UI.showToast('모든 역할의 후보가 소진되었습니다!', 'success');
     }, 500);
   }
 }
@@ -624,12 +625,12 @@ function toggleTimer() {
 
 function pauseTimer() {
   isTimerRunning = false;
-  $('tag-timer-pause').innerHTML = '▶️ 재시작';
+  $('tag-timer-pause').innerHTML = `${Icons.play(14)} 재시작`;
 }
 
 function resumeTimer() {
   isTimerRunning = true;
-  $('tag-timer-pause').innerHTML = '⏸️ 일시정지';
+  $('tag-timer-pause').innerHTML = `${Icons.pause(14)} 일시정지`;
   runTimer();
 }
 

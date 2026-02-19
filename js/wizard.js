@@ -258,7 +258,7 @@ function setupStep5() {
 
 // ===== 완료 처리 =====
 async function handleComplete() {
-  console.log('🎯 handleComplete 시작');
+  console.log('handleComplete 시작');
 
   // 로딩 표시
   const loadingEl = document.getElementById('wizard-loading');
@@ -306,7 +306,7 @@ async function handleComplete() {
     }
   });
 
-  console.log(`✅ localStorage에 ${createdClasses.length}개 학급 저장 완료`);
+  console.log(`localStorage에 ${createdClasses.length}개 학급 저장 완료`);
 
   // Firestore 동기화
   if (AuthManager.isAuthenticated()) {
