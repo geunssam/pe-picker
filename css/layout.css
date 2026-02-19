@@ -239,6 +239,76 @@
   gap: var(--space-sm);
 }
 
+/* === Class Info Stats (학급 관리 상단) === */
+.class-info-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(124, 158, 245, 0.1);
+}
+
+.class-info-name {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.class-info-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.class-info-icon--name {
+  background: rgba(124, 158, 245, 0.15);
+  color: var(--color-primary);
+}
+
+.class-info-icon--student {
+  background: rgba(167, 139, 250, 0.15);
+  color: #a78bfa;
+}
+
+.class-info-icon--team {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.class-info-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+.class-info-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.class-info-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.class-info-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
 /* === Setting Row === */
 .setting-row {
   display: flex;

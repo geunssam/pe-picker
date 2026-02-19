@@ -30,18 +30,26 @@ export function onSettingsPageEnter() {
   if (infoContainer && cls) {
     const gc = cls.teamCount || cls.teams?.length || 6;
     infoContainer.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); text-align: center;">
-        <div>
-          <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--space-xs);">학급명</div>
-          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--text-primary);">${UI.escapeHtml(cls.name)}</div>
+      <div class="class-info-header">
+        <div class="class-info-icon-wrap class-info-icon--name">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         </div>
-        <div>
-          <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--space-xs);">학생 수</div>
-          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-primary);">👤 ${cls.students.length}명</div>
+        <div class="class-info-name">${UI.escapeHtml(cls.name)}</div>
+      </div>
+      <div class="class-info-stats">
+        <div class="class-info-stat">
+          <div class="class-info-icon-wrap class-info-icon--student">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="class-info-stat-value">${cls.students.length}</div>
+          <div class="class-info-stat-label">학생</div>
         </div>
-        <div>
-          <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--space-xs);">모둠 수</div>
-          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-secondary);">👥 ${gc}모둠</div>
+        <div class="class-info-stat">
+          <div class="class-info-icon-wrap class-info-icon--team">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <div class="class-info-stat-value">${gc}</div>
+          <div class="class-info-stat-label">모둠</div>
         </div>
       </div>
     `;
