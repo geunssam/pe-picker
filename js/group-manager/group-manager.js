@@ -640,7 +640,6 @@ async function executeGroupPick(students, groupSize, groupCount) {
         id: idx + 1,
         name: group.name,
         members: group.members,
-        cookies: 0,
       });
     });
   } else {
@@ -654,7 +653,6 @@ async function executeGroupPick(students, groupSize, groupCount) {
         id: i + 1,
         name: groupNames[i] || `${i + 1}모둠`,
         members: shuffled.slice(start, start + groupSize),
-        cookies: 0,
       });
     }
 
@@ -734,21 +732,17 @@ async function executeGroupPick(students, groupSize, groupCount) {
   }
 }
 
-// === 쿠키 관리 ===
-function addCookie(groupId) {
+// === 뱃지 모달 호출 ===
+function openBadgeForGroup(groupId) {
   const group = currentGroups.find(g => g.id === groupId);
   if (!group) return;
-  group.cookies++;
-  GroupManagerUI.updateCookieDisplay(groupId, group.cookies);
-  Store.saveCurrentTeams(currentGroups);
-}
 
-function removeCookie(groupId) {
-  const group = currentGroups.find(g => g.id === groupId);
-  if (!group || group.cookies <= 0) return;
-  group.cookies--;
-  GroupManagerUI.updateCookieDisplay(groupId, group.cookies);
-  Store.saveCurrentTeams(currentGroups);
+  window.BadgeManager.openModal({
+    mode: 'group',
+    groups: currentGroups,
+    activeGroupId: groupId,
+    context: 'group-manager',
+  });
 }
 
 // === 타이머 ===
@@ -1014,8 +1008,7 @@ export const GroupManager = {
   onPageEnter,
   pickGroups,
   pickAgain,
-  addCookie,
-  removeCookie,
+  openBadgeForGroup,
   toggleStudentCard,
   addNumberRange,
   removeNumberRange,

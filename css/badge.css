@@ -1,0 +1,1143 @@
+/* ============================================
+   PE Picker - Badge System Styles
+   뱃지 부여 모달 + 뱃지도감 탭 + 세로 온도계
+   ============================================ */
+
+/* === 뱃지 부여 모달 === */
+.badge-award-modal {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.badge-section {
+  margin-bottom: var(--space-md);
+}
+
+.badge-section-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.badge-mode-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.badge-mode-tab {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.badge-mode-tab.active {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-group-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+
+.badge-group-tab {
+  padding: var(--space-xs) var(--space-md);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.badge-group-tab.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--text-white);
+}
+
+.badge-students-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.badge-selected-count {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.badge-student-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xs);
+  max-height: 180px;
+  overflow-y: auto;
+  padding: var(--space-xs);
+}
+
+@media (max-width: 400px) {
+  .badge-student-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.badge-student-chip {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge-student-chip.selected {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.15);
+  color: var(--color-primary);
+}
+
+/* === 뱃지 타입 선택 그리드 (모달) === */
+.badge-type-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-xs);
+}
+
+@media (max-width: 480px) {
+  .badge-type-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 360px) {
+  .badge-type-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.badge-type-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-xs);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.badge-type-chip .badge-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.badge-type-chip .badge-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.badge-type-chip.selected {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.1);
+  transform: scale(1.05);
+}
+
+.badge-type-chip.selected .badge-name {
+  color: var(--color-primary);
+}
+
+/* === 요약 영역 === */
+.badge-summary {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(124, 224, 163, 0.1);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+/* === 뱃지도감 헤더 액션 버튼 === */
+.badge-header-actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.badge-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.badge-header-btn:active {
+  transform: scale(0.95);
+}
+
+.badge-header-btn svg {
+  flex-shrink: 0;
+}
+
+.badge-header-btn--primary {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.badge-header-btn--primary:active {
+  opacity: 0.85;
+}
+
+/* === 뱃지도감 페이지 === */
+.badge-inner-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.badge-inner-tab {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.badge-inner-tab.active {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.1);
+  color: var(--color-primary);
+}
+
+/* === 개인 뱃지 뷰 === */
+.badge-student-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  background: var(--bg-white);
+  margin-bottom: var(--space-md);
+}
+
+.badge-level-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.badge-level-info {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+}
+
+.badge-xp-bar-wrap {
+  flex: 1;
+}
+
+.badge-xp-bar {
+  height: 8px;
+  background: rgba(124, 158, 245, 0.15);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.badge-xp-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+.badge-xp-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  text-align: right;
+}
+
+/* ========================================
+   개인 뱃지 인벤토리 — 큰 카드 그리드
+   ======================================== */
+.badge-inventory {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 600px) {
+  .badge-inventory {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .badge-inventory {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 개인 인벤토리 카드 */
+.badge-inv-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--bg-white);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.badge-inv-card:active {
+  transform: scale(0.96);
+}
+
+.badge-inv-card.empty {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.badge-inv-card .badge-inv-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.badge-inv-card .badge-inv-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge-inv-card .badge-inv-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* ========================================
+   통계 뷰 — 뱃지 타입별 (가로 스크롤)
+   ======================================== */
+.badge-stats-row {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge-stats-row::-webkit-scrollbar {
+  height: 4px;
+}
+.badge-stats-row::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+/* 통계 아이템 — .badge-inv-item (기존 클래스) */
+.badge-inv-item {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-sm);
+  min-width: 76px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-white);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.badge-inv-item.empty {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.badge-inv-item .badge-inv-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.badge-inv-item .badge-inv-count {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.badge-inv-item .badge-inv-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+/* ========================================
+   뱃지 상세 모달
+   ======================================== */
+.badge-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.badge-detail-overlay.open {
+  opacity: 1;
+}
+
+.badge-detail-card {
+  position: relative;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  max-width: 280px;
+  width: 85%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.badge-detail-overlay.open .badge-detail-card {
+  transform: scale(1);
+}
+
+.badge-detail-close-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.badge-detail-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin-bottom: var(--space-md);
+}
+
+.badge-detail-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.badge-detail-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.badge-detail-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-tertiary);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.badge-detail-count.owned {
+  color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.15);
+}
+
+/* ========================================
+   학급 온도계 — 세로형
+   ======================================== */
+.thermo-card {
+  padding: var(--space-lg);
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: var(--space-lg);
+  overflow: hidden;
+}
+
+.thermo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.thermo-title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+/* 비주얼 래퍼: 마일스톤열 + 본체열 을 나란히 */
+.thermo-visual {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  height: 340px; /* 고정 높이로 overflow 방지 */
+  overflow: visible;
+}
+
+/* === 마일스톤 열 (왼쪽) === */
+.thermo-ms-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* 아래(0°C)부터 위(100°C)로 */
+  gap: var(--space-sm);
+  padding-bottom: 72px; /* bulb 높이 만큼 아래 여백 */
+  min-width: 100px;
+  max-width: 130px;
+  flex-shrink: 0;
+}
+
+.thermo-ms-tag {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 10px;
+  background: #ffd6dd;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b4050;
+  line-height: 1.3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* 화살표 — 오른쪽을 가리키는 삼각형 */
+.thermo-ms-tag::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-left-color: #ffd6dd;
+}
+
+.thermo-ms-tag.achieved {
+  background: #c8f7dc;
+  color: #2d6b3f;
+}
+
+.thermo-ms-tag.achieved::after {
+  border-left-color: #c8f7dc;
+}
+
+.thermo-ms-reward {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.thermo-ms-temp {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* === 온도계 본체 열 (오른쪽) === */
+.thermo-body-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* 튜브 */
+.thermo-tube {
+  width: 48px;
+  height: 260px;
+  border-radius: 24px 24px 0 0;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #b8dce8;
+  background: #f8f3e8;
+}
+
+.thermo-tube-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    #fff9e6 0%,
+    #fff3cc 10%,
+    #ffe4a0 20%,
+    #ffd580 30%,
+    #ffc266 40%,
+    #ffad80 50%,
+    #ff9a8c 60%,
+    #ff8090 70%,
+    #ff6680 80%,
+    #ee5070 90%,
+    #dd3344 100%
+  );
+  opacity: 0.2;
+}
+
+.thermo-tube-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0%;
+  background: linear-gradient(
+    to top,
+    #fff3cc 0%,
+    #ffe4a0 15%,
+    #ffd580 25%,
+    #ffc266 35%,
+    #ffad80 45%,
+    #ff9a8c 55%,
+    #ff8090 65%,
+    #ff6680 75%,
+    #ee5070 88%,
+    #dd3344 100%
+  );
+  transition: height 0.8s ease;
+  z-index: 1;
+}
+
+/* 눈금 (오른쪽) */
+.thermo-scale {
+  position: absolute;
+  top: 0;
+  right: -52px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.thermo-scale-mark {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 0;
+}
+
+.thermo-scale-tick {
+  width: 6px;
+  height: 1.5px;
+  background: #bbb;
+}
+
+.thermo-scale-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* 구 (bulb) */
+.thermo-bulb {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 3px solid #b8dce8;
+  background: #ffeebb;
+  position: relative;
+  margin-top: -8px;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.thermo-bulb-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #ff8080 0%, #ffb080 60%, #ffeebb 100%);
+  opacity: 0.6;
+}
+
+.thermo-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.thermo-eyes {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.thermo-eye {
+  width: 5px;
+  height: 6px;
+  background: #333;
+  border-radius: 50%;
+}
+
+.thermo-mouth {
+  width: 12px;
+  height: 6px;
+  border-bottom: 2px solid #333;
+  border-radius: 0 0 50% 50%;
+}
+
+.thermo-cheeks {
+  position: absolute;
+  bottom: 16px;
+  width: 96px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.thermo-cheek {
+  width: 16px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 160, 140, 0.5);
+}
+
+/* 현재 온도 */
+.thermo-temp {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  text-align: center;
+  margin-top: var(--space-sm);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   학생 순위
+   ======================================== */
+.badge-ranking {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.badge-ranking-title {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  background: rgba(124, 158, 245, 0.06);
+}
+
+.badge-ranking-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.badge-ranking-item:last-child {
+  border-bottom: none;
+}
+
+.badge-rank-num {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+  color: var(--color-primary);
+}
+
+.badge-rank-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.badge-rank-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   온도계 설정 패널
+   ======================================== */
+.thermo-settings {
+  display: none;
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(124, 158, 245, 0.05);
+  border-radius: var(--radius-md);
+}
+
+.thermo-settings.open {
+  display: block;
+}
+
+.thermo-setting-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.thermo-setting-row label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  min-width: 80px;
+}
+
+/* 마일스톤 에디터 */
+.thermo-ms-editor {
+  margin-top: var(--space-sm);
+}
+
+.thermo-ms-editor-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.thermo-ms-edit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+.thermo-ms-edit-row input[type='number'] {
+  width: 56px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.thermo-ms-edit-row input[type='text'] {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.thermo-ms-unit {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.thermo-ms-remove-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.thermo-ms-add-btn {
+  width: 100%;
+  padding: var(--space-xs);
+  border: 1.5px dashed var(--border-light);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  margin-top: var(--space-xs);
+}
+
+.thermo-ms-add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ========================================
+   뱃지 가이드 모달 (전체 10종 설명)
+   ======================================== */
+.badge-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.badge-guide-overlay.open {
+  opacity: 1;
+}
+
+.badge-guide-card {
+  position: relative;
+  background: #fdf6e3;
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-xl) var(--space-lg);
+  max-width: 520px;
+  width: 94%;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.badge-guide-overlay.open .badge-guide-card {
+  transform: scale(1);
+}
+
+.badge-guide-title {
+  text-align: center;
+  font-size: var(--font-size-xl, 20px);
+  font-weight: 700;
+  color: #c0392b;
+  margin-bottom: var(--space-xs);
+}
+
+.badge-guide-subtitle {
+  text-align: center;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+  line-height: 1.5;
+}
+
+.badge-guide-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.badge-guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.badge-guide-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.badge-guide-item img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.badge-guide-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.badge-guide-item-name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge-guide-item-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.badge-guide-count-tag {
+  display: inline-block;
+  background: #f4c542;
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  text-align: center;
+  margin: 0 auto var(--space-md);
+}
+
+@media (max-width: 480px) {
+  .badge-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .badge-guide-card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .badge-guide-item img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* ========================================
+   모둠카드 / 술래뽑기 뱃지 버튼
+   ======================================== */
+.gm-badge-btn {
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.gm-badge-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+.gm-badge-btn:active {
+  transform: scale(0.95);
+}
+
+.tag-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--space-md);
+}
+
+.tag-badge-btn:hover {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.08);
+}
+
+/* ========================================
+   모바일 반응형
+   ======================================== */
+@media (max-width: 400px) {
+  .thermo-visual {
+    gap: var(--space-sm);
+  }
+
+  .thermo-ms-col {
+    min-width: 80px;
+    max-width: 100px;
+  }
+
+  .thermo-ms-reward {
+    font-size: 10px;
+  }
+
+  .badge-inv-card .badge-inv-img {
+    width: 52px;
+    height: 52px;
+  }
+}

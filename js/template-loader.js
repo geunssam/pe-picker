@@ -11,6 +11,7 @@ import tagGameHtml from '../templates/pages/tag-game.html?raw';
 import groupManagerHtml from '../templates/pages/group-manager.html?raw';
 import settingsHtml from '../templates/pages/settings.html?raw';
 import wizardHtml from '../templates/pages/wizard.html?raw';
+import badgeCollectionHtml from '../templates/pages/badge-collection.html?raw';
 
 // ── Modals ──
 import classRosterHtml from '../templates/modals/class-roster.html?raw';
@@ -24,6 +25,7 @@ import gmGenderHtml from '../templates/modals/gm-gender.html?raw';
 import overflowHtml from '../templates/modals/overflow.html?raw';
 import shortageHtml from '../templates/modals/shortage.html?raw';
 import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
+import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
 
 // ── Whistle FAB ──
 import whistleFabHtml from '../templates/whistle-fab.html?raw';
@@ -57,7 +59,12 @@ export function mountTemplates() {
   // 2. Pages — .app-container 내부에 삽입
   const appContainer = document.querySelector('.app-container');
   appContainer.innerHTML = resolveAssets(
-    classSelectorHtml + tagGameHtml + groupManagerHtml + settingsHtml + wizardHtml
+    classSelectorHtml +
+      tagGameHtml +
+      groupManagerHtml +
+      badgeCollectionHtml +
+      settingsHtml +
+      wizardHtml
   );
 
   // 3. Modals — .app-container 바로 뒤에 삽입
@@ -72,7 +79,8 @@ export function mountTemplates() {
     manualInputHtml +
     emptyStudentsHtml +
     gmNumberHtml +
-    gmGenderHtml;
+    gmGenderHtml +
+    badgeAwardHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 
   // 4. Whistle FAB — body 끝에 삽입

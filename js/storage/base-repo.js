@@ -10,7 +10,8 @@ export const KEYS = {
   TAG_GAME: `${PREFIX}tag_game`,
   CURRENT_TEAMS: `${PREFIX}current_teams`,
   SETTINGS: `${PREFIX}settings`,
-  COOKIE_HISTORY: `${PREFIX}cookie_history`,
+  BADGE_LOG: `${PREFIX}badge_log`,
+  THERMOSTAT: `${PREFIX}thermostat`,
   SELECTED_CLASS: `${PREFIX}selected_class`,
   TEACHER_PROFILE: `${PREFIX}teacher_profile`,
 };

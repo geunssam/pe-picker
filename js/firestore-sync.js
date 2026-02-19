@@ -5,6 +5,7 @@ import { withTimeout } from './shared/promise-utils.js';
 import { syncClassToFirestore } from './class-management/class-firestore.js';
 import { decodeTeamsFromFirestore } from './shared/firestore-utils.js';
 import { generateId } from './storage/base-repo.js';
+import { BadgeRepo } from './storage/badge-repo.js';
 import {
   collection,
   doc,
@@ -176,6 +177,94 @@ function startRealtimeClassSync() {
   );
 }
 
+async function hydrateBadgeDataFromFirestore() {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid) return;
+
+  try {
+    // 뱃지 로그 읽기
+    const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
+    const snap = await withTimeout(getDocs(badgeLogsRef), SYNC_TIMEOUT_MS, 'badge logs load');
+    if (!snap.empty) {
+      const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      BadgeRepo.saveBadgeLogs(logs);
+    } else {
+      // 로컬에 있으면 클라우드로 업로드
+      const localLogs = BadgeRepo.getBadgeLogs();
+      if (localLogs.length > 0) {
+        await syncBadgeLogsToFirestore(localLogs);
+      }
+    }
+
+    // 온도계 설정 읽기
+    const thermoRef = collection(database, 'users', uid, 'thermostatSettings');
+    const thermoSnap = await withTimeout(getDocs(thermoRef), SYNC_TIMEOUT_MS, 'thermostat load');
+    if (!thermoSnap.empty) {
+      const allSettings = {};
+      thermoSnap.docs.forEach(d => {
+        allSettings[d.id] = d.data();
+      });
+      // 로컬 설정과 병합
+      const localAll = BadgeRepo.getAllThermostatSettings();
+      const merged = { ...localAll, ...allSettings };
+      for (const classId of Object.keys(merged)) {
+        BadgeRepo.saveThermostatSettings(classId, merged[classId]);
+      }
+    }
+  } catch (error) {
+    console.warn('[FirestoreSync] 뱃지 데이터 동기화 실패:', error);
+  }
+}
+
+async function syncBadgeLogsToFirestore(logs) {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid) return;
+
+  // 대량 업로드 — 최근 100개만 (너무 많으면 부하)
+  const recentLogs = logs.slice(-100);
+  await Promise.all(
+    recentLogs.map(log =>
+      setDoc(doc(database, 'users', uid, 'badgeLogs', log.id), log).catch(err =>
+        console.warn('[FirestoreSync] 뱃지 로그 업로드 실패:', err)
+      )
+    )
+  );
+}
+
+export async function syncBadgeLogEntry(logEntry) {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid) return;
+
+  try {
+    await withTimeout(
+      setDoc(doc(database, 'users', uid, 'badgeLogs', logEntry.id), logEntry),
+      SYNC_TIMEOUT_MS,
+      'badge log sync'
+    );
+  } catch (error) {
+    console.warn('[FirestoreSync] 뱃지 로그 동기화 실패:', error);
+  }
+}
+
+export async function syncThermostatToFirestore(classId, settings) {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid) return;
+
+  try {
+    await withTimeout(
+      setDoc(doc(database, 'users', uid, 'thermostatSettings', classId), settings),
+      SYNC_TIMEOUT_MS,
+      'thermostat sync'
+    );
+  } catch (error) {
+    console.warn('[FirestoreSync] 온도계 설정 동기화 실패:', error);
+  }
+}
+
 export async function init() {
   const uid = getCurrentUserId();
   if (!uid || currentUserId === uid) return;
@@ -192,7 +281,11 @@ export async function init() {
   const database = getDb();
   if (!database) return;
 
-  await Promise.all([hydrateProfileFromFirestore(), hydrateClassesFromFirestore()]);
+  await Promise.all([
+    hydrateProfileFromFirestore(),
+    hydrateClassesFromFirestore(),
+    hydrateBadgeDataFromFirestore(),
+  ]);
   startRealtimeClassSync();
 }
 
@@ -249,4 +342,6 @@ export const FirestoreSync = {
   stop,
   syncTeacherProfileToFirestore,
   setSelectedClass,
+  syncBadgeLogEntry,
+  syncThermostatToFirestore,
 };

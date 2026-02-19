@@ -1,0 +1,47 @@
+<!-- 뱃지 부여 통합 모달 -->
+<div id="badge-award-modal" class="modal-overlay">
+  <div class="modal badge-award-modal">
+    <div class="modal-header">
+      <h3>🏅 뱃지 부여</h3>
+      <button class="modal-close" id="badge-award-close">×</button>
+    </div>
+    <div class="modal-body" style="padding: var(--space-md) var(--space-lg)">
+      <!-- Step 1: 부여 대상 선택 -->
+      <div class="badge-section">
+        <div class="badge-section-label">부여 대상</div>
+        <div class="badge-mode-tabs">
+          <button class="badge-mode-tab active" id="badge-mode-individual" data-mode="individual">
+            👤 개인
+          </button>
+          <button class="badge-mode-tab" id="badge-mode-group" data-mode="group">👥 모둠</button>
+        </div>
+
+        <!-- 모둠 탭 (모둠 모드일 때만 표시) -->
+        <div id="badge-group-tabs" class="badge-group-tabs" style="display: none"></div>
+
+        <!-- 학생 선택 그리드 -->
+        <div class="badge-students-header">
+          <button class="btn btn-sm btn-secondary" id="badge-select-all">전체 선택</button>
+          <button class="btn btn-sm btn-secondary" id="badge-deselect-all">전체 해제</button>
+          <span class="badge-selected-count" id="badge-selected-count">0명 선택</span>
+        </div>
+        <div id="badge-student-grid" class="badge-student-grid"></div>
+      </div>
+
+      <!-- Step 2: 뱃지 선택 -->
+      <div class="badge-section">
+        <div class="badge-section-label">뱃지 선택</div>
+        <div id="badge-type-grid" class="badge-type-grid"></div>
+      </div>
+
+      <!-- 요약 + 부여 버튼 -->
+      <div class="badge-summary" id="badge-summary" style="display: none">
+        <span id="badge-summary-text"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="badge-award-cancel">취소</button>
+      <button class="btn btn-primary" id="badge-award-confirm" disabled>🏅 뱃지 부여하기</button>
+    </div>
+  </div>
+</div>

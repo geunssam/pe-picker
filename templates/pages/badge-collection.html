@@ -1,0 +1,181 @@
+<div id="page-badge-collection" class="page-view">
+  <div class="page-header">
+    <div>
+      <div class="page-title">뱃지도감</div>
+      <div class="page-subtitle">인성 뱃지 수집과 학급 온도계</div>
+    </div>
+    <div class="badge-header-actions">
+      <button class="badge-header-btn" id="badge-guide-open-btn" title="뱃지 안내">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <span>안내</span>
+      </button>
+      <button
+        class="badge-header-btn badge-header-btn--primary"
+        id="badge-free-award-btn"
+        title="뱃지 부여"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="8" r="6" />
+          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+        </svg>
+        <span>부여</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 내부 탭 -->
+  <div class="badge-inner-tabs">
+    <button class="badge-inner-tab active" id="badge-tab-personal" data-tab="personal">
+      🏅 개인 뱃지
+    </button>
+    <button class="badge-inner-tab" id="badge-tab-class" data-tab="class">🌡️ 학급 통계</button>
+  </div>
+
+  <!-- === 개인 뱃지 탭 === -->
+  <div id="badge-personal-view">
+    <!-- 학생 선택 -->
+    <select id="badge-student-dropdown" class="badge-student-select">
+      <option value="">학생 선택...</option>
+    </select>
+
+    <!-- 레벨 + XP 바 -->
+    <div id="badge-level-section" class="badge-level-bar" style="display: none">
+      <div class="badge-level-info" id="badge-level-text">Lv.1 새싹</div>
+      <div class="badge-xp-bar-wrap">
+        <div class="badge-xp-bar">
+          <div class="badge-xp-bar-fill" id="badge-xp-fill" style="width: 0%"></div>
+        </div>
+        <div class="badge-xp-text" id="badge-xp-text">0 / 30 XP</div>
+      </div>
+    </div>
+
+    <!-- 뱃지 인벤토리 -->
+    <div id="badge-inventory" class="badge-inventory"></div>
+  </div>
+
+  <!-- === 학급 통계 탭 === -->
+  <div id="badge-class-view" style="display: none">
+    <!-- 온도계 (세로형) -->
+    <div class="thermo-card">
+      <div class="thermo-header">
+        <span class="thermo-title">🌡️ 학급 온도계</span>
+        <button class="btn btn-sm btn-secondary" id="thermo-settings-btn">⚙️ 설정</button>
+      </div>
+
+      <!-- 세로 온도계 비주얼 — overflow 차단 -->
+      <div class="thermo-visual">
+        <!-- 마일스톤 라벨 (왼쪽 열) -->
+        <div class="thermo-ms-col" id="thermo-milestones"></div>
+
+        <!-- 온도계 본체 (오른쪽 열) -->
+        <div class="thermo-body-col">
+          <div class="thermo-tube">
+            <div class="thermo-tube-bg"></div>
+            <div class="thermo-tube-fill" id="thermo-bar-fill"></div>
+            <div id="thermo-scale" class="thermo-scale"></div>
+          </div>
+          <div class="thermo-bulb">
+            <div class="thermo-bulb-fill"></div>
+            <div class="thermo-face">
+              <div class="thermo-eyes">
+                <span class="thermo-eye"></span>
+                <span class="thermo-eye"></span>
+              </div>
+              <div class="thermo-mouth"></div>
+            </div>
+          </div>
+          <div class="thermo-cheeks">
+            <span class="thermo-cheek left"></span>
+            <span class="thermo-cheek right"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 현재 온도 -->
+      <div class="thermo-temp" id="thermo-temp-display">0°C</div>
+
+      <!-- 온도계 설정 (인라인 토글) -->
+      <div id="thermo-settings-panel" class="thermo-settings">
+        <div class="thermo-setting-row">
+          <label>100°C 기준</label>
+          <input
+            type="number"
+            id="thermo-target-input"
+            class="input input-sm"
+            value="200"
+            min="10"
+            max="9999"
+            style="width: 80px"
+          />
+          <span style="font-size: var(--font-size-xs)">개 뱃지</span>
+        </div>
+        <div id="thermo-milestone-editor"></div>
+        <button
+          class="btn btn-sm btn-primary"
+          id="thermo-save-btn"
+          style="margin-top: var(--space-sm)"
+        >
+          저장
+        </button>
+      </div>
+    </div>
+
+    <!-- 뱃지 타입별 통계 -->
+    <div class="section">
+      <div class="section-title">📊 뱃지 타입별 통계</div>
+      <div id="badge-class-stats" class="badge-stats-row"></div>
+    </div>
+
+    <!-- 학생별 순위 -->
+    <div id="badge-ranking-section" class="badge-ranking">
+      <div class="badge-ranking-title">🏆 학생별 TOP 5</div>
+      <div id="badge-ranking-list"></div>
+    </div>
+  </div>
+
+  <!-- 하단 여백 -->
+  <div style="padding-bottom: var(--space-xl)"></div>
+</div>
+
+<!-- 뱃지 가이드 모달 (전체 10종) -->
+<div id="badge-guide-modal" class="badge-guide-overlay" style="display: none">
+  <div class="badge-guide-card">
+    <button class="badge-guide-close" id="badge-guide-close">×</button>
+    <div class="badge-guide-title">인성 뱃지 10종</div>
+    <div class="badge-guide-subtitle">수업 활동 중 경쟁&협동&존중을 배워요!</div>
+    <div id="badge-guide-grid" class="badge-guide-grid"></div>
+  </div>
+</div>
+
+<!-- 뱃지 상세 모달 -->
+<div id="badge-detail-modal" class="badge-detail-overlay" style="display: none">
+  <div class="badge-detail-card">
+    <button class="badge-detail-close-btn" id="badge-detail-close">×</button>
+    <img class="badge-detail-img" id="badge-detail-img" src="" alt="" />
+    <div class="badge-detail-name" id="badge-detail-name"></div>
+    <div class="badge-detail-desc" id="badge-detail-desc"></div>
+    <div class="badge-detail-count" id="badge-detail-count"></div>
+  </div>
+</div>

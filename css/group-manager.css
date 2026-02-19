@@ -124,42 +124,6 @@
   background: rgba(132, 204, 22, 0.1);
 }
 
-/* === 쿠키 영역 === */
-.gm-cookie-area {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.gm-cookie-count {
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  min-width: 20px;
-  text-align: center;
-}
-
-.gm-cookie-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition-fast);
-}
-
-.gm-cookie-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.gm-cookie-btn:active {
-  transform: scale(0.9);
-}
-
 /* === 타이머 디스플레이 === */
 .gm-timer-display {
   font-family: var(--font-display);

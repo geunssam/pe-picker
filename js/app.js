@@ -12,12 +12,15 @@ import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
 import { Whistle } from './shared/whistle.js';
 import { QuickTimer } from './shared/quick-timer.js';
+import { BadgeManager } from './badge-manager/badge-manager.js';
+import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', icon: '🎯', requiresClass: false },
   'class-selector': { label: '학급 선택', icon: '🏠', requiresClass: false },
   'tag-game': { label: '술래뽑기', icon: '🎯', requiresClass: true },
   'group-manager': { label: '모둠뽑기', icon: '👥', requiresClass: true },
+  'badge-collection': { label: '뱃지도감', icon: '🏅', requiresClass: true },
   settings: { label: '설정', icon: '⚙️', requiresClass: true },
 };
 
@@ -43,6 +46,8 @@ function onStoreDataUpdated() {
     TagGame.onPageEnter();
   } else if (currentRoute === 'group-manager') {
     GroupManager.onPageEnter();
+  } else if (currentRoute === 'badge-collection') {
+    BadgeCollectionUI.onPageEnter();
   }
 
   // 내비게이션 바 학급 이름 갱신
@@ -172,6 +177,8 @@ async function bootstrapAfterAuth() {
   ClassManager.init();
   TagGame.init();
   GroupManager.init();
+  BadgeManager.init();
+  BadgeCollectionUI.init();
   Whistle.init();
   QuickTimer.init();
 
@@ -281,6 +288,8 @@ function activateRoute(route) {
     TagGame.onPageEnter();
   } else if (route === 'group-manager') {
     GroupManager.onPageEnter();
+  } else if (route === 'badge-collection') {
+    BadgeCollectionUI.onPageEnter();
   } else if (route === 'settings') {
     ClassManager.onSettingsPageEnter();
   }
@@ -321,5 +330,6 @@ window.ClassManager = ClassManager;
 window.TagGame = TagGame;
 window.GroupManager = GroupManager;
 window.WizardManager = WizardManager;
+window.BadgeManager = BadgeManager;
 
 window.App.init();

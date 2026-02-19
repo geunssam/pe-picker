@@ -10,6 +10,7 @@ import { TagGameRepo } from '../storage/tag-game-repo.js';
 import { GroupManagerRepo } from '../storage/group-manager-repo.js';
 import { SettingsRepo } from '../storage/settings-repo.js';
 import { TeacherRepo } from '../storage/teacher-repo.js';
+import { BadgeRepo } from '../storage/badge-repo.js';
 
 // === 학급 관리 (ClassRepo) ===
 function getClasses() {
@@ -78,25 +79,49 @@ function clearCurrentTeams() {
   return GroupManagerRepo.clearCurrentTeams();
 }
 
-// === 쿠키 (GroupManagerRepo) ===
-function getCookieHistory() {
-  return GroupManagerRepo.getCookieHistory();
+// === 뱃지 (BadgeRepo) ===
+function addBadgeRecords(classId, students, badgeTypes, context) {
+  return BadgeRepo.addBadgeRecords(classId, students, badgeTypes, context);
 }
 
-function addCookieRecord(classId, groups) {
-  return GroupManagerRepo.addCookieRecord(classId, groups);
+function getBadgeLogsByClass(classId) {
+  return BadgeRepo.getBadgeLogsByClass(classId);
 }
 
-function getCookieHistoryByClass(classId) {
-  return GroupManagerRepo.getCookieHistoryByClass(classId);
+function getBadgeLogsByStudent(classId, studentId) {
+  return BadgeRepo.getBadgeLogsByStudent(classId, studentId);
 }
 
-function getCookieStats(classId) {
-  return GroupManagerRepo.getCookieStats(classId);
+function getStudentBadgeCounts(classId, studentId) {
+  return BadgeRepo.getStudentBadgeCounts(classId, studentId);
 }
 
-function clearCookieHistory(classId) {
-  return GroupManagerRepo.clearCookieHistory(classId);
+function getStudentXp(classId, studentId) {
+  return BadgeRepo.getStudentXp(classId, studentId);
+}
+
+function getClassTotalBadges(classId) {
+  return BadgeRepo.getClassTotalBadges(classId);
+}
+
+function getClassBadgeCounts(classId) {
+  return BadgeRepo.getClassBadgeCounts(classId);
+}
+
+function getStudentRanking(classId, limit) {
+  return BadgeRepo.getStudentRanking(classId, limit);
+}
+
+function clearBadgeLogs(classId) {
+  return BadgeRepo.clearBadgeLogs(classId);
+}
+
+function getThermostatSettings(classId) {
+  return BadgeRepo.getThermostatSettings(classId);
+}
+
+function saveThermostatSettings(classId, settings) {
+  return BadgeRepo.saveThermostatSettings(classId, settings);
 }
 
 // === 설정 (SettingsRepo) ===
@@ -318,11 +343,6 @@ function migrateFromLegacy() {
     set(KEYS.SETTINGS, legacySettings);
   }
 
-  const legacyCookies = get('cgm_cookie_history');
-  if (legacyCookies && !get(KEYS.COOKIE_HISTORY)) {
-    set(KEYS.COOKIE_HISTORY, legacyCookies);
-  }
-
   // 기존 태그게임 데이터
   const legacyTag = get('tagGameData');
   if (legacyTag && !get(KEYS.TAG_GAME)) {
@@ -370,12 +390,18 @@ export const Store = {
   saveSettings,
   getDefaultTeamNames,
   saveDefaultTeamNames,
-  // 쿠키
-  getCookieHistory,
-  addCookieRecord,
-  getCookieHistoryByClass,
-  getCookieStats,
-  clearCookieHistory,
+  // 뱃지
+  addBadgeRecords,
+  getBadgeLogsByClass,
+  getBadgeLogsByStudent,
+  getStudentBadgeCounts,
+  getStudentXp,
+  getClassTotalBadges,
+  getClassBadgeCounts,
+  getStudentRanking,
+  clearBadgeLogs,
+  getThermostatSettings,
+  saveThermostatSettings,
   // 교사 프로필
   getTeacherProfile,
   saveTeacherProfile,

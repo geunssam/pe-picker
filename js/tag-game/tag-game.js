@@ -127,6 +127,9 @@ function setupEventListeners() {
   $('tag-timer-fullscreen-toggle')?.addEventListener('click', toggleFullscreen);
   $('tag-timer-end')?.addEventListener('click', endTimer);
 
+  // 뱃지 부여 버튼
+  $('tag-badge-btn')?.addEventListener('click', openBadgeModal);
+
   // 폴딩 토글
   document.querySelectorAll('.tag-collapse-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -670,6 +673,26 @@ function toggleFullscreen() {
   }
 }
 
+// ========== 뱃지 ==========
+function openBadgeModal() {
+  const cls = Store.getSelectedClass();
+  if (!cls) return;
+
+  // 술래 + 천사를 미리 선택
+  const preselectedIds = [];
+  const allNames = [...selectedIts, ...selectedAngels];
+  for (const name of allNames) {
+    const student = cls.students.find(s => s.name === name);
+    if (student) preselectedIds.push(student.id);
+  }
+
+  window.BadgeManager.openModal({
+    mode: 'individual',
+    preselectedStudentIds: preselectedIds,
+    context: 'tag-game',
+  });
+}
+
 // ========== 화면 전환 ==========
 function showSettings() {
   currentPhase = 1;
@@ -751,6 +774,7 @@ function updateUI() {
   const roundDisplay = $('tag-round-display');
   const settingsBtn = $('tag-settings-btn');
   const saveBtn = $('tag-save-btn');
+  const badgeArea = $('tag-badge-area');
 
   // 모든 숨기기
   if (phase1) phase1.style.display = 'none';
@@ -762,6 +786,7 @@ function updateUI() {
   if (roundDisplay) roundDisplay.style.display = 'none';
   if (settingsBtn) settingsBtn.style.display = 'none';
   if (saveBtn) saveBtn.style.display = 'none';
+  if (badgeArea) badgeArea.style.display = 'none';
 
   if (currentPhase === 1) {
     if (phase1) phase1.style.display = '';
@@ -778,6 +803,7 @@ function updateUI() {
       roundDisplay.textContent = `ROUND ${currentRound}`;
     }
     if (settingsBtn) settingsBtn.style.display = '';
+    if (badgeArea) badgeArea.style.display = '';
 
     // 결과 렌더
     TagGameUI.renderResultCards(selectedIts, selectedAngels);

@@ -62,11 +62,7 @@ function createGroupCardHTML(group) {
     <div class="gm-team-card gm-color-${colorIdx}" data-group-id="${group.id}">
       <div class="gm-team-header">
         <span>${UI.escapeHtml(groupName)} (${group.members.length}명)</span>
-        <div class="gm-cookie-area">
-          <button class="gm-cookie-btn" onclick="GroupManager.removeCookie(${group.id})">−</button>
-          <span class="gm-cookie-count" id="gm-cookie-${group.id}">🍪 ${group.cookies || 0}</span>
-          <button class="gm-cookie-btn" onclick="GroupManager.addCookie(${group.id})">+</button>
-        </div>
+        <button class="gm-badge-btn" onclick="GroupManager.openBadgeForGroup(${group.id})">🏅 뱃지</button>
       </div>
       <div class="gm-team-members">
         ${membersHTML}
@@ -75,18 +71,7 @@ function createGroupCardHTML(group) {
   `;
 }
 
-// === 쿠키 디스플레이 업데이트 ===
-function updateCookieDisplay(groupId, count) {
-  const el = document.getElementById(`gm-cookie-${groupId}`);
-  if (el) {
-    el.textContent = `🍪 ${count}`;
-    el.classList.add('anim-cookie-bounce');
-    setTimeout(() => el.classList.remove('anim-cookie-bounce'), 300);
-  }
-}
-
 export const GroupManagerUI = {
   renderGroups,
   renderGroupsWithAnimation,
-  updateCookieDisplay,
 };
