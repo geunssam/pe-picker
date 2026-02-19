@@ -127,7 +127,7 @@ function setupEventListeners() {
   $('tag-timer-fullscreen-toggle')?.addEventListener('click', toggleFullscreen);
   $('tag-timer-end')?.addEventListener('click', endTimer);
 
-  // 뱃지 부여 버튼
+  // 배지 부여 버튼
   $('tag-badge-btn')?.addEventListener('click', openBadgeModal);
 
   // 폴딩 토글
@@ -673,7 +673,7 @@ function toggleFullscreen() {
   }
 }
 
-// ========== 뱃지 ==========
+// ========== 배지 ==========
 function openBadgeModal() {
   const cls = Store.getSelectedClass();
   if (!cls) return;

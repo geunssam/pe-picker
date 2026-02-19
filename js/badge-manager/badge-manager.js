@@ -1,11 +1,12 @@
 /* ============================================
    PE Picker - Badge Manager
-   통합 뱃지 부여 모달 로직
+   통합 배지 부여 모달 로직
    ============================================ */
 
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
 import { BADGE_TYPES, BADGE_KEYS } from './badge-config.js';
+import { FirestoreSync } from '../firestore-sync.js';
 
 let selectedStudentIds = new Set();
 let selectedBadgeTypes = new Set();
@@ -29,12 +30,12 @@ function init() {
   document.getElementById('badge-award-cancel')?.addEventListener('click', closeModal);
   document.getElementById('badge-award-confirm')?.addEventListener('click', confirmAward);
 
-  // 뱃지 타입 그리드 렌더
+  // 배지 타입 그리드 렌더
   renderBadgeTypeGrid();
 }
 
 /**
- * 뱃지 부여 모달 열기
+ * 배지 부여 모달 열기
  * @param {Object} options
  * @param {'individual'|'group'} options.mode - 초기 모드
  * @param {Array<string>} [options.preselectedStudentIds] - 미리 선택할 학생 ID
@@ -253,7 +254,7 @@ function updateSummary() {
   if (totalBadges > 0) {
     if (summaryEl) summaryEl.style.display = '';
     if (textEl)
-      textEl.textContent = `${studentCount}명 × ${badgeCount}개 = ${totalBadges}개 뱃지 (+${totalXp} XP)`;
+      textEl.textContent = `${studentCount}명 × ${badgeCount}개 = ${totalBadges}개 배지 (+${totalXp} XP)`;
     if (confirmBtn) confirmBtn.disabled = false;
   } else {
     if (summaryEl) summaryEl.style.display = 'none';
@@ -269,19 +270,23 @@ function confirmAward() {
   const badgeTypes = Array.from(selectedBadgeTypes);
 
   if (students.length === 0 || badgeTypes.length === 0) {
-    UI.showToast('학생과 뱃지를 선택해주세요', 'error');
+    UI.showToast('학생과 배지를 선택해주세요', 'error');
     return;
   }
 
-  const count = Store.addBadgeRecords(cls.id, students, badgeTypes, currentContext);
+  const result = Store.addBadgeRecords(cls.id, students, badgeTypes, currentContext);
+  const count = result.count;
 
-  // 뱃지 이름 목록
+  // Firestore 동기화 (fire-and-forget)
+  FirestoreSync.syncBadgeLogEntries(result.newEntries);
+
+  // 배지 이름 목록
   const badgeNames = badgeTypes.map(k => BADGE_TYPES[k].emoji + BADGE_TYPES[k].name).join(', ');
-  UI.showToast(`🏅 ${count}개 뱃지 부여 완료! (${badgeNames})`, 'success');
+  UI.showToast(`🏅 ${count}개 배지 부여 완료! (${badgeNames})`, 'success');
 
   closeModal();
 
-  // 뱃지도감 갱신 이벤트
+  // 배지도감 갱신 이벤트
   window.dispatchEvent(new CustomEvent('badge-updated'));
 }
 

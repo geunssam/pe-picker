@@ -79,7 +79,7 @@ function clearCurrentTeams() {
   return GroupManagerRepo.clearCurrentTeams();
 }
 
-// === 뱃지 (BadgeRepo) ===
+// === 배지 (BadgeRepo) ===
 function addBadgeRecords(classId, students, badgeTypes, context) {
   return BadgeRepo.addBadgeRecords(classId, students, badgeTypes, context);
 }
@@ -390,7 +390,7 @@ export const Store = {
   saveSettings,
   getDefaultTeamNames,
   saveDefaultTeamNames,
-  // 뱃지
+  // 배지
   addBadgeRecords,
   getBadgeLogsByClass,
   getBadgeLogsByStudent,

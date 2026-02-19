@@ -548,10 +548,10 @@ function init() {
 
   if (!panel || !whistleBtn) return;
 
-  // 패널 바깥 클릭으로 닫기 (tools-fab-container도 제외)
+  // 패널 바깥 클릭으로 닫기 (right-toolbar도 제외)
   document.addEventListener('click', e => {
-    const toolsFab = document.getElementById('tools-fab-container');
-    if (panelOpen && !panel.contains(e.target) && (!toolsFab || !toolsFab.contains(e.target))) {
+    const toolbar = document.getElementById('right-toolbar');
+    if (panelOpen && !panel.contains(e.target) && (!toolbar || !toolbar.contains(e.target))) {
       closePanel();
     }
   });

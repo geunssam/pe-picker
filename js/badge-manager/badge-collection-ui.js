@@ -1,14 +1,16 @@
 /* ============================================
    PE Picker - Badge Collection UI
-   뱃지도감 탭 렌더링 (개인/학급 통계/온도계)
+   배지도감 탭 렌더링 (개인/학급 통계/온도계)
    ============================================ */
 
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
 import { BADGE_TYPES, BADGE_KEYS, getLevelInfo, DEFAULT_THERMOSTAT } from './badge-config.js';
+import { FirestoreSync } from '../firestore-sync.js';
 
 let currentTab = 'personal'; // 'personal' | 'class'
 let editMilestones = []; // 편집 중인 마일스톤
+let currentModalStudentId = null; // 학생 모달에 열린 학생 ID
 
 function init() {
   // 내부 탭 전환
@@ -17,10 +19,7 @@ function init() {
     ?.addEventListener('click', () => switchTab('personal'));
   document.getElementById('badge-tab-class')?.addEventListener('click', () => switchTab('class'));
 
-  // 학생 드롭다운
-  document.getElementById('badge-student-dropdown')?.addEventListener('change', onStudentSelect);
-
-  // 자유 뱃지 부여
+  // 자유 배지 부여
   document.getElementById('badge-free-award-btn')?.addEventListener('click', () => {
     window.BadgeManager.openModal({ mode: 'individual', context: 'badge-collection' });
   });
@@ -29,20 +28,28 @@ function init() {
   document.getElementById('thermo-settings-btn')?.addEventListener('click', toggleThermoSettings);
   document.getElementById('thermo-save-btn')?.addEventListener('click', saveThermoSettings);
 
-  // 뱃지 상세 모달 닫기
+  // 배지 상세 모달 닫기
   document.getElementById('badge-detail-close')?.addEventListener('click', closeBadgeDetail);
   document.getElementById('badge-detail-modal')?.addEventListener('click', e => {
     if (e.target.id === 'badge-detail-modal') closeBadgeDetail();
   });
 
-  // 뱃지 가이드 모달
+  // 학생 배지 모달 닫기
+  document
+    .getElementById('badge-student-modal-close')
+    ?.addEventListener('click', closeStudentModal);
+  document.getElementById('badge-student-modal')?.addEventListener('click', e => {
+    if (e.target.id === 'badge-student-modal') closeStudentModal();
+  });
+
+  // 배지 가이드 모달
   document.getElementById('badge-guide-open-btn')?.addEventListener('click', openBadgeGuide);
   document.getElementById('badge-guide-close')?.addEventListener('click', closeBadgeGuide);
   document.getElementById('badge-guide-modal')?.addEventListener('click', e => {
     if (e.target.id === 'badge-guide-modal') closeBadgeGuide();
   });
 
-  // 뱃지 업데이트 이벤트 수신
+  // 배지 업데이트 이벤트 수신
   window.addEventListener('badge-updated', () => {
     if (document.getElementById('page-badge-collection')?.classList.contains('active')) {
       onPageEnter();
@@ -51,12 +58,8 @@ function init() {
 }
 
 function onPageEnter() {
-  populateStudentDropdown();
   if (currentTab === 'personal') {
-    const dropdown = document.getElementById('badge-student-dropdown');
-    if (dropdown?.value) {
-      renderPersonalView(dropdown.value);
-    }
+    renderStudentCards();
   } else {
     renderClassView();
   }
@@ -74,71 +77,89 @@ function switchTab(tab) {
   if (personalView) personalView.style.display = tab === 'personal' ? '' : 'none';
   if (classView) classView.style.display = tab === 'class' ? '' : 'none';
 
-  if (tab === 'class') {
+  if (tab === 'personal') {
+    renderStudentCards();
+  } else {
     renderClassView();
   }
 }
 
-// === 개인 뱃지 탭 ===
-function populateStudentDropdown() {
-  const select = document.getElementById('badge-student-dropdown');
-  if (!select) return;
+// === 개인 배지 탭 — 학생 카드 그리드 ===
+function renderStudentCards() {
+  const grid = document.getElementById('badge-student-card-grid');
+  if (!grid) return;
 
   const cls = Store.getSelectedClass();
-  if (!cls) {
-    select.innerHTML = '<option value="">학급을 먼저 선택하세요</option>';
+  if (!cls || !cls.students?.length) {
+    grid.innerHTML = '<div class="badge-empty-msg">학급에 등록된 학생이 없습니다</div>';
     return;
   }
 
-  const currentVal = select.value;
-  select.innerHTML = '<option value="">학생 선택...</option>';
+  grid.innerHTML = cls.students
+    .map(s => {
+      const xp = Store.getStudentXp(cls.id, s.id);
+      const levelInfo = getLevelInfo(xp);
+      const totalBadges = Store.getStudentBadgeCounts(cls.id, s.id);
+      const badgeTotal = Object.values(totalBadges).reduce((a, b) => a + b, 0);
 
-  (cls.students || []).forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.name;
-    select.appendChild(opt);
+      return `<button class="badge-stu-card" data-student-id="${s.id}">
+        <span class="badge-stu-name">${UI.escapeHtml(s.name)}</span>
+        <span class="badge-stu-level">Lv.${levelInfo.level}</span>
+        <span class="badge-stu-count">${badgeTotal}개</span>
+      </button>`;
+    })
+    .join('');
+
+  // 카드 클릭 → 학생 배지 모달
+  grid.querySelectorAll('.badge-stu-card').forEach(card => {
+    card.addEventListener('click', () => {
+      openStudentModal(card.dataset.studentId);
+    });
   });
-
-  if (currentVal && select.querySelector(`option[value="${currentVal}"]`)) {
-    select.value = currentVal;
-    renderPersonalView(currentVal);
-  }
 }
 
-function onStudentSelect(e) {
-  const studentId = e.target.value;
-  if (studentId) {
-    renderPersonalView(studentId);
-  } else {
-    document.getElementById('badge-level-section').style.display = 'none';
-    document.getElementById('badge-inventory').innerHTML = '';
-  }
-}
-
-function renderPersonalView(studentId) {
+// === 학생 배지 상세 모달 ===
+function openStudentModal(studentId) {
   const cls = Store.getSelectedClass();
   if (!cls) return;
 
+  const student = cls.students?.find(s => s.id === studentId);
+  if (!student) return;
+
+  currentModalStudentId = studentId;
+  renderStudentModalContent(cls, student);
+
+  // 모달 열기
+  const modal = document.getElementById('badge-student-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('open'));
+  }
+}
+
+function renderStudentModalContent(cls, student) {
+  const studentId = student.id;
   const xp = Store.getStudentXp(cls.id, studentId);
   const levelInfo = getLevelInfo(xp);
   const badgeCounts = Store.getStudentBadgeCounts(cls.id, studentId);
 
-  // 레벨 바
-  const levelSection = document.getElementById('badge-level-section');
-  const levelText = document.getElementById('badge-level-text');
-  const xpFill = document.getElementById('badge-xp-fill');
-  const xpText = document.getElementById('badge-xp-text');
+  // 이름
+  const nameEl = document.getElementById('badge-student-modal-name');
+  if (nameEl) nameEl.textContent = student.name;
 
-  if (levelSection) levelSection.style.display = '';
+  // 레벨 + XP
+  const levelText = document.getElementById('badge-modal-level-text');
+  const xpFill = document.getElementById('badge-modal-xp-fill');
+  const xpText = document.getElementById('badge-modal-xp-text');
+
   if (levelText) levelText.textContent = `Lv.${levelInfo.level} ${levelInfo.name}`;
   if (xpFill) xpFill.style.width = `${levelInfo.progress * 100}%`;
   if (xpText) {
     xpText.textContent = levelInfo.nextXp ? `${xp} / ${levelInfo.nextXp} XP` : `${xp} XP (MAX)`;
   }
 
-  // 뱃지 인벤토리 (큰 이미지 + 이름 + 개수)
-  const inventory = document.getElementById('badge-inventory');
+  // 배지 인벤토리
+  const inventory = document.getElementById('badge-student-modal-inventory');
   if (inventory) {
     inventory.innerHTML = BADGE_KEYS.map(key => {
       const badge = BADGE_TYPES[key];
@@ -147,20 +168,68 @@ function renderPersonalView(studentId) {
       return `<div class="badge-inv-card${emptyClass}" data-badge-key="${key}">
         <img class="badge-inv-img" src="${badge.image}" alt="${badge.name}" />
         <div class="badge-inv-label">${badge.name}</div>
-        <div class="badge-inv-count">×${count}</div>
+        <div class="badge-inv-count">&times;${count}</div>
       </div>`;
     }).join('');
 
-    // 뱃지 클릭 → 상세 모달
+    // 배지 클릭 → 배지 상세 + 부여 확인
     inventory.querySelectorAll('.badge-inv-card').forEach(card => {
       card.addEventListener('click', () => {
-        openBadgeDetail(card.dataset.badgeKey, badgeCounts);
+        showBadgeAwardConfirm(card.dataset.badgeKey, student);
       });
     });
   }
 }
 
-// === 뱃지 상세 모달 ===
+// === 배지 클릭 시 상세 안내 + 부여 확인 ===
+async function showBadgeAwardConfirm(badgeKey, student) {
+  const badge = BADGE_TYPES[badgeKey];
+  if (!badge) return;
+
+  const cls = Store.getSelectedClass();
+  if (!cls) return;
+
+  const confirmed = await UI.showConfirm(
+    `${badge.emoji} ${badge.name} 배지\n\n${badge.desc}\n\n${student.name}에게 부여할까요?`,
+    { confirmText: '부여', cancelText: '취소' }
+  );
+
+  if (!confirmed) return;
+
+  // 배지 부여
+  const result = Store.addBadgeRecords(
+    cls.id,
+    [{ id: student.id, name: student.name }],
+    [badgeKey],
+    'badge-collection'
+  );
+
+  // Firestore 동기화
+  FirestoreSync.syncBadgeLogEntries(result.newEntries);
+
+  UI.showToast(`🏅 ${student.name}에게 ${badge.emoji}${badge.name} 배지 부여!`, 'success');
+
+  // 모달 내용 갱신
+  renderStudentModalContent(cls, student);
+
+  // 학생 카드 그리드도 갱신
+  renderStudentCards();
+
+  // 배지도감 갱신 이벤트
+  window.dispatchEvent(new CustomEvent('badge-updated'));
+}
+
+function closeStudentModal() {
+  const modal = document.getElementById('badge-student-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 200);
+  }
+}
+
+// === 배지 상세 모달 ===
 function openBadgeDetail(key, counts) {
   const badge = BADGE_TYPES[key];
   if (!badge) return;
@@ -196,7 +265,7 @@ function closeBadgeDetail() {
   }
 }
 
-// === 뱃지 가이드 모달 (전체 10종 설명) ===
+// === 배지 가이드 모달 (전체 10종 설명) ===
 function openBadgeGuide() {
   const grid = document.getElementById('badge-guide-grid');
   if (grid) {
@@ -247,6 +316,14 @@ function renderThermometer(classId) {
   // 온도 표시
   const tempDisplay = document.getElementById('thermo-temp-display');
   if (tempDisplay) tempDisplay.textContent = `${temp}°C`;
+
+  // 진행 바
+  const progressFill = document.getElementById('thermo-progress-fill');
+  const progressText = document.getElementById('thermo-progress-text');
+  if (progressFill) progressFill.style.width = `${temp}%`;
+  if (progressText) {
+    progressText.textContent = `${temp}°C ( ${totalBadges} / ${settings.targetBadges} )`;
+  }
 
   // 세로 바 채우기 (높이로)
   const barFill = document.getElementById('thermo-bar-fill');
@@ -360,7 +437,7 @@ function renderStudentRanking(classId) {
 
   if (ranking.length === 0) {
     list.innerHTML =
-      '<div style="padding: var(--space-md); text-align: center; font-size: var(--font-size-sm); color: var(--text-tertiary);">아직 뱃지 데이터가 없습니다</div>';
+      '<div style="padding: var(--space-md); text-align: center; font-size: var(--font-size-sm); color: var(--text-tertiary);">아직 배지 데이터가 없습니다</div>';
     return;
   }
 
@@ -393,10 +470,11 @@ function saveThermoSettings() {
     .filter(ms => ms.temp > 0 && ms.temp <= 100 && ms.reward.trim())
     .sort((a, b) => a.temp - b.temp);
 
-  Store.saveThermostatSettings(cls.id, {
-    targetBadges,
-    milestones: validMilestones,
-  });
+  const settings = { targetBadges, milestones: validMilestones };
+  Store.saveThermostatSettings(cls.id, settings);
+
+  // Firestore 동기화 (fire-and-forget)
+  FirestoreSync.syncThermostatToFirestore(cls.id, settings);
 
   toggleThermoSettings();
   renderThermometer(cls.id);

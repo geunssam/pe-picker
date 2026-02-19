@@ -1,9 +1,9 @@
 /* ============================================
    PE Picker - Badge Configuration
-   뱃지 타입, 레벨 테이블, XP 상수
+   배지 타입, 레벨 테이블, XP 상수
    ============================================ */
 
-// ── 뱃지 이미지 import (Vite가 해시 경로로 변환) ──
+// ── 배지 이미지 import (Vite가 해시 경로로 변환) ──
 import imgCooperation from '../../assets/badges/협동.png';
 import imgRespect from '../../assets/badges/존중.png';
 import imgConsideration from '../../assets/badges/배려.png';
@@ -15,10 +15,10 @@ import imgVictory from '../../assets/badges/승리.png';
 import imgChallenge from '../../assets/badges/도전.png';
 import imgPositivity from '../../assets/badges/긍정.png';
 
-/** 뱃지 1개당 XP */
+/** 배지 1개당 XP */
 export const XP_PER_BADGE = 10;
 
-/** 뱃지 10종 정의 */
+/** 배지 10종 정의 */
 export const BADGE_TYPES = {
   cooperation: {
     name: '협동',
@@ -92,7 +92,7 @@ export const BADGE_TYPES = {
   },
 };
 
-/** 뱃지 키 목록 (순서 고정) */
+/** 배지 키 목록 (순서 고정) */
 export const BADGE_KEYS = Object.keys(BADGE_TYPES);
 
 /** 레벨 테이블 (Lv.1 ~ Lv.10) */

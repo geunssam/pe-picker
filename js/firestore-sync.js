@@ -8,11 +8,13 @@ import { generateId } from './storage/base-repo.js';
 import { BadgeRepo } from './storage/badge-repo.js';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   onSnapshot,
   setDoc,
+  writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const SYNC_TIMEOUT_MS = 10000;
@@ -22,6 +24,7 @@ const USER_ID_KEY = 'pet_current_uid';
 let db = null;
 let currentUserId = null;
 let unsubscribeClasses = null;
+let unsubscribeBadgeLogs = null;
 
 function notifyStoreUpdated() {
   window.dispatchEvent(new CustomEvent(STORE_UPDATED_EVENT, { detail: { source: 'firestore' } }));
@@ -183,7 +186,7 @@ async function hydrateBadgeDataFromFirestore() {
   if (!database || !uid) return;
 
   try {
-    // 뱃지 로그 읽기
+    // 배지 로그 읽기
     const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
     const snap = await withTimeout(getDocs(badgeLogsRef), SYNC_TIMEOUT_MS, 'badge logs load');
     if (!snap.empty) {
@@ -213,7 +216,7 @@ async function hydrateBadgeDataFromFirestore() {
       }
     }
   } catch (error) {
-    console.warn('[FirestoreSync] 뱃지 데이터 동기화 실패:', error);
+    console.warn('[FirestoreSync] 배지 데이터 동기화 실패:', error);
   }
 }
 
@@ -227,7 +230,7 @@ async function syncBadgeLogsToFirestore(logs) {
   await Promise.all(
     recentLogs.map(log =>
       setDoc(doc(database, 'users', uid, 'badgeLogs', log.id), log).catch(err =>
-        console.warn('[FirestoreSync] 뱃지 로그 업로드 실패:', err)
+        console.warn('[FirestoreSync] 배지 로그 업로드 실패:', err)
       )
     )
   );
@@ -245,8 +248,83 @@ export async function syncBadgeLogEntry(logEntry) {
       'badge log sync'
     );
   } catch (error) {
-    console.warn('[FirestoreSync] 뱃지 로그 동기화 실패:', error);
+    console.warn('[FirestoreSync] 배지 로그 동기화 실패:', error);
   }
+}
+
+/**
+ * 여러 배지 로그를 Firestore에 배치 쓰기
+ * @param {Array} logEntries - 새로 생성된 배지 로그 배열
+ */
+export async function syncBadgeLogEntries(logEntries) {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid || !logEntries?.length) return;
+
+  try {
+    const batch = writeBatch(database);
+    for (const entry of logEntries) {
+      const ref = doc(database, 'users', uid, 'badgeLogs', entry.id);
+      batch.set(ref, entry);
+    }
+    await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge batch sync');
+  } catch (error) {
+    console.warn('[FirestoreSync] 배지 로그 배치 동기화 실패:', error);
+  }
+}
+
+/**
+ * Firestore 배지 로그 삭제
+ * @param {string} [classId] - 학급 ID (없으면 전체 삭제)
+ */
+export async function deleteBadgeLogsFromFirestore(classId) {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid) return;
+
+  try {
+    const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
+    const snap = await withTimeout(getDocs(badgeLogsRef), SYNC_TIMEOUT_MS, 'badge logs delete');
+    const batch = writeBatch(database);
+    let count = 0;
+
+    snap.docs.forEach(d => {
+      if (!classId || d.data().classId === classId) {
+        batch.delete(d.ref);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge delete commit');
+    }
+  } catch (error) {
+    console.warn('[FirestoreSync] 배지 로그 삭제 실패:', error);
+  }
+}
+
+/**
+ * 배지 로그 실시간 동기화 리스너 시작
+ */
+function startRealtimeBadgeLogSync() {
+  const database = getDb();
+  const uid = getCurrentUserId();
+  if (!database || !uid || unsubscribeBadgeLogs) return;
+
+  const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
+  unsubscribeBadgeLogs = onSnapshot(
+    badgeLogsRef,
+    snapshot => {
+      if (snapshot.empty) return;
+      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      BadgeRepo.saveBadgeLogs(logs);
+      notifyStoreUpdated();
+      window.dispatchEvent(new CustomEvent('badge-updated'));
+    },
+    error => {
+      console.warn('[FirestoreSync] 배지 로그 실시간 동기화 실패:', error);
+    }
+  );
 }
 
 export async function syncThermostatToFirestore(classId, settings) {
@@ -287,12 +365,17 @@ export async function init() {
     hydrateBadgeDataFromFirestore(),
   ]);
   startRealtimeClassSync();
+  startRealtimeBadgeLogSync();
 }
 
 export function stop() {
   if (unsubscribeClasses) {
     unsubscribeClasses();
     unsubscribeClasses = null;
+  }
+  if (unsubscribeBadgeLogs) {
+    unsubscribeBadgeLogs();
+    unsubscribeBadgeLogs = null;
   }
   currentUserId = null;
 }
@@ -343,5 +426,7 @@ export const FirestoreSync = {
   syncTeacherProfileToFirestore,
   setSelectedClass,
   syncBadgeLogEntry,
+  syncBadgeLogEntries,
+  deleteBadgeLogsFromFirestore,
   syncThermostatToFirestore,
 };

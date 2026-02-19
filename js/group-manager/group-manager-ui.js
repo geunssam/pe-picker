@@ -62,7 +62,7 @@ function createGroupCardHTML(group) {
     <div class="gm-team-card gm-color-${colorIdx}" data-group-id="${group.id}">
       <div class="gm-team-header">
         <span>${UI.escapeHtml(groupName)} (${group.members.length}명)</span>
-        <button class="gm-badge-btn" onclick="GroupManager.openBadgeForGroup(${group.id})">🏅 뱃지</button>
+        <button class="gm-badge-btn" onclick="GroupManager.openBadgeForGroup(${group.id})">🏅 배지</button>
       </div>
       <div class="gm-team-members">
         ${membersHTML}

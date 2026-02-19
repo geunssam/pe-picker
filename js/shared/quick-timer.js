@@ -100,10 +100,10 @@ function init() {
   panel = document.getElementById('timer-panel');
   if (!panel) return;
 
-  // 패널 바깥 클릭으로 닫기
+  // 패널 바깥 클릭으로 닫기 (right-toolbar도 제외)
   document.addEventListener('click', e => {
-    const toolsFab = document.getElementById('tools-fab-container');
-    if (panelOpen && !panel.contains(e.target) && (!toolsFab || !toolsFab.contains(e.target))) {
+    const toolbar = document.getElementById('right-toolbar');
+    if (panelOpen && !panel.contains(e.target) && (!toolbar || !toolbar.contains(e.target))) {
       closePanel();
     }
   });

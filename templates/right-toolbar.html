@@ -1,0 +1,160 @@
+<!-- 우측 고정 세로 툴바 (3단계: minimized → collapsed → expanded) -->
+<div id="right-toolbar" class="right-toolbar minimized" style="display: none">
+  <!-- 계정 버튼 (상단) -->
+  <div class="toolbar-account-items">
+    <button id="toolbar-class-btn" class="toolbar-btn toolbar-btn--class" aria-label="학급 선택">
+      <span class="toolbar-icon toolbar-icon--class">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      </span>
+      <span class="toolbar-text">학급 선택</span>
+    </button>
+    <button id="toolbar-logout-btn" class="toolbar-btn toolbar-btn--logout" aria-label="로그아웃">
+      <span class="toolbar-icon toolbar-icon--logout">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      </span>
+      <span class="toolbar-text">로그아웃</span>
+    </button>
+  </div>
+  <!-- 구분선 -->
+  <div class="toolbar-divider"></div>
+  <!-- 배지 도구 -->
+  <div class="toolbar-items">
+    <button
+      id="toolbar-quick-badge-btn"
+      class="toolbar-btn toolbar-btn--badge"
+      aria-label="빠른 배지 수여"
+    >
+      <span class="toolbar-icon toolbar-icon--badge">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+          />
+        </svg>
+      </span>
+      <span class="toolbar-text">배지 수여</span>
+    </button>
+    <button
+      id="toolbar-thermo-btn"
+      class="toolbar-btn toolbar-btn--thermo"
+      aria-label="학급 온도계"
+    >
+      <span class="toolbar-icon toolbar-icon--thermo">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+        </svg>
+      </span>
+      <span class="toolbar-text">온도계</span>
+    </button>
+  </div>
+  <!-- 구분선 -->
+  <div class="toolbar-divider"></div>
+  <!-- 수업 도구 -->
+  <div class="toolbar-items">
+    <button id="toolbar-timer-btn" class="toolbar-btn toolbar-btn--timer" aria-label="퀵 타이머">
+      <span class="toolbar-icon toolbar-icon--timer">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="13" r="8" />
+          <path d="M12 9v4l2 2" />
+          <path d="M9 2h6" />
+          <path d="M12 2v2" />
+        </svg>
+      </span>
+      <span class="toolbar-text">타이머</span>
+    </button>
+    <button
+      id="toolbar-whistle-btn"
+      class="toolbar-btn toolbar-btn--whistle"
+      aria-label="만능 휘슬"
+    >
+      <span class="toolbar-icon toolbar-icon--whistle">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 13a5 5 0 1 0 4-1.5L21 7l-1-2-9 5A5 5 0 0 0 9 13z" />
+          <circle cx="8.5" cy="14" r="1.2" />
+          <path d="M6 6l1 2" />
+          <path d="M9 5l.5 2" />
+          <path d="M12 4.5l0 2" />
+        </svg>
+      </span>
+      <span class="toolbar-text">휘슬</span>
+    </button>
+  </div>
+  <!-- 토글 버튼 -->
+  <button id="toolbar-toggle" class="toolbar-toggle" aria-label="툴바 접기/펼치기">
+    <span class="toggle-icon">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </span>
+    <span class="toggle-text">접기</span>
+  </button>
+</div>

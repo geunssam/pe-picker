@@ -732,7 +732,7 @@ async function executeGroupPick(students, groupSize, groupCount) {
   }
 }
 
-// === 뱃지 모달 호출 ===
+// === 배지 모달 호출 ===
 function openBadgeForGroup(groupId) {
   const group = currentGroups.find(g => g.id === groupId);
   if (!group) return;

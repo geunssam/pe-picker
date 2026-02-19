@@ -12,7 +12,7 @@ import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
 import { Whistle } from './shared/whistle.js';
 import { QuickTimer } from './shared/quick-timer.js';
-import { ToolsFab } from './shared/tools-fab.js';
+import { Toolbar } from './shared/toolbar.js';
 import { BadgeManager } from './badge-manager/badge-manager.js';
 import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
 
@@ -21,7 +21,7 @@ const ROUTES = {
   'class-selector': { label: '학급 선택', icon: '🏠', requiresClass: false },
   'tag-game': { label: '술래뽑기', icon: '🎯', requiresClass: true },
   'group-manager': { label: '모둠뽑기', icon: '👥', requiresClass: true },
-  'badge-collection': { label: '뱃지도감', icon: '🏅', requiresClass: true },
+  'badge-collection': { label: '배지도감', icon: '🏅', requiresClass: true },
   settings: { label: '설정', icon: '⚙️', requiresClass: true },
 };
 
@@ -118,45 +118,6 @@ async function bootstrapAfterAuth() {
     });
   });
 
-  // 프로필 드롭다운
-  const profileDropdown = document.getElementById('navbar-profile-dropdown');
-
-  if (profileImg && profileDropdown) {
-    profileImg.addEventListener('click', e => {
-      e.stopPropagation();
-      profileDropdown.classList.toggle('open');
-    });
-
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.navbar-profile-wrap')) {
-        profileDropdown.classList.remove('open');
-      }
-    });
-  }
-
-  const dropdownClassBtn = document.getElementById('navbar-dropdown-class');
-  if (dropdownClassBtn) {
-    dropdownClassBtn.addEventListener('click', () => {
-      if (profileDropdown) profileDropdown.classList.remove('open');
-      goBackToLanding();
-    });
-  }
-
-  const dropdownLogoutBtn = document.getElementById('navbar-dropdown-logout');
-  if (dropdownLogoutBtn) {
-    dropdownLogoutBtn.addEventListener('click', async () => {
-      if (profileDropdown) profileDropdown.classList.remove('open');
-      try {
-        FirestoreSync.stop();
-        Store.clearAllData();
-        await AuthManager.signOut();
-        window.location.replace('login.html');
-      } catch (error) {
-        console.warn('[App] 로그아웃 실패:', error);
-      }
-    });
-  }
-
   const logoutBtn = document.getElementById('landing-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -182,8 +143,7 @@ async function bootstrapAfterAuth() {
   BadgeCollectionUI.init();
   Whistle.init();
   QuickTimer.init();
-  ToolsFab.init();
-  initHamburgerMenu();
+  Toolbar.init();
 
   if (!hasClassData) {
     activateRoute('wizard');
@@ -253,7 +213,7 @@ function activateRoute(route) {
   if (route === 'wizard' || route === 'class-selector') {
     if (navbar) navbar.style.display = 'none';
     if (container) container.classList.add('no-navbar');
-    ToolsFab.hide();
+    Toolbar.hide();
     if (route === 'class-selector') {
       ClassManager.renderLandingClassList();
     }
@@ -264,7 +224,7 @@ function activateRoute(route) {
   } else {
     if (navbar) navbar.style.display = '';
     if (container) container.classList.remove('no-navbar');
-    ToolsFab.show();
+    Toolbar.show();
 
     const cls = Store.getSelectedClass();
     const nameEl = document.getElementById('navbar-class-name');
@@ -285,10 +245,8 @@ function activateRoute(route) {
     btn.classList.toggle('active', btn.dataset.route === route);
   });
 
-  // 모바일 메뉴 활성 탭
-  document.querySelectorAll('.navbar-mobile-item').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.route === route);
-  });
+  // 드로어 네비 활성 탭 동기화
+  Toolbar.syncActiveTab(route);
 
   if (route === 'tag-game') {
     TagGame.onPageEnter();
@@ -299,35 +257,6 @@ function activateRoute(route) {
   } else if (route === 'settings') {
     ClassManager.onSettingsPageEnter();
   }
-}
-
-// === 모바일 햄버거 메뉴 ===
-function initHamburgerMenu() {
-  const hamburger = document.getElementById('navbar-hamburger');
-  const mobileMenu = document.getElementById('navbar-mobile-menu');
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', e => {
-    e.stopPropagation();
-    mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active');
-  });
-
-  mobileMenu.querySelectorAll('.navbar-mobile-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const route = btn.dataset.route;
-      if (route) navigateTo(route);
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active');
-    });
-  });
-
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.navbar-hamburger') && !e.target.closest('.navbar-mobile-menu')) {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active');
-    }
-  });
 }
 
 function onClassSelected(classId) {

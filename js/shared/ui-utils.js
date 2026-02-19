@@ -172,6 +172,52 @@ function init() {
   });
 }
 
+// === Confirm Dialog ===
+function showConfirm(message, { confirmText = '확인', cancelText = '취소', danger = false } = {}) {
+  return new Promise(resolve => {
+    // 기존 confirm 모달 제거
+    document.getElementById('ui-confirm-modal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'ui-confirm-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-alert">
+        <div class="modal-alert-body">
+          <div class="modal-alert-message">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
+          <div class="confirm-btn-row">
+            <button class="btn-confirm-cancel">${escapeHtml(cancelText)}</button>
+            <button class="btn-confirm-ok${danger ? ' btn-confirm-danger' : ''}">${escapeHtml(confirmText)}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('show'));
+
+    modal.querySelector('.btn-confirm-cancel').addEventListener('click', () => {
+      modal.classList.remove('show');
+      setTimeout(() => modal.remove(), 200);
+      resolve(false);
+    });
+
+    modal.querySelector('.btn-confirm-ok').addEventListener('click', () => {
+      modal.classList.remove('show');
+      setTimeout(() => modal.remove(), 200);
+      resolve(true);
+    });
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 200);
+        resolve(false);
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', init);
 
 export const UI = {
@@ -185,4 +231,5 @@ export const UI = {
   sleep,
   initSteppers,
   escapeHtml,
+  showConfirm,
 };

@@ -33,8 +33,11 @@ import whistleFabHtml from '../templates/whistle-fab.html?raw';
 // ── Timer FAB ──
 import timerFabHtml from '../templates/timer-fab.html?raw';
 
-// ── Tools FAB (Speed Dial) ──
-import toolsFabHtml from '../templates/tools-fab.html?raw';
+// ── Right Toolbar ──
+import rightToolbarHtml from '../templates/right-toolbar.html?raw';
+
+// ── Left Drawer ──
+import leftDrawerHtml from '../templates/left-drawer.html?raw';
 
 // ── Assets (Vite가 해시 경로로 변환) ──
 import logoUrl from '../assets/logo.png';
@@ -92,6 +95,9 @@ export function mountTemplates() {
   // 5. Timer Panel — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', timerFabHtml);
 
-  // 6. Tools FAB (Speed Dial) — body 끝에 삽입
-  document.body.insertAdjacentHTML('beforeend', toolsFabHtml);
+  // 6. Right Toolbar — body 끝에 삽입
+  document.body.insertAdjacentHTML('beforeend', rightToolbarHtml);
+
+  // 7. Left Drawer + Overlay — body 끝에 삽입
+  document.body.insertAdjacentHTML('beforeend', resolveAssets(leftDrawerHtml));
 }
