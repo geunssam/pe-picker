@@ -85,7 +85,7 @@ async function init(listener) {
   });
 }
 
-async function waitForAuthReady(timeoutMs = 8000) {
+async function waitForAuthReady(timeoutMs = 15000) {
   if (authReady) return Promise.resolve(currentUser);
   return withTimeout(
     new Promise(resolve => {
@@ -106,7 +106,7 @@ async function signInWithGoogle() {
 
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await withTimeout(signInWithPopup(auth, provider), 12000, 'Google sign in');
+  const result = await withTimeout(signInWithPopup(auth, provider), 30000, 'Google sign in');
   return result.user;
 }
 
