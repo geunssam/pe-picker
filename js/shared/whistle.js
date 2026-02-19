@@ -26,7 +26,7 @@ let hintEl = null;
 let timerWhistleBtn = null;
 let timerRing1 = null;
 let timerRing2 = null;
-let timerMode = 'long'; // 타이머에서는 기본 "삐—"
+let timerMode = 'hold'; // 타이머에서는 기본 "꾹 누르기"
 
 // === Audio 유틸 ===
 function makeSoftClipCurve(amount) {
