@@ -128,27 +128,6 @@
   gap: var(--space-xs);
 }
 
-@media (max-width: 480px) {
-  .badge-type-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 3px;
-  }
-
-  .badge-type-chip .badge-img {
-    width: 30px;
-    height: 30px;
-  }
-
-  .badge-type-chip .badge-name {
-    font-size: 10px;
-  }
-
-  .badge-type-chip {
-    padding: 3px 1px;
-    border-width: 1.5px;
-  }
-}
-
 .badge-type-chip {
   display: flex;
   flex-direction: column;
@@ -173,6 +152,27 @@
   font-weight: 700;
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .badge-type-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+  }
+
+  .badge-type-chip {
+    padding: 3px 1px;
+    border-width: 1.5px;
+  }
+
+  .badge-type-chip .badge-img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .badge-type-chip .badge-name {
+    font-size: 10px;
+  }
 }
 
 .badge-type-chip.selected {
@@ -1108,11 +1108,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: 4px 12px;
-  border: 1.5px solid var(--border-light);
+  padding: 5px 14px;
+  border: 1.5px solid rgba(124, 158, 245, 0.3);
   border-radius: var(--radius-full);
-  background: var(--bg-white);
-  font-size: 12px;
+  background: rgba(124, 158, 245, 0.12);
+  color: var(--color-primary);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -1122,7 +1123,7 @@
 
 .tag-badge-btn:hover {
   border-color: var(--color-primary);
-  background: rgba(124, 158, 245, 0.08);
+  background: rgba(124, 158, 245, 0.2);
 }
 
 /* ========================================

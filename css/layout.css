@@ -175,6 +175,7 @@
 .navbar-tabs {
   display: flex;
   gap: 4px;
+  overflow: hidden;
 }
 
 .navbar-tab {
@@ -191,6 +192,7 @@
   cursor: pointer;
   transition: all 0.2s;
   font-family: var(--font-family);
+  white-space: nowrap;
 }
 
 .navbar-tab:hover {
@@ -2602,6 +2604,17 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+/* 데스크톱 좁은 창: 탭 텍스트 숨기고 아이콘만 */
+@media (max-width: 1024px) and (min-width: 481px) {
+  .navbar-tab span {
+    display: none;
+  }
+
+  .navbar-tab {
+    padding: 8px 10px;
+  }
 }
 
 /* 모바일: 탭 숨기고 햄버거 표시 */
