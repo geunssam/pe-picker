@@ -11,6 +11,7 @@ import { TagGame } from './tag-game/tag-game.js';
 import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './wizard.js';
 import { Whistle } from './shared/whistle.js';
+import { QuickTimer } from './shared/quick-timer.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', icon: '🎯', requiresClass: false },
@@ -172,6 +173,7 @@ async function bootstrapAfterAuth() {
   TagGame.init();
   GroupManager.init();
   Whistle.init();
+  QuickTimer.init();
 
   if (!hasClassData) {
     activateRoute('wizard');
@@ -242,6 +244,7 @@ function activateRoute(route) {
     if (navbar) navbar.style.display = 'none';
     if (container) container.classList.add('no-navbar');
     Whistle.hide();
+    QuickTimer.hide();
     if (route === 'class-selector') {
       ClassManager.renderLandingClassList();
     }
@@ -253,6 +256,7 @@ function activateRoute(route) {
     if (navbar) navbar.style.display = '';
     if (container) container.classList.remove('no-navbar');
     Whistle.show();
+    QuickTimer.show();
 
     const cls = Store.getSelectedClass();
     const nameEl = document.getElementById('navbar-class-name');

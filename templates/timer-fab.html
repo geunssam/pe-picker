@@ -1,0 +1,58 @@
+<!-- Timer FAB + 퀵 타이머 패널 -->
+<button id="timer-fab" class="timer-fab" style="display: none" aria-label="타이머 열기">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <circle cx="12" cy="13" r="8" />
+    <path d="M12 9v4l2 2" />
+    <path d="M9 2h6" />
+    <path d="M12 2v2" />
+  </svg>
+</button>
+
+<div id="timer-panel" class="timer-panel">
+  <div class="timer-panel__header">
+    <span class="timer-panel__title">퀵 타이머</span>
+    <button id="timer-panel-close" class="timer-panel__close" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="timer-preset-grid">
+    <button class="timer-preset-btn" data-seconds="30">30초</button>
+    <button class="timer-preset-btn" data-seconds="60">1분</button>
+    <button class="timer-preset-btn" data-seconds="180">3분</button>
+    <button class="timer-preset-btn" data-seconds="300">5분</button>
+  </div>
+
+  <div class="timer-custom-row">
+    <div class="timer-custom-field">
+      <label class="timer-custom-label">분</label>
+      <div class="number-stepper">
+        <button class="stepper-btn stepper-minus" data-target="timer-quick-min">−</button>
+        <input type="number" id="timer-quick-min" value="1" min="0" max="59" />
+        <button class="stepper-btn stepper-plus" data-target="timer-quick-min">+</button>
+      </div>
+    </div>
+    <div class="timer-custom-field">
+      <label class="timer-custom-label">초</label>
+      <div class="number-stepper">
+        <button class="stepper-btn stepper-minus" data-target="timer-quick-sec">−</button>
+        <input type="number" id="timer-quick-sec" value="0" min="0" max="59" />
+        <button class="stepper-btn stepper-plus" data-target="timer-quick-sec">+</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="timer-quick-start" class="btn btn-primary timer-quick-start-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+    타이머 시작
+  </button>
+</div>

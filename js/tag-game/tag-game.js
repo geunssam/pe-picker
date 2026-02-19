@@ -183,31 +183,99 @@ function updateSettingsForm() {
 
 // 버튼 1: 번호순 생성 모달
 function openNumberModal() {
-  const studentCount = parseInt($('tag-student-count')?.value) || 20;
-  if ($('tag-number-start')) $('tag-number-start').value = 1;
-  if ($('tag-number-end')) $('tag-number-end').value = studentCount;
+  // 추가 범위 행 제거, 첫 행만 리셋
+  const rangesContainer = $('tag-number-ranges');
+  if (rangesContainer) {
+    const rows = rangesContainer.querySelectorAll('.number-range-row');
+    rows.forEach((row, idx) => {
+      if (idx > 0) row.remove();
+    });
+    const firstRow = rangesContainer.querySelector('.number-range-row');
+    if (firstRow) {
+      const startInput = firstRow.querySelector('.range-start');
+      const endInput = firstRow.querySelector('.range-end');
+      if (startInput) startInput.value = 1;
+      if (endInput) endInput.value = parseInt($('tag-student-count')?.value) || 20;
+    }
+  }
   UI.showModal('tag-number-modal');
 }
 
 function confirmNumberInput() {
-  const start = parseInt($('tag-number-start')?.value) || 1;
-  const end = parseInt($('tag-number-end')?.value) || 20;
-  if (start > end || start < 1) {
-    UI.showToast('번호 범위를 확인해주세요!', 'error');
+  const rangesContainer = $('tag-number-ranges');
+  if (!rangesContainer) return;
+
+  const rows = rangesContainer.querySelectorAll('.number-range-row');
+  const ranges = [];
+
+  for (const row of rows) {
+    const start = parseInt(row.querySelector('.range-start')?.value);
+    const end = parseInt(row.querySelector('.range-end')?.value);
+    if (isNaN(start) || isNaN(end)) continue; // 빈 행 무시
+    if (start > end || start < 1) {
+      UI.showToast('번호 범위를 확인해주세요! (시작 ≤ 끝)', 'error');
+      return;
+    }
+    ranges.push({ start, end });
+  }
+
+  if (ranges.length === 0) {
+    UI.showToast('번호 범위를 입력해주세요!', 'error');
     return;
   }
+
   const container = $('tag-student-cards');
   if (!container) return;
   container.innerHTML = '';
-  const count = end - start + 1;
-  for (let i = start; i <= end; i++) {
-    createStudentCard(container, `${i}번`);
+
+  let count = 0;
+  const labels = [];
+  for (const { start, end } of ranges) {
+    for (let i = start; i <= end; i++) {
+      createStudentCard(container, `${i}번`);
+      count++;
+    }
+    labels.push(`${start}~${end}번`);
   }
+
   $('tag-student-count').value = count;
   gameSettings.studentCount = count;
   showStudentCardsWrapper();
   UI.hideModal('tag-number-modal');
-  UI.showToast(`${count}명 카드 생성 완료 (${start}번~${end}번)`, 'success');
+  UI.showToast(`${count}명 카드 생성 완료 (${labels.join(', ')})`, 'success');
+}
+
+// 번호 범위 행 추가 (최대 5개)
+function addNumberRange(prefix) {
+  const container = document.getElementById(`${prefix}-number-ranges`);
+  if (!container) return;
+  const rows = container.querySelectorAll('.number-range-row');
+  if (rows.length >= 5) {
+    UI.showToast('최대 5개 범위까지 추가할 수 있습니다', 'error');
+    return;
+  }
+  const row = document.createElement('div');
+  row.className = 'number-range-row';
+  row.style.cssText =
+    'display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-sm)';
+  row.innerHTML = `
+    <div style="flex: 1">
+      <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)">시작 번호</label>
+      <input class="input range-start" type="number" value="1" min="1" max="99" style="margin-top: var(--space-xs)" />
+    </div>
+    <div style="flex: 1">
+      <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)">끝 번호</label>
+      <input class="input range-end" type="number" value="20" min="1" max="99" style="margin-top: var(--space-xs)" />
+    </div>
+    <button type="button" class="btn-icon" style="width: 28px; height: 28px; border: none; background: var(--bg-danger, rgba(245,124,124,0.15)); color: var(--color-danger, #e74c3c); border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-top: 16px" onclick="TagGame.removeNumberRange(this)">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+// 번호 범위 행 삭제
+function removeNumberRange(btn) {
+  const row = btn.closest('.number-range-row');
+  if (row) row.remove();
 }
 
 // 버튼 2: 성별 구분 모달
@@ -793,4 +861,6 @@ export const TagGame = {
   init,
   onPageEnter,
   toggleStudentCard,
+  addNumberRange,
+  removeNumberRange,
 };

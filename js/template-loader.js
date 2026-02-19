@@ -28,6 +28,9 @@ import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
 // ── Whistle FAB ──
 import whistleFabHtml from '../templates/whistle-fab.html?raw';
 
+// ── Timer FAB ──
+import timerFabHtml from '../templates/timer-fab.html?raw';
+
 // ── Assets (Vite가 해시 경로로 변환) ──
 import logoUrl from '../assets/logo.png';
 
@@ -74,4 +77,7 @@ export function mountTemplates() {
 
   // 4. Whistle FAB — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', whistleFabHtml);
+
+  // 5. Timer FAB — body 끝에 삽입
+  document.body.insertAdjacentHTML('beforeend', timerFabHtml);
 }

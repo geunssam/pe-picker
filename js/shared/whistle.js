@@ -636,9 +636,15 @@ function destroy() {
   firstUnlocked = false;
 }
 
+function setTimerMode(mode) {
+  timerMode = mode;
+}
+
 export const Whistle = {
   init,
   destroy,
   show,
   hide,
+  bindTimerWhistle,
+  setTimerMode,
 };
