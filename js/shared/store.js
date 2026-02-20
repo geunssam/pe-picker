@@ -80,8 +80,8 @@ function clearCurrentTeams() {
 }
 
 // === 배지 (BadgeRepo) ===
-function addBadgeRecords(classId, students, badgeTypes, context) {
-  return BadgeRepo.addBadgeRecords(classId, students, badgeTypes, context);
+function addBadgeRecords(classId, students, badgeTypes, context, teamName) {
+  return BadgeRepo.addBadgeRecords(classId, students, badgeTypes, context, teamName);
 }
 
 function getBadgeLogsByClass(classId) {

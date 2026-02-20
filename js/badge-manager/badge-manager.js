@@ -274,11 +274,28 @@ function confirmAward() {
     return;
   }
 
-  const result = Store.addBadgeRecords(cls.id, students, badgeTypes, currentContext);
+  // 모둠 모드일 때 활성 모둠 이름을 team 필드로 전달
+  let activeTeamName = '';
+  const activeTab = document.querySelector('.badge-group-tab.active');
+  if (activeTab) {
+    activeTeamName = activeTab.textContent.trim();
+  }
+
+  const result = Store.addBadgeRecords(
+    cls.id,
+    students,
+    badgeTypes,
+    currentContext,
+    activeTeamName
+  );
   const count = result.count;
 
+  console.log('[BadgeManager] 배지 부여:', count, '건, newEntries:', result.newEntries?.length);
+
   // Firestore 동기화 (fire-and-forget)
-  FirestoreSync.syncBadgeLogEntries(result.newEntries);
+  FirestoreSync.syncBadgeLogEntries(result.newEntries).catch(err =>
+    console.error('[BadgeManager] Firestore 동기화 실패:', err)
+  );
 
   // 배지 이름 목록
   const badgeNames = badgeTypes.map(k => BADGE_TYPES[k].name).join(', ');

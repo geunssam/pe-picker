@@ -158,6 +158,17 @@ export function openTeamModal(classId, callback) {
   if (saveBtn) saveBtn.disabled = false;
 
   initializeTeamState(cls);
+
+  // 행 수 초기값: 학생수/모둠수 기반 + 기존 배치 중 최대값 반영
+  const rowsInput = document.getElementById('team-modal-rows');
+  if (rowsInput) {
+    const totalStudents = state.teamStudents.length;
+    let autoRows = Math.max(1, Math.ceil(totalStudents / teamCount));
+    state.teamTeams.forEach(team => {
+      if (team.length > autoRows) autoRows = team.length;
+    });
+    rowsInput.value = autoRows;
+  }
   renderTeamEditor();
   UI.showModal('class-team-modal');
 }

@@ -7,18 +7,30 @@
     </div>
     <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto">
       <div class="class-editor-section">
-        <div class="class-editor-header">
-          <div class="class-editor-title">모둠 설정</div>
-          <div class="class-editor-meta">
-            <label class="timetable-label" style="margin-bottom: 0">모둠 수</label>
+        <div class="class-editor-title">모둠 설정</div>
+        <div class="team-stepper-row">
+          <div class="team-stepper-card">
+            <span class="team-stepper-label">모둠 수</span>
             <div class="number-stepper">
               <button class="stepper-btn" data-target="team-modal-count" data-dir="down">−</button>
               <input type="number" id="team-modal-count" value="6" min="2" max="8" />
               <button class="stepper-btn" data-target="team-modal-count" data-dir="up">+</button>
             </div>
           </div>
+          <div class="team-stepper-card">
+            <span class="team-stepper-label">모둠당 인원</span>
+            <div class="number-stepper">
+              <button class="stepper-btn" data-target="team-modal-rows" data-dir="down">−</button>
+              <input type="number" id="team-modal-rows" value="4" min="1" max="12" />
+              <button class="stepper-btn" data-target="team-modal-rows" data-dir="up">+</button>
+            </div>
+          </div>
         </div>
-        <div id="team-name-inputs" class="team-name-inputs-row">
+      </div>
+
+      <div class="class-editor-section">
+        <div class="class-editor-title">모둠 이름 설정</div>
+        <div id="team-name-inputs" class="team-name-inputs-grid">
           <!-- JS에서 동적 생성: 모둠 이름 input -->
         </div>
       </div>

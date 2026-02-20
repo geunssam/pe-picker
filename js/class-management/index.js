@@ -11,6 +11,7 @@ import {
   handleRosterKeydown,
   handleTeamInput,
   onTeamCountChange,
+  onTeamRowsChange,
 } from './modal-editor.js';
 import {
   handleCSVImport,
@@ -76,6 +77,9 @@ function init() {
   if (teamCancelBtn) teamCancelBtn.addEventListener('click', closeTeamModal);
   if (teamSaveBtn) teamSaveBtn.addEventListener('click', saveTeams);
   if (teamCountInput) teamCountInput.addEventListener('change', onTeamCountChange);
+
+  const teamRowsInput = document.getElementById('team-modal-rows');
+  if (teamRowsInput) teamRowsInput.addEventListener('change', onTeamRowsChange);
 
   const teamModalEl = document.getElementById('class-team-modal');
   if (teamModalEl) {

@@ -1411,7 +1411,67 @@
   opacity: 0.5;
 }
 
-/* === Team 모달: 모둠 이름 행 === */
+/* === Team 모달: 스텝퍼 카드 행 === */
+.team-stepper-row {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.team-stepper-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-secondary, #f8f9fc);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(124, 158, 245, 0.12);
+}
+
+.team-stepper-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* 카드 안 스텝퍼 축소 */
+.team-stepper-card .number-stepper {
+  gap: 4px;
+}
+
+.team-stepper-card .stepper-btn {
+  width: 28px;
+  height: 28px;
+  font-size: var(--font-size-sm);
+}
+
+.team-stepper-card .number-stepper input {
+  width: 36px;
+  padding: 2px 0;
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+/* === Team 모달: 모둠 이름 그리드 === */
+.team-name-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* JS에서 동적 오버라이드 */
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.team-name-inputs-grid .cm-team-name-input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  padding: var(--space-xs) 4px;
+  font-size: var(--font-size-sm);
+}
+
+/* 하위호환: 기존 row 클래스 */
 .team-name-inputs-row {
   display: flex;
   flex-wrap: wrap;
@@ -1483,9 +1543,14 @@
   font-weight: 700;
   color: var(--text-secondary);
   background: rgba(124, 158, 245, 0.06);
-  border-bottom: 1px solid rgba(124, 158, 245, 0.15);
+  border-right: 1px solid rgba(124, 158, 245, 0.18);
+  border-bottom: 2px solid rgba(124, 158, 245, 0.25);
   text-align: center;
   white-space: nowrap;
+}
+
+.team-sheet th:last-child {
+  border-right: none;
 }
 
 .team-sheet-count {
@@ -1496,16 +1561,53 @@
 
 .team-sheet td {
   padding: 2px;
-  border: 1px solid rgba(124, 158, 245, 0.08);
+  border: 1px solid rgba(124, 158, 245, 0.2);
   height: 30px;
   vertical-align: middle;
+  position: relative;
+}
+
+.team-sheet td:last-child {
+  border-right: none;
 }
 
 .team-sheet-empty-cell {
-  border: 1px dashed rgba(124, 158, 245, 0.18);
+  border: 1px dashed rgba(124, 158, 245, 0.22);
   border-radius: var(--radius-sm);
   height: 22px;
-  opacity: 0.4;
+  opacity: 0.5;
+}
+
+/* 셀 내 학생 제거(✕) 버튼 */
+.team-cell-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: rgba(220, 80, 80, 0.15);
+  color: rgba(220, 80, 80, 0.7);
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.team-sheet td:hover .team-cell-remove {
+  opacity: 1;
+}
+
+/* 모바일에서는 항상 표시 */
+@media (hover: none) {
+  .team-cell-remove {
+    opacity: 0.7;
+  }
 }
 
 /* === Team 모달: 드래그 영역 === */
@@ -1664,11 +1766,17 @@
 
 /* === Settings Timetable (읽기 전용) === */
 .settings-timetable td {
-  padding: 6px 8px;
+  padding: 8px 8px;
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   text-align: center;
-  border-bottom: 1px solid rgba(124, 158, 245, 0.06);
+  border-right: 1px solid rgba(124, 158, 245, 0.18);
+  border-bottom: 1px solid rgba(124, 158, 245, 0.18);
+  height: 36px;
+}
+
+.settings-timetable td:last-child {
+  border-right: none;
 }
 
 .settings-timetable tbody tr:last-child td {

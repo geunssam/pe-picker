@@ -2,13 +2,16 @@ import { Store } from './shared/store.js';
 import { AuthManager } from './auth-manager.js';
 import { getFirestoreInstance } from './firebase-config.js';
 import { withTimeout } from './shared/promise-utils.js';
-import { syncClassToFirestore } from './class-management/class-firestore.js';
+import {
+  syncClassToFirestore,
+  hydrateStudentsFromFirestore,
+} from './class-management/class-firestore.js';
 import { decodeTeamsFromFirestore } from './shared/firestore-utils.js';
 import { generateId } from './storage/base-repo.js';
 import { BadgeRepo } from './storage/badge-repo.js';
+import { XP_PER_BADGE } from './badge-manager/badge-config.js';
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -24,7 +27,6 @@ const USER_ID_KEY = 'pet_current_uid';
 let db = null;
 let currentUserId = null;
 let unsubscribeClasses = null;
-let unsubscribeBadgeLogs = null;
 
 function notifyStoreUpdated() {
   window.dispatchEvent(new CustomEvent(STORE_UPDATED_EVENT, { detail: { source: 'firestore' } }));
@@ -67,10 +69,41 @@ function normalizeStudent(raw, fallbackNumber = 0) {
   };
 }
 
-function normalizeClassFromSnapshot(classId, data = {}) {
-  const safeStudents = Array.isArray(data.students)
+/**
+ * 클래스 문서의 학생 배열 + 서브컬렉션의 badges/xp를 병합
+ * - 클래스 문서의 students 배열이 전체 명단의 출처 (source of truth)
+ * - 서브컬렉션은 badges/xp 데이터만 오버레이
+ */
+function mergeStudentsWithSubcollection(docStudents, subStudents) {
+  if (!subStudents || subStudents.length === 0) return docStudents;
+  if (!docStudents || docStudents.length === 0) return subStudents;
+
+  // 서브컬렉션이 전체 명단을 커버하면 그대로 사용
+  if (subStudents.length >= docStudents.length) return subStudents;
+
+  // 부분 서브컬렉션: 클래스 문서 명단 기반 + 서브컬렉션의 badges/xp 병합
+  const subMap = new Map(subStudents.map(s => [s.id, s]));
+  return docStudents.map(ds => {
+    const sub = subMap.get(ds.id);
+    if (sub) {
+      return {
+        ...ds,
+        badges: sub.badges || [],
+        xp: sub.xp || 0,
+      };
+    }
+    return ds;
+  });
+}
+
+function normalizeClassFromSnapshot(classId, data = {}, subStudents = null) {
+  const docStudents = Array.isArray(data.students)
     ? data.students.map((student, idx) => normalizeStudent(student, idx + 1))
     : [];
+
+  const safeStudents = mergeStudentsWithSubcollection(docStudents, subStudents).map((s, idx) =>
+    normalizeStudent(s, idx + 1)
+  );
 
   const teamNames = Array.isArray(data.teamNames ?? data.groupNames)
     ? (data.teamNames ?? data.groupNames)
@@ -91,6 +124,7 @@ function normalizeClassFromSnapshot(classId, data = {}) {
       : Array.from({ length: teamCount }, (_, i) => `${i + 1}모둠`),
     teams: teams.length ? teams : Array.from({ length: teamCount }, () => []),
     teamCount,
+    thermostat: data.thermostat || null,
     createdAt: (() => {
       const val = data.createdAt;
       if (!val) return new Date().toISOString();
@@ -137,12 +171,25 @@ async function hydrateClassesFromFirestore() {
 
   const classesRef = collection(database, 'users', uid, 'classes');
   const snap = await withTimeout(getDocs(classesRef), SYNC_TIMEOUT_MS, 'classes load');
-  const classes = snap.docs.map(docItem =>
-    normalizeClassFromSnapshot(docItem.id, docItem.data() || {})
-  );
 
-  if (classes.length > 0) {
+  if (snap.docs.length > 0) {
+    // 각 학급의 학생 서브컬렉션도 함께 읽기 (badges/xp 오버레이용)
+    const classes = await Promise.all(
+      snap.docs.map(async docItem => {
+        const data = docItem.data() || {};
+        const subStudents = await hydrateStudentsFromFirestore(docItem.id);
+        return normalizeClassFromSnapshot(docItem.id, data, subStudents);
+      })
+    );
+
     Store.saveClasses(classes);
+
+    // 학생 서브컬렉션에서 badges/xp를 읽어 BadgeRepo에 반영
+    hydrateBadgesFromStudents(classes);
+
+    // thermostat 필드를 BadgeRepo에 반영
+    hydrateThermostatFromClasses(classes);
+
     notifyStoreUpdated();
     return;
   }
@@ -159,6 +206,57 @@ async function hydrateClassesFromFirestore() {
   }
 }
 
+/**
+ * 학생 서브컬렉션의 badges → BadgeRepo의 badgeLogs 형식으로 변환
+ */
+function hydrateBadgesFromStudents(classes) {
+  const allLogs = [];
+
+  for (const cls of classes) {
+    for (const student of cls.students) {
+      if (!Array.isArray(student.badges) || student.badges.length === 0) continue;
+
+      for (const badge of student.badges) {
+        allLogs.push({
+          id: badge.id || generateId('badge'),
+          timestamp: badge.date || new Date().toISOString(),
+          classId: cls.id,
+          studentId: student.id,
+          studentName: student.name,
+          badgeType: badge.type,
+          xp: badge.xp || XP_PER_BADGE,
+          context: badge.context || 'badge-collection',
+          team: badge.team || '',
+        });
+      }
+    }
+  }
+
+  if (allLogs.length > 0) {
+    // Firestore 데이터를 로컬에 반영 (기존 로컬 로그보다 우선)
+    BadgeRepo.saveBadgeLogs(allLogs);
+  } else {
+    // 로컬에 있으면 클라우드로 업로드 (최초 마이그레이션)
+    const localLogs = BadgeRepo.getBadgeLogs();
+    if (localLogs.length > 0) {
+      syncBadgesToStudentDocs(classes).catch(err =>
+        console.warn('[FirestoreSync] 배지 초기 업로드 실패:', err)
+      );
+    }
+  }
+}
+
+/**
+ * 학급 문서의 thermostat 필드 → BadgeRepo에 반영
+ */
+function hydrateThermostatFromClasses(classes) {
+  for (const cls of classes) {
+    if (cls.thermostat) {
+      BadgeRepo.saveThermostatSettings(cls.id, cls.thermostat);
+    }
+  }
+}
+
 function startRealtimeClassSync() {
   const database = getDb();
   const uid = getCurrentUserId();
@@ -167,12 +265,19 @@ function startRealtimeClassSync() {
   const classesRef = collection(database, 'users', uid, 'classes');
   unsubscribeClasses = onSnapshot(
     classesRef,
-    snapshot => {
-      const classes = snapshot.docs.map(docItem =>
-        normalizeClassFromSnapshot(docItem.id, docItem.data() || {})
+    async snapshot => {
+      const classes = await Promise.all(
+        snapshot.docs.map(async docItem => {
+          const data = docItem.data() || {};
+          const subStudents = await hydrateStudentsFromFirestore(docItem.id);
+          return normalizeClassFromSnapshot(docItem.id, data, subStudents);
+        })
       );
       Store.saveClasses(classes);
+      hydrateBadgesFromStudents(classes);
+      hydrateThermostatFromClasses(classes);
       notifyStoreUpdated();
+      window.dispatchEvent(new CustomEvent('badge-updated'));
     },
     error => {
       console.warn('[FirestoreSync] 실시간 클래스 동기화 실패:', error);
@@ -180,80 +285,64 @@ function startRealtimeClassSync() {
   );
 }
 
-async function hydrateBadgeDataFromFirestore() {
+/**
+ * 배지 데이터를 학생 서브컬렉션의 badges 배열 + xp로 동기화
+ * @param {Array} classes - 학급 배열 (없으면 Store에서 가져옴)
+ */
+async function syncBadgesToStudentDocs(classes) {
   const database = getDb();
   const uid = getCurrentUserId();
   if (!database || !uid) return;
 
-  try {
-    // 배지 로그 읽기
-    const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
-    const snap = await withTimeout(getDocs(badgeLogsRef), SYNC_TIMEOUT_MS, 'badge logs load');
-    if (!snap.empty) {
-      const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      BadgeRepo.saveBadgeLogs(logs);
-    } else {
-      // 로컬에 있으면 클라우드로 업로드
-      const localLogs = BadgeRepo.getBadgeLogs();
-      if (localLogs.length > 0) {
-        await syncBadgeLogsToFirestore(localLogs);
-      }
-    }
+  const targetClasses = classes || Store.getClasses();
+  const allLogs = BadgeRepo.getBadgeLogs();
 
-    // 온도계 설정 읽기
-    const thermoRef = collection(database, 'users', uid, 'thermostatSettings');
-    const thermoSnap = await withTimeout(getDocs(thermoRef), SYNC_TIMEOUT_MS, 'thermostat load');
-    if (!thermoSnap.empty) {
-      const allSettings = {};
-      thermoSnap.docs.forEach(d => {
-        allSettings[d.id] = d.data();
-      });
-      // 로컬 설정과 병합
-      const localAll = BadgeRepo.getAllThermostatSettings();
-      const merged = { ...localAll, ...allSettings };
-      for (const classId of Object.keys(merged)) {
-        BadgeRepo.saveThermostatSettings(classId, merged[classId]);
-      }
+  // classId → studentId → badges 맵 구성
+  const classStudentBadgeMap = {};
+  for (const log of allLogs) {
+    if (!classStudentBadgeMap[log.classId]) {
+      classStudentBadgeMap[log.classId] = {};
     }
-  } catch (error) {
-    console.warn('[FirestoreSync] 배지 데이터 동기화 실패:', error);
+    if (!classStudentBadgeMap[log.classId][log.studentId]) {
+      classStudentBadgeMap[log.classId][log.studentId] = { badges: [], xp: 0 };
+    }
+    classStudentBadgeMap[log.classId][log.studentId].badges.push({
+      id: log.id,
+      type: log.badgeType,
+      date: log.timestamp,
+      context: log.context || 'badge-collection',
+      team: log.team || '',
+      xp: log.xp || XP_PER_BADGE,
+    });
+    classStudentBadgeMap[log.classId][log.studentId].xp += log.xp || XP_PER_BADGE;
   }
-}
 
-async function syncBadgeLogsToFirestore(logs) {
-  const database = getDb();
-  const uid = getCurrentUserId();
-  if (!database || !uid) return;
+  for (const cls of targetClasses) {
+    const studentMap = classStudentBadgeMap[cls.id];
+    if (!studentMap) continue;
 
-  // 대량 업로드 — 최근 100개만 (너무 많으면 부하)
-  const recentLogs = logs.slice(-100);
-  await Promise.all(
-    recentLogs.map(log =>
-      setDoc(doc(database, 'users', uid, 'badgeLogs', log.id), log).catch(err =>
-        console.warn('[FirestoreSync] 배지 로그 업로드 실패:', err)
-      )
-    )
-  );
-}
+    try {
+      const batch = writeBatch(database);
+      let count = 0;
 
-export async function syncBadgeLogEntry(logEntry) {
-  const database = getDb();
-  const uid = getCurrentUserId();
-  if (!database || !uid) return;
+      for (const [studentId, data] of Object.entries(studentMap)) {
+        const ref = doc(database, 'users', uid, 'classes', cls.id, 'students', studentId);
+        batch.set(ref, { badges: data.badges, xp: data.xp }, { merge: true });
+        count++;
+      }
 
-  try {
-    await withTimeout(
-      setDoc(doc(database, 'users', uid, 'badgeLogs', logEntry.id), logEntry),
-      SYNC_TIMEOUT_MS,
-      'badge log sync'
-    );
-  } catch (error) {
-    console.warn('[FirestoreSync] 배지 로그 동기화 실패:', error);
+      if (count > 0) {
+        await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge batch sync');
+        console.log('[FirestoreSync] 배지 동기화:', cls.id, count, '명');
+      }
+    } catch (error) {
+      console.error('[FirestoreSync] 배지 동기화 실패:', cls.id, error);
+    }
   }
 }
 
 /**
- * 여러 배지 로그를 Firestore에 배치 쓰기
+ * 새 배지 엔트리들을 해당 학생 문서에 추가
  * @param {Array} logEntries - 새로 생성된 배지 로그 배열
  */
 export async function syncBadgeLogEntries(logEntries) {
@@ -261,80 +350,73 @@ export async function syncBadgeLogEntries(logEntries) {
   const uid = getCurrentUserId();
   if (!database || !uid || !logEntries?.length) return;
 
-  try {
-    const batch = writeBatch(database);
-    for (const entry of logEntries) {
-      const ref = doc(database, 'users', uid, 'badgeLogs', entry.id);
-      batch.set(ref, entry);
+  // classId → studentId → newBadges 그룹핑
+  const grouped = {};
+  for (const entry of logEntries) {
+    const key = `${entry.classId}|${entry.studentId}`;
+    if (!grouped[key]) {
+      grouped[key] = { classId: entry.classId, studentId: entry.studentId, badges: [], xpDelta: 0 };
     }
-    await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge batch sync');
-  } catch (error) {
-    console.warn('[FirestoreSync] 배지 로그 배치 동기화 실패:', error);
-  }
-}
-
-/**
- * Firestore 배지 로그 삭제
- * @param {string} [classId] - 학급 ID (없으면 전체 삭제)
- */
-export async function deleteBadgeLogsFromFirestore(classId) {
-  const database = getDb();
-  const uid = getCurrentUserId();
-  if (!database || !uid) return;
-
-  try {
-    const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
-    const snap = await withTimeout(getDocs(badgeLogsRef), SYNC_TIMEOUT_MS, 'badge logs delete');
-    const batch = writeBatch(database);
-    let count = 0;
-
-    snap.docs.forEach(d => {
-      if (!classId || d.data().classId === classId) {
-        batch.delete(d.ref);
-        count++;
-      }
+    grouped[key].badges.push({
+      id: entry.id,
+      type: entry.badgeType,
+      date: entry.timestamp,
+      context: entry.context || 'badge-collection',
+      team: entry.team || '',
+      xp: entry.xp || XP_PER_BADGE,
     });
+    grouped[key].xpDelta += entry.xp || XP_PER_BADGE;
+  }
 
-    if (count > 0) {
-      await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge delete commit');
+  try {
+    for (const group of Object.values(grouped)) {
+      const ref = doc(
+        database,
+        'users',
+        uid,
+        'classes',
+        group.classId,
+        'students',
+        group.studentId
+      );
+
+      // 기존 문서 읽기 → badges 배열에 추가
+      const snap = await withTimeout(getDoc(ref), SYNC_TIMEOUT_MS, 'student doc read');
+      const existing = snap.exists() ? snap.data() : {};
+      const existingBadges = Array.isArray(existing.badges) ? existing.badges : [];
+      const existingXp = parseInt(existing.xp, 10) || 0;
+
+      await withTimeout(
+        setDoc(
+          ref,
+          {
+            badges: [...existingBadges, ...group.badges],
+            xp: existingXp + group.xpDelta,
+          },
+          { merge: true }
+        ),
+        SYNC_TIMEOUT_MS,
+        'student badge update'
+      );
     }
+    console.log('[FirestoreSync] 배지 엔트리 동기화 성공:', logEntries.length, '건');
   } catch (error) {
-    console.warn('[FirestoreSync] 배지 로그 삭제 실패:', error);
+    console.error('[FirestoreSync] 배지 엔트리 동기화 실패:', error);
   }
 }
 
 /**
- * 배지 로그 실시간 동기화 리스너 시작
+ * 온도계 설정을 클래스 문서의 thermostat 필드에 merge
  */
-function startRealtimeBadgeLogSync() {
-  const database = getDb();
-  const uid = getCurrentUserId();
-  if (!database || !uid || unsubscribeBadgeLogs) return;
-
-  const badgeLogsRef = collection(database, 'users', uid, 'badgeLogs');
-  unsubscribeBadgeLogs = onSnapshot(
-    badgeLogsRef,
-    snapshot => {
-      if (snapshot.empty) return;
-      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      BadgeRepo.saveBadgeLogs(logs);
-      notifyStoreUpdated();
-      window.dispatchEvent(new CustomEvent('badge-updated'));
-    },
-    error => {
-      console.warn('[FirestoreSync] 배지 로그 실시간 동기화 실패:', error);
-    }
-  );
-}
-
 export async function syncThermostatToFirestore(classId, settings) {
   const database = getDb();
   const uid = getCurrentUserId();
   if (!database || !uid) return;
 
   try {
+    const ref = doc(database, 'users', uid, 'classes', classId);
     await withTimeout(
-      setDoc(doc(database, 'users', uid, 'thermostatSettings', classId), settings),
+      setDoc(ref, { thermostat: settings }, { merge: true }),
       SYNC_TIMEOUT_MS,
       'thermostat sync'
     );
@@ -359,23 +441,17 @@ export async function init() {
   const database = getDb();
   if (!database) return;
 
-  await Promise.all([
-    hydrateProfileFromFirestore(),
-    hydrateClassesFromFirestore(),
-    hydrateBadgeDataFromFirestore(),
-  ]);
+  // 하이드레이션 순서: 프로필 → 클래스 (학생 서브컬렉션 + 배지/온도계 포함)
+  await hydrateProfileFromFirestore();
+  await hydrateClassesFromFirestore();
+
   startRealtimeClassSync();
-  startRealtimeBadgeLogSync();
 }
 
 export function stop() {
   if (unsubscribeClasses) {
     unsubscribeClasses();
     unsubscribeClasses = null;
-  }
-  if (unsubscribeBadgeLogs) {
-    unsubscribeBadgeLogs();
-    unsubscribeBadgeLogs = null;
   }
   currentUserId = null;
 }
@@ -425,8 +501,6 @@ export const FirestoreSync = {
   stop,
   syncTeacherProfileToFirestore,
   setSelectedClass,
-  syncBadgeLogEntry,
   syncBadgeLogEntries,
-  deleteBadgeLogsFromFirestore,
   syncThermostatToFirestore,
 };

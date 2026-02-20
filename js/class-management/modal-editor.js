@@ -366,6 +366,9 @@ export function renderTeamNameInputs() {
   const container = document.getElementById('team-name-inputs');
   if (!container) return;
 
+  const count = state.teamTeamNames.length;
+  container.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+
   container.innerHTML = state.teamTeamNames
     .map(
       (name, idx) =>
@@ -390,12 +393,15 @@ export function renderTeamColumns() {
 
   const teamCount = state.teamTeams.length;
 
-  // 최대 멤버 수 계산
+  // 행 수: 스텝퍼 값 우선, 없으면 자동 계산
   let maxMembers = 0;
   state.teamTeams.forEach(team => {
     if (team.length > maxMembers) maxMembers = team.length;
   });
-  const totalRows = Math.max(maxMembers + 2, 4);
+  const rowsInput = document.getElementById('team-modal-rows');
+  const totalRows = rowsInput
+    ? Math.max(1, parseInt(rowsInput.value, 10) || 4)
+    : Math.max(maxMembers + 2, 4);
 
   // 헤더 (모둠이름 + 인원수, null 제외)
   let headerCells = '';
@@ -416,6 +422,7 @@ export function renderTeamColumns() {
       if (student) {
         cells += `<td class="tm-drop-zone" data-zone-type="group" data-group-index="${col}" data-row-index="${row}">
             ${renderPillCardHTML(student, { draggable: true })}
+            <button class="team-cell-remove" data-student-id="${student.id}" title="미배정으로 이동">✕</button>
           </td>`;
       } else {
         cells += `<td class="tm-drop-zone" data-zone-type="group" data-group-index="${col}" data-row-index="${row}">
@@ -544,6 +551,20 @@ function bindTeamDragAndDrop() {
     zone.addEventListener('dragleave', onTeamDropZoneDragLeave);
     zone.addEventListener('drop', onTeamDropZoneDrop);
   });
+
+  // 셀 제거(✕) 버튼 핸들러
+  modal.querySelectorAll('.team-cell-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const studentId = btn.dataset.studentId;
+      if (studentId) {
+        moveStudentToTeamZone(studentId, 'unassigned', null, null);
+        renderTeamUnassignedPool();
+        renderTeamColumns();
+        bindTeamDragAndDrop();
+      }
+    });
+  });
 }
 
 // ========== Team 입력 핸들러 ==========
@@ -559,10 +580,36 @@ export function handleTeamInput(event) {
   }
 }
 
+export function onTeamRowsChange() {
+  const rowsInput = document.getElementById('team-modal-rows');
+  if (!rowsInput) return;
+  const rows = Math.max(1, Math.min(12, parseInt(rowsInput.value, 10) || 4));
+  rowsInput.value = rows;
+
+  // 각 모둠에서 rows를 초과하는 학생 → 미배정으로 이동
+  state.teamTeams.forEach(team => {
+    while (team.length > rows) {
+      const removed = team.pop();
+      if (removed) state.teamUnassigned.push(removed);
+    }
+  });
+
+  renderTeamEditor();
+}
+
 export function onTeamCountChange() {
   const countInput = document.getElementById('team-modal-count');
   if (!countInput) return;
   const count = ensureTeamCount(countInput.value);
   countInput.value = count;
+
+  // 행 수 자동 재계산
+  const rowsInput = document.getElementById('team-modal-rows');
+  if (rowsInput) {
+    const totalStudents = state.teamStudents.length;
+    const autoRows = Math.max(1, Math.ceil(totalStudents / count));
+    rowsInput.value = autoRows;
+  }
+
   renderTeamEditor();
 }

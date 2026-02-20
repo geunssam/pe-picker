@@ -19,17 +19,8 @@ service cloud.firestore {
         }
       }
 
-      // 뱃지 로그 서브컬렉션
-      match /badgeLogs/{logId} {
-        allow read, write: if request.auth != null
-                           && request.auth.uid == userId;
-      }
-
-      // 온도계 설정 서브컬렉션
-      match /thermostatSettings/{classId} {
-        allow read, write: if request.auth != null
-                           && request.auth.uid == userId;
-      }
+      // (삭제됨) badgeLogs — 학생 문서의 badges 배열로 대체
+      // (삭제됨) thermostatSettings — 클래스 문서의 thermostat 필드로 대체
     }
 
     // 그 외 모든 경로 차단

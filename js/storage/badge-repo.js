@@ -32,7 +32,7 @@ function saveBadgeLogs(logs) {
  * @param {string} context - 부여 맥락 ('tag-game'|'group-manager'|'badge-collection')
  * @returns {number} 추가된 배지 수
  */
-function addBadgeRecords(classId, students, badgeTypes, context) {
+function addBadgeRecords(classId, students, badgeTypes, context, teamName) {
   const logs = getBadgeLogs();
   const timestamp = new Date().toISOString();
   const newEntries = [];
@@ -48,6 +48,7 @@ function addBadgeRecords(classId, students, badgeTypes, context) {
         badgeType,
         xp: XP_PER_BADGE,
         context,
+        team: teamName || student.team || '',
       };
       logs.push(entry);
       newEntries.push(entry);
