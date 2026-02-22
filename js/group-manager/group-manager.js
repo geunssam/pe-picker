@@ -243,7 +243,7 @@ function createStudentCard(container, name, isExcluded = false, gender = null) {
   if (gender === 'male') cls += ' gender-male';
   if (gender === 'female') cls += ' gender-female';
   card.className = cls;
-  card.innerHTML = `<span>${name}</span><button class="tag-card-remove" onclick="GroupManager.toggleStudentCard(this)">×</button>`;
+  card.innerHTML = `<span>${UI.escapeHtml(name)}</span><button class="tag-card-remove" onclick="GroupManager.toggleStudentCard(this)">×</button>`;
   container.appendChild(card);
 }
 
