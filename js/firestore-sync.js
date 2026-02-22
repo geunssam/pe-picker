@@ -173,24 +173,34 @@ async function hydrateClassesFromFirestore() {
   const snap = await withTimeout(getDocs(classesRef), SYNC_TIMEOUT_MS, 'classes load');
 
   if (snap.docs.length > 0) {
-    // 각 학급의 학생 서브컬렉션도 함께 읽기 (badges/xp 오버레이용)
-    const classes = await Promise.all(
+    // 1단계: 학급 문서만 먼저 로드 → UI 즉시 렌더링
+    const classesWithoutSub = snap.docs.map(docItem => {
+      const data = docItem.data() || {};
+      return normalizeClassFromSnapshot(docItem.id, data, null);
+    });
+
+    Store.saveClasses(classesWithoutSub);
+    hydrateThermostatFromClasses(classesWithoutSub);
+    notifyStoreUpdated();
+
+    // 2단계: 백그라운드에서 학생 서브컬렉션(badges/xp) 로드 → 업데이트
+    Promise.all(
       snap.docs.map(async docItem => {
         const data = docItem.data() || {};
         const subStudents = await hydrateStudentsFromFirestore(docItem.id);
         return normalizeClassFromSnapshot(docItem.id, data, subStudents);
       })
-    );
+    )
+      .then(fullClasses => {
+        Store.saveClasses(fullClasses);
+        hydrateBadgesFromStudents(fullClasses);
+        hydrateThermostatFromClasses(fullClasses);
+        notifyStoreUpdated();
+      })
+      .catch(error => {
+        console.warn('[FirestoreSync] 학생 서브컬렉션 로드 실패:', error);
+      });
 
-    Store.saveClasses(classes);
-
-    // 학생 서브컬렉션에서 badges/xp를 읽어 BadgeRepo에 반영
-    hydrateBadgesFromStudents(classes);
-
-    // thermostat 필드를 BadgeRepo에 반영
-    hydrateThermostatFromClasses(classes);
-
-    notifyStoreUpdated();
     return;
   }
 
@@ -265,19 +275,34 @@ function startRealtimeClassSync() {
   const classesRef = collection(database, 'users', uid, 'classes');
   unsubscribeClasses = onSnapshot(
     classesRef,
-    async snapshot => {
-      const classes = await Promise.all(
+    snapshot => {
+      // 1단계: 학급 문서만 먼저 반영 → UI 즉시 업데이트
+      const classesWithoutSub = snapshot.docs.map(docItem => {
+        const data = docItem.data() || {};
+        return normalizeClassFromSnapshot(docItem.id, data, null);
+      });
+      Store.saveClasses(classesWithoutSub);
+      hydrateThermostatFromClasses(classesWithoutSub);
+      notifyStoreUpdated();
+
+      // 2단계: 백그라운드에서 학생 서브컬렉션 로드
+      Promise.all(
         snapshot.docs.map(async docItem => {
           const data = docItem.data() || {};
           const subStudents = await hydrateStudentsFromFirestore(docItem.id);
           return normalizeClassFromSnapshot(docItem.id, data, subStudents);
         })
-      );
-      Store.saveClasses(classes);
-      hydrateBadgesFromStudents(classes);
-      hydrateThermostatFromClasses(classes);
-      notifyStoreUpdated();
-      window.dispatchEvent(new CustomEvent('badge-updated'));
+      )
+        .then(fullClasses => {
+          Store.saveClasses(fullClasses);
+          hydrateBadgesFromStudents(fullClasses);
+          hydrateThermostatFromClasses(fullClasses);
+          notifyStoreUpdated();
+          window.dispatchEvent(new CustomEvent('badge-updated'));
+        })
+        .catch(error => {
+          console.warn('[FirestoreSync] 실시간 학생 서브컬렉션 로드 실패:', error);
+        });
     },
     error => {
       console.warn('[FirestoreSync] 실시간 클래스 동기화 실패:', error);

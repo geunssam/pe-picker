@@ -40,6 +40,28 @@ export function set(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      // 임시 데이터 자동 정리 시도
+      const tempKeys = [KEYS.TAG_GAME, KEYS.CURRENT_TEAMS];
+      tempKeys.forEach(tk => {
+        try {
+          localStorage.removeItem(tk);
+        } catch {
+          // 무시
+        }
+      });
+
+      // 정리 후 재시도
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return;
+      } catch {
+        // 재시도 실패
+      }
+
+      // 사용자 알림 이벤트
+      window.dispatchEvent(new CustomEvent('pet-storage-full'));
+    }
     console.error(`BaseRepo.set(${key}) 오류:`, e);
   }
 }
