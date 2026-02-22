@@ -7,16 +7,21 @@ import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBR-wjw7ZptOyWhFpxTDTzrDBPjACZseIc',
-  authDomain: 'pepick-iwg.firebaseapp.com',
-  projectId: 'pepick-iwg',
-  storageBucket: 'pepick-iwg.firebasestorage.app',
-  messagingSenderId: '490312923173',
-  appId: '1:490312923173:web:ce1fffe7931793dedb27cc',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 function isPlaceholder(value) {
-  return !value || String(value).includes('YOUR_') || String(value).includes('your_');
+  return (
+    !value ||
+    value === 'undefined' ||
+    String(value).includes('YOUR_') ||
+    String(value).includes('your_')
+  );
 }
 
 const REQUIRED_KEYS = [

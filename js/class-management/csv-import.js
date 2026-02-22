@@ -140,6 +140,9 @@ export function handleBulkModalClick(event) {
 
 // ===== CSV 파싱 =====
 
+const CSV_MAX_LINES = 200;
+const CSV_MAX_FILE_SIZE = 512 * 1024; // 512KB
+
 export function parseCSV(content) {
   const lines = content
     .split('\n')
@@ -147,6 +150,11 @@ export function parseCSV(content) {
     .filter(Boolean);
 
   if (lines.length === 0) return [];
+
+  if (lines.length > CSV_MAX_LINES) {
+    UI.showToast(`CSV 최대 ${CSV_MAX_LINES}행까지 지원합니다 (현재 ${lines.length}행)`, 'error');
+    return [];
+  }
 
   const delimiter = lines[0].includes('\t') ? '\t' : ',';
   const headerKeywords = ['이름', '성명', 'name', '학생'];
@@ -198,6 +206,12 @@ export function parseCSV(content) {
 export function handleCSVImport(event) {
   const file = event.target.files?.[0];
   if (!file) return;
+
+  if (file.size > CSV_MAX_FILE_SIZE) {
+    UI.showToast('파일 크기가 512KB를 초과합니다', 'error');
+    event.target.value = '';
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = loadEvent => {
