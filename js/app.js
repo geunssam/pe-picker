@@ -15,6 +15,8 @@ import { QuickTimer } from './shared/quick-timer.js';
 import { Toolbar } from './shared/toolbar.js';
 import { BadgeManager } from './badge-manager/badge-manager.js';
 import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
+import { ConsentManager } from './consent-manager.js';
+import { UI } from './shared/ui-utils.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', requiresClass: false },
@@ -36,6 +38,9 @@ function init() {
   Store.migrateFromLegacy();
   AuthManager.init(onAuthStateChanged);
   window.addEventListener('pet-data-updated', onStoreDataUpdated);
+  window.addEventListener('pet-storage-full', () => {
+    UI.showToast('저장 공간이 부족합니다. 불필요한 데이터를 정리해 주세요.', 'error');
+  });
 }
 
 function onStoreDataUpdated() {
@@ -89,6 +94,14 @@ async function bootstrapAfterAuth() {
   }
 
   hideStartupSplash();
+
+  // 약관 동의 게이트 (미동의 시 로그아웃)
+  const consented = await ConsentManager.ensureConsent();
+  if (!consented) {
+    await AuthManager.signOut();
+    window.location.replace('login.html');
+    return;
+  }
 
   // 프로필 이름 + 이미지 세팅
   const user = AuthManager.getCurrentUser();

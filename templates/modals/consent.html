@@ -1,0 +1,107 @@
+<!-- 약관 동의 모달 -->
+<div id="consent-modal" class="modal-overlay" style="display: none">
+  <div class="modal-content" style="max-width: 400px">
+    <div class="modal-header">
+      <h3>서비스 이용 동의</h3>
+    </div>
+    <div class="modal-body" style="padding: var(--space-lg)">
+      <p
+        style="
+          font-size: var(--font-size-sm);
+          color: var(--text-secondary);
+          margin-bottom: var(--space-lg);
+          line-height: 1.6;
+        "
+      >
+        PEPick! 서비스를 이용하려면 아래 약관에 동의해 주세요.
+      </p>
+
+      <!-- 전체 동의 -->
+      <label
+        class="consent-row consent-all"
+        style="
+          display: flex;
+          align-items: center;
+          gap: var(--space-sm);
+          padding: var(--space-md);
+          background: rgba(124, 158, 245, 0.08);
+          border-radius: var(--radius-md);
+          cursor: pointer;
+          margin-bottom: var(--space-md);
+          font-weight: 600;
+        "
+      >
+        <input type="checkbox" id="consent-all-check" />
+        <span>전체 동의</span>
+      </label>
+
+      <!-- 개별 항목 -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-sm)">
+        <!-- 이용약관 -->
+        <div
+          class="consent-row"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm) var(--space-md);
+          "
+        >
+          <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer">
+            <input type="checkbox" id="consent-terms-check" class="consent-required" />
+            <span style="font-size: var(--font-size-sm)"
+              ><span style="color: var(--color-primary); font-weight: 600">[필수]</span> 이용약관
+              동의</span
+            >
+          </label>
+          <a
+            href="terms.html"
+            target="_blank"
+            rel="noopener"
+            style="
+              font-size: var(--font-size-xs);
+              color: var(--text-tertiary);
+              text-decoration: underline;
+            "
+            >보기</a
+          >
+        </div>
+
+        <!-- 개인정보처리방침 -->
+        <div
+          class="consent-row"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm) var(--space-md);
+          "
+        >
+          <label style="display: flex; align-items: center; gap: var(--space-sm); cursor: pointer">
+            <input type="checkbox" id="consent-privacy-check" class="consent-required" />
+            <span style="font-size: var(--font-size-sm)"
+              ><span style="color: var(--color-primary); font-weight: 600">[필수]</span>
+              개인정보처리방침 동의</span
+            >
+          </label>
+          <a
+            href="privacy.html"
+            target="_blank"
+            rel="noopener"
+            style="
+              font-size: var(--font-size-xs);
+              color: var(--text-tertiary);
+              text-decoration: underline;
+            "
+            >보기</a
+          >
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding: var(--space-md) var(--space-lg) var(--space-lg)">
+      <button id="consent-submit-btn" class="btn btn-primary btn-lg" disabled style="width: 100%">
+        동의하고 시작하기
+      </button>
+    </div>
+  </div>
+</div>

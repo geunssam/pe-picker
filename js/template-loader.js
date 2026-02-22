@@ -26,6 +26,7 @@ import overflowHtml from '../templates/modals/overflow.html?raw';
 import shortageHtml from '../templates/modals/shortage.html?raw';
 import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
 import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
+import consentHtml from '../templates/modals/consent.html?raw';
 
 // ── Whistle FAB ──
 import whistleFabHtml from '../templates/whistle-fab.html?raw';
@@ -38,6 +39,9 @@ import rightToolbarHtml from '../templates/right-toolbar.html?raw';
 
 // ── Left Drawer ──
 import leftDrawerHtml from '../templates/left-drawer.html?raw';
+
+// ── Footer ──
+import footerHtml from '../templates/footer.html?raw';
 
 // ── Assets (Vite가 해시 경로로 변환) ──
 import logoUrl from '../assets/logo.png';
@@ -86,7 +90,8 @@ export function mountTemplates() {
     emptyStudentsHtml +
     gmNumberHtml +
     gmGenderHtml +
-    badgeAwardHtml;
+    badgeAwardHtml +
+    consentHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 
   // 4. Whistle Panel — body 끝에 삽입
@@ -100,4 +105,7 @@ export function mountTemplates() {
 
   // 7. Left Drawer + Overlay — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', resolveAssets(leftDrawerHtml));
+
+  // 8. Footer — app-container 뒤에 삽입
+  appContainer.insertAdjacentHTML('afterend', footerHtml);
 }
