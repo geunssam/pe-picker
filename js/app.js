@@ -67,10 +67,13 @@ function onStoreDataUpdated() {
 function onAuthStateChanged() {
   const user = AuthManager.getCurrentUser();
   if (!user) {
-    if (!isLoginPage()) {
-      window.location.replace('login.html');
+    // SCREENSHOT_MODE: skip auth redirect
+    if (!window.__SCREENSHOT_MODE__) {
+      if (!isLoginPage()) {
+        window.location.replace('login.html');
+      }
+      return;
     }
-    return;
   }
 
   bootstrapAfterAuth();
@@ -87,20 +90,25 @@ async function bootstrapAfterAuth() {
   if (isBootstrapped) return;
   isBootstrapped = true;
 
-  try {
-    await FirestoreSync.init();
-  } catch (error) {
-    console.warn('[App] Firestore sync failed:', error);
+  // SCREENSHOT_MODE: skip Firestore, consent, profile
+  if (!window.__SCREENSHOT_MODE__) {
+    try {
+      await FirestoreSync.init();
+    } catch (error) {
+      console.warn('[App] Firestore sync failed:', error);
+    }
   }
 
   hideStartupSplash();
 
-  // 약관 동의 게이트 (미동의 시 로그아웃)
-  const consented = await ConsentManager.ensureConsent();
-  if (!consented) {
-    await AuthManager.signOut();
-    window.location.replace('login.html');
-    return;
+  if (!window.__SCREENSHOT_MODE__) {
+    // 약관 동의 게이트 (미동의 시 로그아웃)
+    const consented = await ConsentManager.ensureConsent();
+    if (!consented) {
+      await AuthManager.signOut();
+      window.location.replace('login.html');
+      return;
+    }
   }
 
   // 프로필 이름 + 이미지 세팅

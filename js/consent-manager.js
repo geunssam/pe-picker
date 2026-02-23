@@ -150,7 +150,8 @@ function showConsentModal() {
     const onSubmit = async () => {
       await saveConsent();
       cleanup();
-      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
       resolve(true);
     };
 
@@ -166,8 +167,9 @@ function showConsentModal() {
       submitBtn.removeEventListener('click', onSubmit);
     }
 
-    // 모달 표시 (배경 클릭 닫기 방지)
-    modal.style.display = 'flex';
+    // 모달 표시 (배경 클릭 닫기 방지) — .show로 visibility 토글
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
   });
 }
 
