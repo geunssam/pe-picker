@@ -3,11 +3,12 @@
    5단계 복수 학급 생성 위저드
    ============================================ */
 
-import { Store } from './shared/store.js';
-import { AuthManager } from './features/auth/auth-manager.js';
-import { generateId } from './storage/base-repo.js';
-import { syncClassToFirestore } from './class-management/class-firestore.js';
-import { syncTeacherProfileToFirestore } from './firestore-sync.js';
+import { Store } from '../../shared/store.js';
+import { AuthManager } from '../auth/auth-manager.js';
+import { generateId } from '../../storage/base-repo.js';
+import { syncClassToFirestore } from '../../class-management/class-firestore.js';
+import { syncTeacherProfileToFirestore } from '../../infra/firestore-sync.js';
+import './wizard.css';
 
 let currentStep = 1;
 let wizardData = {

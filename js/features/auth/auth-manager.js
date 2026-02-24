@@ -1,4 +1,4 @@
-import { getAuthInstance, isFirebaseConfigReady } from '../../firebase-config.js';
+import { getAuthInstance, isFirebaseConfigReady } from '../../infra/firebase-config.js';
 import {
   GoogleAuthProvider,
   onAuthStateChanged,

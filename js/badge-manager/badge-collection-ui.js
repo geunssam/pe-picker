@@ -7,7 +7,7 @@ import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
 import { Icons } from '../shared/icons.js';
 import { BADGE_TYPES, BADGE_KEYS, getLevelInfo, DEFAULT_THERMOSTAT } from './badge-config.js';
-import { FirestoreSync } from '../firestore-sync.js';
+import { FirestoreSync } from '../infra/firestore-sync.js';
 
 let currentTab = 'personal'; // 'personal' | 'class'
 let editMilestones = []; // 편집 중인 마일스톤

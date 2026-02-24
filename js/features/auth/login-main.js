@@ -1,6 +1,6 @@
 import { AuthManager } from './auth-manager.js';
-import { isFirebaseConfigReady } from '../../firebase-config.js';
-import { syncTeacherProfileToFirestore } from '../../firestore-sync.js';
+import { isFirebaseConfigReady } from '../../infra/firebase-config.js';
+import { syncTeacherProfileToFirestore } from '../../infra/firestore-sync.js';
 import './login.css';
 
 function setLoading(loading) {

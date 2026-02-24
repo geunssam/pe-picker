@@ -10,7 +10,7 @@ import classSelectorHtml from '../templates/pages/class-selector.html?raw';
 import tagGameHtml from '../templates/pages/tag-game.html?raw';
 import groupManagerHtml from '../templates/pages/group-manager.html?raw';
 import settingsHtml from '../templates/pages/settings.html?raw';
-import wizardHtml from '../templates/pages/wizard.html?raw';
+import wizardHtml from './features/wizard/wizard.html?raw';
 import badgeCollectionHtml from '../templates/pages/badge-collection.html?raw';
 
 // ── Modals ──

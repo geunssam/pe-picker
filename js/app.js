@@ -5,11 +5,11 @@
 import { mountTemplates } from './template-loader.js';
 import { Store } from './shared/store.js';
 import { AuthManager } from './features/auth/auth-manager.js';
-import { FirestoreSync } from './firestore-sync.js';
+import { FirestoreSync } from './infra/firestore-sync.js';
 import { ClassManager } from './class-management/index.js';
 import { TagGame } from './tag-game/tag-game.js';
 import { GroupManager } from './group-manager/group-manager.js';
-import { WizardManager } from './wizard.js';
+import { WizardManager } from './features/wizard/wizard.js';
 import { Whistle } from './shared/whistle.js';
 import { QuickTimer } from './shared/quick-timer.js';
 import { Toolbar } from './shared/toolbar.js';

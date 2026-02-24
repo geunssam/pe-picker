@@ -1,15 +1,15 @@
-import { Store } from './shared/store.js';
-import { AuthManager } from './features/auth/auth-manager.js';
+import { Store } from '../shared/store.js';
+import { AuthManager } from '../features/auth/auth-manager.js';
 import { getFirestoreInstance } from './firebase-config.js';
-import { withTimeout } from './shared/promise-utils.js';
+import { withTimeout } from '../shared/promise-utils.js';
 import {
   syncClassToFirestore,
   hydrateStudentsFromFirestore,
-} from './class-management/class-firestore.js';
-import { decodeTeamsFromFirestore } from './shared/firestore-utils.js';
-import { generateId } from './storage/base-repo.js';
-import { BadgeRepo } from './storage/badge-repo.js';
-import { XP_PER_BADGE } from './badge-manager/badge-config.js';
+} from '../class-management/class-firestore.js';
+import { decodeTeamsFromFirestore } from '../shared/firestore-utils.js';
+import { generateId } from '../storage/base-repo.js';
+import { BadgeRepo } from '../storage/badge-repo.js';
+import { XP_PER_BADGE } from '../badge-manager/badge-config.js';
 import {
   collection,
   doc,

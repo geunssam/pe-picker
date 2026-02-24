@@ -6,7 +6,7 @@
 import { Store } from '../shared/store.js';
 import { UI } from '../shared/ui-utils.js';
 import { BADGE_TYPES, BADGE_KEYS } from './badge-config.js';
-import { FirestoreSync } from '../firestore-sync.js';
+import { FirestoreSync } from '../infra/firestore-sync.js';
 
 let selectedStudentIds = new Set();
 let selectedBadgeTypes = new Set();
