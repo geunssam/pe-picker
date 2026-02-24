@@ -1,19 +1,12 @@
 <div id="page-settings" class="page-view">
   <div class="page-header">
     <div>
-      <div class="page-title">학급 관리</div>
-      <div class="page-subtitle">현재 학급의 정보를 관리합니다</div>
+      <div class="page-title">설정</div>
+      <div class="page-subtitle">학급 구성원과 모둠을 관리합니다</div>
     </div>
   </div>
 
-  <!-- 현재 학급 정보 -->
-  <div class="section">
-    <div id="settings-current-class" class="glass-card" style="padding: var(--space-lg)">
-      <!-- JS에서 동적 렌더링 -->
-    </div>
-  </div>
-
-  <!-- 학급 학생 목록 -->
+  <!-- 학생 설정 -->
   <div class="section">
     <div
       class="section-title"
@@ -34,7 +27,7 @@
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
           <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
         </svg>
-        학생 목록</span
+        학생 설정</span
       >
       <button
         class="btn btn-primary btn-sm"
@@ -87,7 +80,7 @@
     </div>
   </div>
 
-  <!-- 앱 정보 -->
+  <!-- 계정 관리 -->
   <div class="section">
     <div class="section-title">
       <svg
@@ -104,61 +97,17 @@
         <circle cx="12" cy="12" r="10" />
         <path d="M12 16v-4M12 8h.01" />
       </svg>
-      앱 정보
+      계정 관리
     </div>
     <div class="glass-card" style="padding: var(--space-lg)">
-      <div class="setting-row">
-        <div class="setting-label">체육 수업 도우미</div>
-        <div style="font-size: var(--font-size-sm); color: var(--text-tertiary)">v2.0.0</div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-label">이용약관</div>
-        <a
-          href="terms.html"
-          target="_blank"
-          rel="noopener"
-          style="
-            font-size: var(--font-size-sm);
-            color: var(--color-primary);
-            text-decoration: underline;
-          "
-          >보기</a
-        >
-      </div>
-      <div class="setting-row">
-        <div class="setting-label">개인정보처리방침</div>
-        <a
-          href="privacy.html"
-          target="_blank"
-          rel="noopener"
-          style="
-            font-size: var(--font-size-sm);
-            color: var(--color-primary);
-            text-decoration: underline;
-          "
-          >보기</a
-        >
-      </div>
       <div class="setting-row">
         <div class="setting-label">데이터 초기화</div>
         <button class="btn btn-sm btn-danger" id="settings-reset-data">초기화</button>
       </div>
-    </div>
-  </div>
-
-  <!-- 회원 탈퇴 -->
-  <div class="section">
-    <div class="glass-card" style="padding: var(--space-lg)">
       <div class="setting-row" style="border-bottom: none">
         <div>
           <div class="setting-label" style="color: var(--color-danger)">회원 탈퇴</div>
-          <div
-            style="
-              font-size: var(--font-size-xs);
-              color: var(--text-tertiary);
-              margin-top: var(--space-2xs);
-            "
-          >
+          <div style="font-size: var(--font-size-xs); color: var(--text-tertiary); margin-top: 2px">
             계정과 모든 데이터가 영구 삭제됩니다
           </div>
         </div>

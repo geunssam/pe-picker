@@ -108,6 +108,6 @@ export function mountTemplates() {
   // 7. Left Drawer + Overlay — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', resolveAssets(leftDrawerHtml));
 
-  // 8. Footer — app-container 뒤에 삽입
-  appContainer.insertAdjacentHTML('afterend', footerHtml);
+  // 8. Footer — app-container 안쪽 끝에 삽입
+  appContainer.insertAdjacentHTML('beforeend', footerHtml);
 }

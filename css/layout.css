@@ -13,6 +13,8 @@
   padding-top: calc(56px + var(--safe-top) + var(--space-lg));
   padding-bottom: var(--space-xl);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .startup-splash {
@@ -215,6 +217,7 @@
 .page-view.active {
   display: block;
   opacity: 1;
+  flex: 1;
 }
 
 /* === Section === */
