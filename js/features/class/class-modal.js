@@ -4,7 +4,7 @@
 import { state } from './state.js';
 import { Store } from '../../shared/store.js';
 import { UI } from '../../shared/ui-utils.js';
-import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
+import { sanitizeGender, sortStudentsByNumber, getStudentLabel } from './helpers.js';
 import {
   initializeRosterState,
   renderRosterEditor,
@@ -15,6 +15,7 @@ import {
 } from './modal-editor.js';
 import { closeBulkRegistrationModal } from './csv-import.js';
 import { syncClassToFirestore } from './class-firestore.js';
+import { AuthManager } from '../auth/auth-manager.js';
 
 // ========== Roster 모달 ==========
 
@@ -24,6 +25,12 @@ export function openRosterModal(classId, callback) {
 
   const titleEl = document.getElementById('roster-modal-title');
   const nameInput = document.getElementById('class-name-input');
+  const teacherInput = document.getElementById('roster-teacher-name');
+
+  // 선생님 이름 로드 (저장값 → Google displayName → 빈값)
+  const profile = Store.getTeacherProfile();
+  const googleName = AuthManager.getCurrentUser()?.displayName || '';
+  if (teacherInput) teacherInput.value = profile?.teacherName || googleName;
 
   if (classId) {
     const cls = Store.getClassById(classId);
@@ -68,27 +75,43 @@ export async function saveRoster() {
   const className = nameInput?.value.trim();
   const saveBtn = document.getElementById('roster-modal-save');
 
+  // 선생님 이름 저장
+  const teacherInput = document.getElementById('roster-teacher-name');
+  const teacherName = teacherInput?.value.trim() || '';
+  if (teacherName) {
+    const p = Store.getTeacherProfile() || {};
+    Store.saveTeacherProfile({ ...p, teacherName });
+    const navEl = document.getElementById('navbar-profile-name');
+    if (navEl) navEl.textContent = teacherName;
+  }
+
   if (!className) {
     UI.showToast('학급 이름을 입력하세요', 'error');
     return;
   }
 
-  const validStudents = state.rosterStudents
-    .map(s => ({
-      ...s,
-      name: (s.name || '').trim(),
-      number: parseInt(s.number, 10),
-      gender: sanitizeGender(s.gender),
-    }))
+  const sorted = state.rosterStudents
+    .map(s => {
+      const num = parseInt(s.number, 10);
+      return {
+        ...s,
+        name: (s.name || '').trim(),
+        number: Number.isFinite(num) && num > 0 ? num : 0,
+        gender: sanitizeGender(s.gender),
+      };
+    })
     .filter(s => s.name.length > 0)
-    .sort(sortStudentsByNumber)
-    .map((s, idx) => ({
-      ...s,
-      number: idx + 1,
-      sportsAbility: s.sportsAbility || '',
-      tags: Array.isArray(s.tags) ? s.tags : [],
-      note: s.note || '',
-    }));
+    .sort(sortStudentsByNumber);
+
+  // number가 0(무효)인 학생은 최대 번호 + 1로 보정
+  let maxNum = sorted.reduce((m, s) => Math.max(m, s.number), 0);
+  const validStudents = sorted.map(s => ({
+    ...s,
+    number: s.number > 0 ? s.number : ++maxNum,
+    sportsAbility: s.sportsAbility || '',
+    tags: Array.isArray(s.tags) ? s.tags : [],
+    note: s.note || '',
+  }));
 
   if (validStudents.length === 0) {
     UI.showToast('학생을 한 명 이상 입력하세요', 'error');
@@ -178,6 +201,7 @@ export function closeTeamModal() {
 
   state.editingClassId = null;
   state.teamDraggedId = null;
+  state.teamActiveGroup = null;
 
   state.teamStudents = [];
   state.teamUnassigned = [];
@@ -198,13 +222,14 @@ export async function saveTeams() {
 
   sanitizeTeamZones();
 
-  // 학생 이름 맵 (ID → name)
-  const nameById = new Map(state.teamStudents.map(s => [s.id, s.name]));
+  // 학생 라벨 맵 (ID → name 또는 번호 문자열)
+  const labelById = new Map(state.teamStudents.map(s => [s.id, getStudentLabel(s)]));
 
   const finalTeams = state.teamTeams.slice(0, teamCount).map(group =>
     group.map(id => {
       if (!id) return null;
-      return nameById.get(id) || null;
+      const label = labelById.get(id);
+      return label != null && label !== '' ? label : null;
     })
   );
 
@@ -225,18 +250,20 @@ export async function saveTeams() {
     }
 
     // 학생별 team 필드 업데이트 (모둠 배정 반영)
-    const studentTeamMap = new Map();
-    finalTeams.forEach((members, teamIdx) => {
+    // ID → 모둠 이름 맵 (finalTeams의 라벨 대신 state에서 ID 기반 매핑)
+    const idToTeamName = new Map();
+    state.teamTeams.slice(0, teamCount).forEach((group, teamIdx) => {
       const teamName = finalTeamNames[teamIdx] || `${teamIdx + 1}모둠`;
-      members.forEach(memberName => {
-        if (memberName) studentTeamMap.set(memberName, teamName);
+      group.forEach(id => {
+        if (id) idToTeamName.set(id, teamName);
       });
     });
 
     const updatedStudents = existing.students.map(s => {
-      const name = typeof s === 'string' ? s : s.name;
-      const teamName = studentTeamMap.get(name) || '';
       if (typeof s === 'string') return s;
+      // teamStudents에서 같은 학생 찾기 (id 매칭)
+      const modalStudent = state.teamStudents.find(ts => ts.id === s.id);
+      const teamName = modalStudent ? idToTeamName.get(modalStudent.id) || '' : s.team || '';
       return { ...s, team: teamName };
     });
 

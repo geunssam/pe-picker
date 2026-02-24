@@ -4,32 +4,17 @@
 import { Store } from '../../shared/store.js';
 import { UI } from '../../shared/ui-utils.js';
 import { Icons } from '../../shared/icons.js';
+import { sortStudentsByNumber } from './helpers.js';
 
 export function onSettingsPageEnter() {
   const cls = Store.getSelectedClass();
 
-  // 교사 이름 입력 필드
-  const nameInput = document.getElementById('settings-teacher-name');
-  if (nameInput) {
-    const profile = Store.getTeacherProfile();
-    nameInput.value = profile?.teacherName || '';
-    // 중복 리스너 방지
-    if (!nameInput._bound) {
-      nameInput._bound = true;
-      nameInput.addEventListener('change', () => {
-        const newName = nameInput.value.trim();
-        const p = Store.getTeacherProfile() || {};
-        Store.saveTeacherProfile({ ...p, teacherName: newName });
-        const el = document.getElementById('navbar-profile-name');
-        if (el) el.textContent = newName;
-        UI.showToast('이름이 변경되었습니다', 'success');
-      });
-    }
-  }
-
   const infoContainer = document.getElementById('settings-current-class');
   if (infoContainer && cls) {
     const gc = cls.teamCount || cls.teams?.length || 6;
+    const namedCount = cls.students.filter(s =>
+      (typeof s === 'string' ? s : s.name || '').trim()
+    ).length;
     infoContainer.innerHTML = `
       <div class="class-info-header">
         <div class="class-info-icon-wrap class-info-icon--name">
@@ -42,7 +27,7 @@ export function onSettingsPageEnter() {
           <div class="class-info-icon-wrap class-info-icon--student">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <div class="class-info-stat-value">${cls.students.length}</div>
+          <div class="class-info-stat-value">${namedCount}</div>
           <div class="class-info-stat-label">학생</div>
         </div>
         <div class="class-info-stat">
@@ -80,14 +65,17 @@ export function renderSettingsStudentList() {
     return;
   }
 
-  const cards = cls.students.map(s => {
+  const sorted = [...cls.students].sort(sortStudentsByNumber);
+  const cards = sorted.map(s => {
     const name = typeof s === 'string' ? s : s.name || '';
-    const number = typeof s === 'object' ? s.number || '' : '';
+    const number = typeof s === 'object' ? parseInt(s.number, 10) : NaN;
     const gender = typeof s === 'object' ? s.gender || '' : '';
     const genderClass =
       gender === 'male' ? ' gender-male' : gender === 'female' ? ' gender-female' : '';
+    const displayNumber = Number.isFinite(number) && number > 0 ? `${number}. ` : '';
+    const displayName = name ? UI.escapeHtml(name) : displayNumber ? '' : '?';
     return `<div class="tag-student-card${genderClass}">
-      <span>${number ? number + '. ' : ''}${UI.escapeHtml(name)}</span>
+      <span>${displayNumber}${displayName}</span>
     </div>`;
   });
 

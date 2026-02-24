@@ -15,7 +15,7 @@
         <div class="wizard-progress-track">
           <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
         </div>
-        <div class="wizard-step-indicator">Step <span id="wizard-current-step">1</span> / 5</div>
+        <div class="wizard-step-indicator">Step <span id="wizard-current-step">1</span> / 4</div>
       </div>
 
       <!-- Step 1: 학교급 선택 -->
@@ -113,25 +113,8 @@
         </div>
       </div>
 
-      <!-- Step 4: 학급별 학생 수 -->
+      <!-- Step 4: 교사 이름 입력 -->
       <div class="wizard-step" id="wizard-step-4">
-        <h2 class="wizard-step-title">학급별 학생 수를 조정해주세요</h2>
-        <p class="wizard-hint-top">기본값은 20명입니다</p>
-
-        <div class="wizard-scroll-area">
-          <div class="wizard-list" id="wizard-student-count-list">
-            <!-- JavaScript로 동적 생성 -->
-          </div>
-        </div>
-
-        <div class="wizard-nav-buttons">
-          <button class="btn btn-secondary btn-lg" id="wizard-step4-back">이전</button>
-          <button class="btn btn-primary btn-lg" id="wizard-step4-next">다음</button>
-        </div>
-      </div>
-
-      <!-- Step 5: 교사 이름 입력 -->
-      <div class="wizard-step" id="wizard-step-5">
         <h2 class="wizard-step-title">어떻게 불러드릴까요?</h2>
         <div class="wizard-input-group">
           <input
@@ -145,8 +128,8 @@
           <p class="wizard-hint">선택사항입니다. 건너뛰려면 바로 완료를 눌러주세요</p>
         </div>
         <div class="wizard-nav-buttons">
-          <button class="btn btn-secondary btn-lg" id="wizard-step5-back">이전</button>
-          <button class="btn btn-primary btn-lg" id="wizard-step5-complete">완료</button>
+          <button class="btn btn-secondary btn-lg" id="wizard-step4-back">이전</button>
+          <button class="btn btn-primary btn-lg" id="wizard-step4-complete">완료</button>
         </div>
       </div>
     </div>

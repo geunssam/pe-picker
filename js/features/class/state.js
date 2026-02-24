@@ -16,4 +16,5 @@ export const state = {
   teamTeams: [],
   teamTeamNames: [],
   teamDraggedId: null,
+  teamActiveGroup: null, // 탭 배정: 활성 모둠 인덱스 (null이면 비활성)
 };

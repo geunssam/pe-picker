@@ -1,7 +1,9 @@
 import { getAuthInstance, isFirebaseConfigReady } from '../../infra/firebase-config.js';
 import {
   GoogleAuthProvider,
+  deleteUser,
   onAuthStateChanged,
+  reauthenticateWithPopup,
   signInWithPopup,
   signOut as firebaseSignOut,
   setPersistence,
@@ -116,6 +118,28 @@ async function signOut() {
   await withTimeout(firebaseSignOut(auth), 8000, 'Sign out');
 }
 
+/**
+ * Firebase Auth 계정 삭제 (requires-recent-login 시 재인증 후 재시도)
+ * Firestore/localStorage 정리는 호출부에서 먼저 수행해야 한다.
+ */
+async function deleteAuthAccount() {
+  const auth = getAuth();
+  const user = auth?.currentUser;
+  if (!user) throw new Error('로그인 상태가 아닙니다.');
+
+  try {
+    await withTimeout(deleteUser(user), 10000, 'delete user');
+  } catch (error) {
+    if (error.code === 'auth/requires-recent-login') {
+      const provider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(user, provider);
+      await withTimeout(deleteUser(user), 10000, 'delete user retry');
+    } else {
+      throw error;
+    }
+  }
+}
+
 function destroy() {
   if (unsubscribe) {
     unsubscribe();
@@ -134,6 +158,7 @@ export const AuthManager = {
   getCurrentUser,
   signInWithGoogle,
   signOut,
+  deleteAuthAccount,
   onAuthStateChanged: listener => {
     if (listener && typeof listener === 'function') listeners.push(listener);
   },

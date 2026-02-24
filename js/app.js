@@ -140,6 +140,13 @@ async function bootstrapAfterAuth() {
     });
   });
 
+  // 로고 클릭 → 술래뽑기(홈)로 이동
+  const navbarLeft = document.querySelector('.navbar-left');
+  if (navbarLeft) {
+    navbarLeft.style.cursor = 'pointer';
+    navbarLeft.addEventListener('click', () => navigateTo(DEFAULT_INNER_ROUTE));
+  }
+
   const logoutBtn = document.getElementById('landing-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {

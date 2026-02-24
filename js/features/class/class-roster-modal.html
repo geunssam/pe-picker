@@ -6,9 +6,21 @@
       <button class="modal-close" id="roster-modal-close">✕</button>
     </div>
     <div class="modal-body" style="padding: var(--space-lg); overflow-x: auto">
-      <div class="class-editor-section">
-        <label class="timetable-label">학급 이름</label>
-        <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반" />
+      <div class="class-editor-section" style="display: flex; gap: var(--space-md)">
+        <div style="flex: 1">
+          <label class="timetable-label">학급 이름</label>
+          <input class="input" type="text" id="class-name-input" placeholder="예: 6학년 3반" />
+        </div>
+        <div style="flex: 1">
+          <label class="timetable-label">선생님 이름</label>
+          <input
+            class="input"
+            type="text"
+            id="roster-teacher-name"
+            placeholder="예: 김체육"
+            maxlength="20"
+          />
+        </div>
       </div>
 
       <div class="class-editor-section">

@@ -39,25 +39,31 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null
                    && request.auth.uid == userId;
-      allow write: if request.auth != null
-                    && request.auth.uid == userId
-                    && isValidUserDoc();
+      allow create, update: if request.auth != null
+                              && request.auth.uid == userId
+                              && isValidUserDoc();
+      allow delete: if request.auth != null
+                     && request.auth.uid == userId;
 
       // 학급 서브컬렉션
       match /classes/{classId} {
         allow read: if request.auth != null
                      && request.auth.uid == userId;
-        allow write: if request.auth != null
-                      && request.auth.uid == userId
-                      && isValidClass();
+        allow create, update: if request.auth != null
+                                && request.auth.uid == userId
+                                && isValidClass();
+        allow delete: if request.auth != null
+                       && request.auth.uid == userId;
 
         // 학생 서브컬렉션
         match /students/{studentId} {
           allow read: if request.auth != null
                        && request.auth.uid == userId;
-          allow write: if request.auth != null
-                        && request.auth.uid == userId
-                        && isValidStudent();
+          allow create, update: if request.auth != null
+                                  && request.auth.uid == userId
+                                  && isValidStudent();
+          allow delete: if request.auth != null
+                         && request.auth.uid == userId;
         }
       }
     }

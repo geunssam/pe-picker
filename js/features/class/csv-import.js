@@ -10,13 +10,25 @@ import { applyImportedStudents } from './modal-editor.js';
 
 export function buildBulkModalRowsFromStudents() {
   const sortedStudents = [...state.rosterStudents].sort(sortStudentsByNumber);
-  const targetCount = sortedStudents.length > 0 ? sortedStudents.length : 20;
+
+  if (sortedStudents.length === 0) {
+    // 학생 없으면 20행 빈 카드
+    const rows = [];
+    for (let i = 0; i < 20; i++) {
+      rows.push({ number: i + 1, name: '', gender: '' });
+    }
+    return rows;
+  }
+
+  // 기존 학생의 최대 번호까지 행 생성 (갭 포함)
+  const maxNumber = Math.max(...sortedStudents.map(s => s.number));
+  const studentByNumber = new Map(sortedStudents.map(s => [s.number, s]));
 
   const rows = [];
-  for (let i = 0; i < targetCount; i++) {
-    const student = sortedStudents[i];
+  for (let num = 1; num <= maxNumber; num++) {
+    const student = studentByNumber.get(num);
     rows.push({
-      number: i + 1,
+      number: num,
       name: student?.name || '',
       gender: sanitizeGender(student?.gender),
     });
@@ -33,7 +45,7 @@ export function renderBulkModalRows() {
       const maleActive = row.gender === 'male' ? ' active-male' : '';
       const femaleActive = row.gender === 'female' ? ' active-female' : '';
       return `<div class="roster-input-card" data-row-index="${idx}">
-          <span class="roster-number">${idx + 1}</span>
+          <span class="roster-number">${row.number}</span>
           <input type="text" class="class-bulk-name-input roster-name-input" maxlength="20"
                  data-row-index="${idx}"
                  value="${UI.escapeHtml(row.name || '')}" placeholder="이름">
@@ -58,8 +70,10 @@ export function closeBulkRegistrationModal() {
 }
 
 export function addBulkModalRow() {
+  const maxNumber =
+    state.bulkModalRows.length > 0 ? Math.max(...state.bulkModalRows.map(r => r.number)) : 0;
   state.bulkModalRows.push({
-    number: state.bulkModalRows.length + 1,
+    number: maxNumber + 1,
     name: '',
     gender: '',
   });
@@ -87,7 +101,9 @@ export function applyBulkRegistrationModal() {
     const femaleBtn = cardEl.querySelector('.class-bulk-gender-btn[data-gender="female"]');
     if (maleBtn?.classList.contains('active-male')) gender = 'male';
     else if (femaleBtn?.classList.contains('active-female')) gender = 'female';
-    return { number: idx + 1, name, gender: sanitizeGender(gender) };
+    // 행의 표시 번호(원본 번호) 유지
+    const rowNumber = state.bulkModalRows[idx]?.number || idx + 1;
+    return { number: rowNumber, name, gender: sanitizeGender(gender) };
   });
 
   const count = applyImportedStudents(rows);

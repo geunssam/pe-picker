@@ -207,6 +207,16 @@ body {
   color: var(--text-white);
 }
 
+.btn-outline-danger {
+  background: transparent;
+  color: var(--color-danger-dark);
+  border: 1.5px solid var(--color-danger);
+}
+.btn-outline-danger:hover {
+  background: var(--color-danger);
+  color: var(--text-white);
+}
+
 .btn-sm {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);

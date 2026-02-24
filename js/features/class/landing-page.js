@@ -12,7 +12,9 @@ export function renderLandingClassList() {
   const container = document.getElementById('landing-class-list');
   if (!container) return;
 
-  const classes = Store.getClasses();
+  const classes = Store.getClasses()
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
 
   if (classes.length === 0) {
     container.innerHTML = `
@@ -28,12 +30,15 @@ export function renderLandingClassList() {
   container.innerHTML = classes
     .map(cls => {
       const gc = cls.teamCount || cls.teams?.length || 6;
+      const namedCount = cls.students.filter(s =>
+        (typeof s === 'string' ? s : s.name || '').trim()
+      ).length;
       return `
         <div class="landing-class-card" data-class-id="${cls.id}">
           <div class="landing-card-info">
             <div class="landing-card-name">${UI.escapeHtml(cls.name)}</div>
             <div class="landing-card-meta">
-              <span>${Icons.user(14)} ${cls.students.length}명</span>
+              <span>${Icons.user(14)} ${namedCount}명</span>
               <span>${Icons.users(14)} ${gc}모둠</span>
             </div>
           </div>
@@ -100,7 +105,10 @@ export function refreshAllSelects() {
   classes.forEach(cls => {
     const option = document.createElement('option');
     option.value = cls.id;
-    option.textContent = `${cls.name} (${cls.students.length}명)`;
+    const named = cls.students.filter(s =>
+      (typeof s === 'string' ? s : s.name || '').trim()
+    ).length;
+    option.textContent = `${cls.name} (${named}명)`;
     select.appendChild(option);
   });
 

@@ -6,7 +6,12 @@
 import { state } from './state.js';
 import { Store } from '../../shared/store.js';
 import { UI } from '../../shared/ui-utils.js';
-import { normalizeStudentName, sortStudentsByNumber, createModalStudent } from './helpers.js';
+import {
+  normalizeStudentName,
+  sortStudentsByNumber,
+  createModalStudent,
+  getStudentLabel,
+} from './helpers.js';
 
 // ========== 공유: 알약 카드 HTML 생성 ==========
 
@@ -19,9 +24,10 @@ function renderPillCardHTML(student, options = {}) {
         ? ' gender-female'
         : '';
   const draggable = options.draggable ? ' draggable="true"' : '';
+  const displayName = student.name ? UI.escapeHtml(student.name) : `${student.number}번`;
   return `<div class="tag-student-card${genderClass}"${draggable}
               data-student-id="${UI.escapeHtml(student.id)}">
-            <span>${student.number}. ${UI.escapeHtml(student.name)}</span>
+            <span>${student.number}. ${displayName}</span>
           </div>`;
 }
 
@@ -58,9 +64,7 @@ export function initializeRosterState(cls) {
 }
 
 export function normalizeRosterNumbers() {
-  state.rosterStudents = [...state.rosterStudents]
-    .sort(sortStudentsByNumber)
-    .map((s, idx) => ({ ...s, number: idx + 1 }));
+  state.rosterStudents = [...state.rosterStudents].sort(sortStudentsByNumber);
 }
 
 export function addStudentRow() {
@@ -80,10 +84,9 @@ export function addStudentRow() {
     if (btn.classList.contains('active-female')) gender = 'female';
   });
 
-  const student = createModalStudent(
-    { name, number: state.rosterStudents.length + 1, gender },
-    state.rosterStudents.length + 1
-  );
+  const named = state.rosterStudents.filter(s => s.name.trim());
+  const maxNumber = named.length > 0 ? Math.max(...named.map(s => s.number)) : 0;
+  const student = createModalStudent({ name, number: maxNumber + 1, gender }, maxNumber + 1);
   state.rosterStudents.push(student);
   normalizeRosterNumbers();
   renderRosterEditor();
@@ -130,7 +133,8 @@ function renderEmptyInputCard() {
   const listEl = document.getElementById('roster-student-list');
   if (!listEl) return;
 
-  const nextNumber = state.rosterStudents.length + 1;
+  const named = state.rosterStudents.filter(s => s.name.trim());
+  const nextNumber = named.length > 0 ? Math.max(...named.map(s => s.number)) + 1 : 1;
   listEl.innerHTML = `<div class="roster-add-card" data-student-id="new">
       <span class="roster-add-number">${nextNumber}</span>
       <input type="text" class="roster-add-name" maxlength="20"
@@ -211,16 +215,17 @@ export function handleRosterClick(event) {
 }
 
 export function applyImportedStudents(importedRows) {
+  let autoNumber = 0;
   const nextStudents = importedRows
-    .map((row, idx) => {
-      const normalized = typeof row === 'string' ? { name: row, number: idx + 1, gender: '' } : row;
-      const student = createModalStudent(normalized, idx + 1);
+    .map(row => {
+      const normalized = typeof row === 'string' ? { name: row, number: 0, gender: '' } : row;
+      autoNumber++;
+      const student = createModalStudent(normalized, autoNumber);
       if (!student.name) return null;
       return student;
     })
     .filter(Boolean)
-    .sort(sortStudentsByNumber)
-    .map((s, idx) => ({ ...s, number: idx + 1 }));
+    .sort(sortStudentsByNumber);
 
   if (nextStudents.length === 0) {
     UI.showToast('학생을 찾을 수 없습니다', 'error');
@@ -307,6 +312,7 @@ export function initializeTeamState(cls) {
   state.teamUnassigned = [];
   state.teamTeams = [];
   state.teamTeamNames = [];
+  state.teamActiveGroup = null;
 
   if (!cls) return;
 
@@ -337,12 +343,27 @@ export function initializeTeamState(cls) {
           state.teamTeams[teamIdx].push(null);
           continue;
         }
-        const memberName = normalizeStudentName(member);
-        if (!memberName) {
+        const memberLabel = normalizeStudentName(member) || String(member).trim();
+        if (!memberLabel) {
           state.teamTeams[teamIdx].push(null);
           continue;
         }
-        const matched = state.teamStudents.find(s => !usedIds.has(s.id) && s.name === memberName);
+        // 1차: 이름으로 매칭
+        let matched = state.teamStudents.find(
+          s => !usedIds.has(s.id) && s.name && s.name === memberLabel
+        );
+        // 2차: 번호 문자열로 매칭 (이름 없는 학생용)
+        if (!matched) {
+          matched = state.teamStudents.find(
+            s => !usedIds.has(s.id) && String(s.number) === memberLabel
+          );
+        }
+        // 3차: getStudentLabel 전체 매칭
+        if (!matched) {
+          matched = state.teamStudents.find(
+            s => !usedIds.has(s.id) && getStudentLabel(s) === memberLabel
+          );
+        }
         if (matched) {
           state.teamTeams[teamIdx].push(matched.id);
           usedIds.add(matched.id);
@@ -403,12 +424,13 @@ export function renderTeamColumns() {
     ? Math.max(1, parseInt(rowsInput.value, 10) || 4)
     : Math.max(maxMembers + 2, 4);
 
-  // 헤더 (모둠이름 + 인원수, null 제외)
+  // 헤더 (모둠이름 + 인원수, null 제외) — 탭 배정용 클릭 영역
   let headerCells = '';
   for (let i = 0; i < teamCount; i++) {
     const name = state.teamTeamNames[i] || `${i + 1}모둠`;
     const count = state.teamTeams[i].filter(Boolean).length;
-    headerCells += `<th>${UI.escapeHtml(name)}<br><span class="team-sheet-count">${count}명</span></th>`;
+    const activeClass = state.teamActiveGroup === i ? ' tm-active-group' : '';
+    headerCells += `<th class="tm-group-header${activeClass}" data-group-index="${i}">${UI.escapeHtml(name)}<br><span class="team-sheet-count">${count}명</span></th>`;
   }
 
   // 본문 (행 = 자리, 열 = 모둠)
@@ -565,6 +587,92 @@ function bindTeamDragAndDrop() {
       }
     });
   });
+
+  // 탭 배정: 모둠 헤더 클릭 → 활성 모둠 토글
+  modal.querySelectorAll('.tm-group-header').forEach(th => {
+    th.addEventListener('click', () => {
+      const idx = parseInt(th.dataset.groupIndex, 10);
+      if (!Number.isFinite(idx)) return;
+      state.teamActiveGroup = state.teamActiveGroup === idx ? null : idx;
+      // 헤더 하이라이트만 갱신 (전체 재렌더 불필요)
+      modal.querySelectorAll('.tm-group-header').forEach(h => {
+        h.classList.toggle(
+          'tm-active-group',
+          parseInt(h.dataset.groupIndex, 10) === state.teamActiveGroup
+        );
+      });
+    });
+  });
+
+  // 탭 배정: 미배정 풀 학생 카드 클릭 → 활성 모둠에 배정
+  const poolEl = document.getElementById('team-unassigned-pool');
+  if (poolEl) {
+    poolEl.querySelectorAll('.tag-student-card').forEach(card => {
+      card.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (state.teamActiveGroup == null) return;
+        const studentId = card.dataset.studentId;
+        if (!studentId) return;
+
+        // 모둠당 인원 초과 체크
+        const rowsInput = document.getElementById('team-modal-rows');
+        const maxRows = rowsInput ? Math.max(1, parseInt(rowsInput.value, 10) || 4) : 4;
+        const team = state.teamTeams[state.teamActiveGroup];
+        const visibleSlots = team.slice(0, maxRows);
+        const hasEmptySlot = visibleSlots.includes(null) || visibleSlots.length < maxRows;
+
+        if (!hasEmptySlot) {
+          const groupName =
+            state.teamTeamNames[state.teamActiveGroup] || `${state.teamActiveGroup + 1}모둠`;
+          const ok = await UI.showConfirm(
+            `${groupName}의 모둠당 인원(${maxRows}명)을 초과합니다.\n모둠당 인원 수를 늘리시겠습니까?`,
+            { confirmText: '늘리기', cancelText: '취소' }
+          );
+          if (!ok) return;
+          if (rowsInput) rowsInput.value = maxRows + 1;
+        }
+
+        moveStudentToTeamZone(studentId, 'group', state.teamActiveGroup, null);
+        renderTeamUnassignedPool();
+        renderTeamColumns();
+        bindTeamDragAndDrop();
+      });
+    });
+  }
+
+  // 탭 배정: 모둠표(보드) 안 학생 카드 클릭 → 미배정으로 복귀
+  const boardEl = document.getElementById('team-assign-board');
+  if (boardEl) {
+    boardEl.querySelectorAll('.tag-student-card').forEach(card => {
+      card.addEventListener('click', e => {
+        e.stopPropagation();
+        const studentId = card.dataset.studentId;
+        if (!studentId) return;
+        moveStudentToTeamZone(studentId, 'unassigned', null, null);
+        renderTeamUnassignedPool();
+        renderTeamColumns();
+        bindTeamDragAndDrop();
+      });
+    });
+  }
+}
+
+// ========== Team 초기화 ==========
+
+export async function resetTeamAssignments() {
+  const ok = await UI.showConfirm(
+    '모든 모둠 배정을 초기화하시겠습니까?\n학생들이 미배정 상태로 돌아갑니다.',
+    { confirmText: '초기화', cancelText: '취소' }
+  );
+  if (!ok) return;
+
+  // 모든 학생 → 미배정 풀로 이동
+  state.teamTeams = state.teamTeams.map(() => []);
+  state.teamUnassigned = state.teamStudents.map(s => s.id);
+  state.teamActiveGroup = null;
+
+  renderTeamEditor();
+  UI.showToast('모둠 배정이 초기화되었습니다', 'info');
 }
 
 // ========== Team 입력 핸들러 ==========

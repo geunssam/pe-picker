@@ -12,6 +12,7 @@ import { BadgeRepo } from '../storage/badge-repo.js';
 import { XP_PER_BADGE } from '../features/badge/badge-config.js';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -547,9 +548,56 @@ export async function setSelectedClass(classId) {
   );
 }
 
+/**
+ * 회원 탈퇴 시 Firestore 사용자 데이터 전체 삭제
+ * 삭제 순서: students(서브컬렉션) → classes → user 문서
+ */
+async function deleteAllUserData(userId) {
+  const database = getDb();
+  if (!database || !userId) return;
+
+  // 실시간 동기화 중지 (삭제 이벤트가 로컬에 반영되지 않도록)
+  stop();
+
+  // 1. 각 class의 students 서브컬렉션 삭제
+  const classesRef = collection(database, 'users', userId, 'classes');
+  const classSnap = await withTimeout(
+    getDocs(classesRef),
+    SYNC_TIMEOUT_MS,
+    'classes load for delete'
+  );
+
+  for (const classDoc of classSnap.docs) {
+    const studentsRef = collection(database, 'users', userId, 'classes', classDoc.id, 'students');
+    const studentSnap = await withTimeout(
+      getDocs(studentsRef),
+      SYNC_TIMEOUT_MS,
+      'students load for delete'
+    );
+
+    if (!studentSnap.empty) {
+      const batch = writeBatch(database);
+      studentSnap.docs.forEach(d => batch.delete(d.ref));
+      await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'students batch delete');
+    }
+  }
+
+  // 2. classes 컬렉션 삭제
+  if (!classSnap.empty) {
+    const batch = writeBatch(database);
+    classSnap.docs.forEach(d => batch.delete(d.ref));
+    await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'classes batch delete');
+  }
+
+  // 3. users/{userId} 문서 삭제
+  const userRef = doc(database, 'users', userId);
+  await withTimeout(deleteDoc(userRef), SYNC_TIMEOUT_MS, 'user doc delete');
+}
+
 export const FirestoreSync = {
   init,
   stop,
+  deleteAllUserData,
   syncTeacherProfileToFirestore,
   setSelectedClass,
   syncBadgeLogEntries,

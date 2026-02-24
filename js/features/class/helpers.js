@@ -16,6 +16,19 @@ export function normalizeStudentName(student) {
   return '';
 }
 
+/**
+ * 저장/매칭용 학생 라벨 반환
+ * 이름이 있으면 이름, 없으면 번호 문자열, 둘 다 없으면 id
+ */
+export function getStudentLabel(student) {
+  if (!student) return '';
+  const name = typeof student === 'string' ? student.trim() : (student.name || '').trim();
+  if (name) return name;
+  const num = typeof student === 'string' ? '' : student.number;
+  if (num != null && num !== '' && num !== 0) return String(num);
+  return student.id || '';
+}
+
 export function sortStudentsByNumber(a, b) {
   const numA = parseInt(a.number, 10);
   const numB = parseInt(b.number, 10);

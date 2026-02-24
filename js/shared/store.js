@@ -361,6 +361,33 @@ function migrateFromLegacy() {
 
   // 학급 ID 마이그레이션
   migrateClassIds();
+
+  // 유령 학생(name이 빈 문자열) 제거 마이그레이션
+  migrateRemoveGhostStudents();
+}
+
+/**
+ * 유령 학생 제거 마이그레이션
+ * 위저드에서 name: '' 으로 생성된 빈 학생 객체를 정리
+ */
+function migrateRemoveGhostStudents() {
+  const classes = getClasses();
+  let changed = false;
+
+  classes.forEach(cls => {
+    if (!Array.isArray(cls.students)) return;
+    const before = cls.students.length;
+    cls.students = cls.students.filter(s => {
+      if (typeof s === 'string') return s.trim().length > 0;
+      return (s.name || '').trim().length > 0;
+    });
+    if (cls.students.length !== before) changed = true;
+  });
+
+  if (changed) {
+    saveClasses(classes);
+    console.log('[Store] 유령 학생 마이그레이션 완료');
+  }
 }
 
 // Public API (기존 인터페이스 유지)

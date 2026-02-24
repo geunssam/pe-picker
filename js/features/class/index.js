@@ -4,6 +4,9 @@
  */
 import { state } from './state.js';
 import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
+import { AuthManager } from '../auth/auth-manager.js';
+import { FirestoreSync } from '../../infra/firestore-sync.js';
 import { normalizeStudentName } from './helpers.js';
 import {
   handleRosterInput,
@@ -12,6 +15,7 @@ import {
   handleTeamInput,
   onTeamCountChange,
   onTeamRowsChange,
+  resetTeamAssignments,
 } from './modal-editor.js';
 import {
   handleCSVImport,
@@ -73,9 +77,12 @@ function init() {
   const teamSaveBtn = document.getElementById('team-modal-save');
   const teamCountInput = document.getElementById('team-modal-count');
 
+  const teamResetBtn = document.getElementById('team-modal-reset');
+
   if (teamCloseBtn) teamCloseBtn.addEventListener('click', closeTeamModal);
   if (teamCancelBtn) teamCancelBtn.addEventListener('click', closeTeamModal);
   if (teamSaveBtn) teamSaveBtn.addEventListener('click', saveTeams);
+  if (teamResetBtn) teamResetBtn.addEventListener('click', resetTeamAssignments);
   if (teamCountInput) teamCountInput.addEventListener('change', onTeamCountChange);
 
   const teamRowsInput = document.getElementById('team-modal-rows');
@@ -118,6 +125,77 @@ function init() {
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
         location.reload();
+      }
+    });
+  }
+
+  // === 회원 탈퇴 버튼 ===
+  const deleteAccountBtn = document.getElementById('settings-delete-account');
+  if (deleteAccountBtn) {
+    deleteAccountBtn.addEventListener('click', async () => {
+      if (!AuthManager.isAuthenticated()) {
+        UI.showToast('로그인 상태에서만 탈퇴할 수 있습니다', 'error');
+        return;
+      }
+
+      const first = await UI.showConfirm('정말 탈퇴하시겠습니까?', {
+        confirmText: '탈퇴',
+        danger: true,
+      });
+      if (!first) return;
+
+      const second = await UI.showConfirm('모든 데이터가 삭제됩니다.\n되돌릴 수 없습니다.', {
+        confirmText: '영구 삭제',
+        danger: true,
+      });
+      if (!second) return;
+
+      try {
+        deleteAccountBtn.disabled = true;
+        deleteAccountBtn.textContent = '처리 중...';
+
+        const userId = AuthManager.getCurrentUser()?.uid;
+
+        // 1. Firestore 데이터 삭제
+        if (userId) {
+          await FirestoreSync.deleteAllUserData(userId);
+        }
+
+        // 2. localStorage 초기화
+        Store.clearAllData();
+        localStorage.removeItem('pet_current_uid');
+
+        // 3. Auth 상태 리스너 제거 (삭제 후 자동 리다이렉트 방지)
+        AuthManager.destroy();
+
+        // 4. Firebase Auth 계정 삭제
+        await AuthManager.deleteAuthAccount();
+
+        // 5. 완료 알림 → 확인 시 로그인 페이지로 이동
+        await new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+          overlay.innerHTML = `
+            <div class="modal-alert">
+              <div class="modal-alert-body">
+                <div class="modal-alert-message">탈퇴 및 데이터 삭제가 완료되었습니다!</div>
+                <div class="confirm-btn-row">
+                  <button class="btn-confirm-ok">확인</button>
+                </div>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+          requestAnimationFrame(() => overlay.classList.add('show'));
+          overlay.querySelector('.btn-confirm-ok').addEventListener('click', resolve);
+        });
+
+        window.location.replace('login.html');
+      } catch (error) {
+        console.error('[Settings] 회원 탈퇴 실패:', error);
+        UI.showToast('탈퇴 처리 중 오류가 발생했습니다', 'error');
+        deleteAccountBtn.disabled = false;
+        deleteAccountBtn.textContent = '탈퇴하기';
       }
     });
   }
@@ -171,9 +249,12 @@ function populateSelect(selectId, selectedId) {
 
   select.innerHTML = '<option value="">학급 선택...</option>';
   classes.forEach(cls => {
+    const named = cls.students.filter(s =>
+      (typeof s === 'string' ? s : s.name || '').trim()
+    ).length;
     const option = document.createElement('option');
     option.value = cls.id;
-    option.textContent = `${cls.name} (${cls.students.length}명)`;
+    option.textContent = `${cls.name} (${named}명)`;
     select.appendChild(option);
   });
 
