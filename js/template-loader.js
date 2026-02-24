@@ -6,38 +6,42 @@
 import navbarHtml from '../templates/navbar.html?raw';
 
 // ── Pages ──
-import classSelectorHtml from '../templates/pages/class-selector.html?raw';
-import tagGameHtml from '../templates/pages/tag-game.html?raw';
-import groupManagerHtml from '../templates/pages/group-manager.html?raw';
-import settingsHtml from '../templates/pages/settings.html?raw';
-import wizardHtml from '../templates/pages/wizard.html?raw';
-import badgeCollectionHtml from '../templates/pages/badge-collection.html?raw';
+import classSelectorHtml from './features/class/class-selector.html?raw';
+import tagGameHtml from './features/tag-game/tag-game.html?raw';
+import groupManagerHtml from './features/group-manager/group-manager.html?raw';
+import settingsHtml from './features/class/settings.html?raw';
+import wizardHtml from './features/wizard/wizard.html?raw';
+import badgeCollectionHtml from './features/badge/badge-collection.html?raw';
 
 // ── Modals ──
-import classRosterHtml from '../templates/modals/class-roster.html?raw';
-import classTeamHtml from '../templates/modals/class-team.html?raw';
-import classBulkHtml from '../templates/modals/class-bulk.html?raw';
-import tagNumberHtml from '../templates/modals/tag-number.html?raw';
-import tagGenderHtml from '../templates/modals/tag-gender.html?raw';
-import manualInputHtml from '../templates/modals/manual-input.html?raw';
-import gmNumberHtml from '../templates/modals/gm-number.html?raw';
-import gmGenderHtml from '../templates/modals/gm-gender.html?raw';
-import overflowHtml from '../templates/modals/overflow.html?raw';
-import shortageHtml from '../templates/modals/shortage.html?raw';
-import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
-import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
+import classRosterHtml from './features/class/class-roster-modal.html?raw';
+import classTeamHtml from './features/class/class-team-modal.html?raw';
+import classBulkHtml from './features/class/class-bulk-modal.html?raw';
+import tagNumberHtml from './features/tag-game/tag-number-modal.html?raw';
+import tagGenderHtml from './features/tag-game/tag-gender-modal.html?raw';
+import manualInputHtml from './features/tag-game/manual-input-modal.html?raw';
+import gmNumberHtml from './features/group-manager/gm-number-modal.html?raw';
+import gmGenderHtml from './features/group-manager/gm-gender-modal.html?raw';
+import overflowHtml from './features/group-manager/overflow-modal.html?raw';
+import shortageHtml from './features/group-manager/shortage-modal.html?raw';
+import emptyStudentsHtml from './features/class/empty-students-modal.html?raw';
+import badgeAwardHtml from './features/badge/badge-award-modal.html?raw';
+import consentHtml from './features/auth/consent-modal.html?raw';
 
 // ── Whistle FAB ──
-import whistleFabHtml from '../templates/whistle-fab.html?raw';
+import whistleFabHtml from './features/tools/whistle-fab.html?raw';
 
 // ── Timer FAB ──
-import timerFabHtml from '../templates/timer-fab.html?raw';
+import timerFabHtml from './features/tools/timer-fab.html?raw';
 
 // ── Right Toolbar ──
-import rightToolbarHtml from '../templates/right-toolbar.html?raw';
+import rightToolbarHtml from './features/tools/right-toolbar.html?raw';
 
 // ── Left Drawer ──
-import leftDrawerHtml from '../templates/left-drawer.html?raw';
+import leftDrawerHtml from './features/tools/left-drawer.html?raw';
+
+// ── Footer ──
+import footerHtml from '../templates/footer.html?raw';
 
 // ── Assets (Vite가 해시 경로로 변환) ──
 import logoUrl from '../assets/logo.png';
@@ -86,7 +90,8 @@ export function mountTemplates() {
     emptyStudentsHtml +
     gmNumberHtml +
     gmGenderHtml +
-    badgeAwardHtml;
+    badgeAwardHtml +
+    consentHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 
   // 4. Whistle Panel — body 끝에 삽입
@@ -100,4 +105,7 @@ export function mountTemplates() {
 
   // 7. Left Drawer + Overlay — body 끝에 삽입
   document.body.insertAdjacentHTML('beforeend', resolveAssets(leftDrawerHtml));
+
+  // 8. Footer — app-container 뒤에 삽입
+  appContainer.insertAdjacentHTML('afterend', footerHtml);
 }

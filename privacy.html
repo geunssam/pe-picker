@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>개인정보처리방침 — PEPick!</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/GmarketSans/GmarketSans.css"
+    />
+
+    <link rel="stylesheet" href="css/design-system.css" />
+    <link rel="stylesheet" href="css/legal.css" />
+  </head>
+  <body class="legal-body">
+    <div class="legal-shell">
+      <header class="legal-header">
+        <a href="/" class="legal-back">&larr; PEPick! 홈으로</a>
+        <div>
+          <img src="assets/logo.png" alt="PEPick 로고" class="legal-logo" />
+        </div>
+        <h1 class="legal-title">개인정보처리방침</h1>
+        <p class="legal-updated">시행일: 2026년 2월 22일 | 버전 1.0</p>
+      </header>
+
+      <article class="legal-content">
+        <p>
+          PEPick!(이하 "서비스")은 「개인정보 보호법」 제30조에 따라 이용자의 개인정보를 보호하고,
+          관련 고충을 신속하게 처리하기 위하여 다음과 같이 개인정보처리방침을 수립·공개합니다.
+        </p>
+
+        <h2>제1조 (수집하는 개인정보 항목)</h2>
+        <p>서비스는 Google OAuth 로그인을 통해 다음의 정보를 수집합니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>수집 항목</th>
+              <th>수집 목적</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Google 계정 이름 (displayName)</td>
+              <td>서비스 내 교사 이름 표시</td>
+            </tr>
+            <tr>
+              <td>Google 이메일 주소</td>
+              <td>계정 식별, 로그인 인증</td>
+            </tr>
+            <tr>
+              <td>Google 프로필 사진 URL</td>
+              <td>서비스 내 프로필 이미지 표시</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          서비스는 이용자의 Google 비밀번호를 저장하지 않으며, Google OAuth 인증 토큰을 통해서만
+          인증합니다.
+        </p>
+
+        <h2>제2조 (학생 데이터 처리)</h2>
+        <p>
+          교사가 서비스에 직접 입력하는 학생 정보(이름, 번호, 성별 등)는
+          <strong>교사 본인의 교육 활동 목적</strong>으로만 처리됩니다.
+        </p>
+        <ul>
+          <li>학생 데이터는 교사의 Firebase 계정 하위에 격리 저장됩니다.</li>
+          <li>다른 교사 또는 제3자가 접근할 수 없습니다.</li>
+          <li>서비스 운영자는 교사의 동의 없이 학생 데이터를 열람·분석하지 않습니다.</li>
+        </ul>
+
+        <h2>제3조 (개인정보의 보유 및 이용 기간)</h2>
+        <ul>
+          <li>이용자의 개인정보는 서비스 이용 기간 동안 보유합니다.</li>
+          <li>회원 탈퇴(로그아웃 후 데이터 삭제 요청) 시 즉시 삭제합니다.</li>
+          <li>1년간 미접속 시, 안내 후 30일 이후 자동 삭제될 수 있습니다.</li>
+        </ul>
+
+        <h2>제4조 (개인정보의 제3자 제공)</h2>
+        <p>서비스는 원칙적으로 이용자의 개인정보를 제3자에게 제공하지 않습니다.</p>
+        <p>단, 다음의 경우 예외로 합니다:</p>
+        <ul>
+          <li>
+            <strong>Firebase (Google Cloud)</strong>: 데이터 저장 및 인증 처리를 위해 Google Cloud
+            Platform 인프라를 이용합니다. Google의 개인정보 보호 정책은
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">
+              Google 개인정보처리방침</a
+            >을 참고해 주세요.
+          </li>
+          <li>법률에 의한 요청이 있는 경우</li>
+        </ul>
+
+        <h2>제5조 (개인정보의 파기 절차 및 방법)</h2>
+        <ul>
+          <li>Firebase Firestore에 저장된 데이터는 회원 탈퇴 시 즉시 삭제됩니다.</li>
+          <li>브라우저 localStorage에 저장된 데이터는 설정 > 데이터 초기화로 삭제 가능합니다.</li>
+        </ul>
+
+        <h2>제6조 (이용자의 권리와 행사 방법)</h2>
+        <p>이용자는 언제든지 다음의 권리를 행사할 수 있습니다:</p>
+        <ul>
+          <li>개인정보 열람 요청</li>
+          <li>개인정보 수정·삭제 요청</li>
+          <li>개인정보 처리 정지 요청</li>
+          <li>회원 탈퇴 및 데이터 삭제 요청</li>
+        </ul>
+        <p>
+          권리 행사는 아래 개인정보보호 책임자에게 이메일로 요청할 수 있으며, 지체 없이
+          조치하겠습니다.
+        </p>
+
+        <h2>제7조 (개인정보 보호를 위한 기술적·관리적 대책)</h2>
+        <ul>
+          <li>Firebase Security Rules를 통한 사용자별 데이터 격리</li>
+          <li>HTTPS(TLS) 통신 암호화</li>
+          <li>XSS, CSRF 등 웹 보안 취약점 대응</li>
+          <li>보안 헤더(CSP, X-Frame-Options 등) 적용</li>
+        </ul>
+
+        <h2>제8조 (개인정보보호 책임자)</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th>구분</th>
+              <td>개인정보보호 책임자</td>
+            </tr>
+            <tr>
+              <th>이메일</th>
+              <td>pepick.help@gmail.com</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>개인정보 침해에 대한 신고나 상담은 아래 기관에도 문의하실 수 있습니다:</p>
+        <ul>
+          <li>
+            개인정보침해 신고센터:
+            <a href="https://privacy.kisa.or.kr" target="_blank" rel="noopener"
+              >privacy.kisa.or.kr</a
+            >
+            (국번없이 118)
+          </li>
+          <li>
+            개인정보 분쟁조정위원회:
+            <a href="https://www.kopico.go.kr" target="_blank" rel="noopener">www.kopico.go.kr</a>
+            (국번없이 1833-6972)
+          </li>
+        </ul>
+
+        <h2>제9조 (방침 변경에 관한 사항)</h2>
+        <p>
+          이 개인정보처리방침은 2026년 2월 22일부터 적용됩니다. 변경 시 서비스 내 공지 또는 동의
+          절차를 통해 안내합니다.
+        </p>
+      </article>
+
+      <footer class="legal-footer">
+        <p>PEPick! — 체육 수업 랜덤 활동 도우미</p>
+      </footer>
+    </div>
+  </body>
+</html>

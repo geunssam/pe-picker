@@ -8,3 +8,4 @@ dist/
 .bkit/
 docs/.pdca-*
 docs/.bkit-*
+.claude/

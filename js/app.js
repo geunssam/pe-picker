@@ -4,17 +4,19 @@
 
 import { mountTemplates } from './template-loader.js';
 import { Store } from './shared/store.js';
-import { AuthManager } from './auth-manager.js';
-import { FirestoreSync } from './firestore-sync.js';
-import { ClassManager } from './class-management/index.js';
-import { TagGame } from './tag-game/tag-game.js';
-import { GroupManager } from './group-manager/group-manager.js';
-import { WizardManager } from './wizard.js';
-import { Whistle } from './shared/whistle.js';
-import { QuickTimer } from './shared/quick-timer.js';
-import { Toolbar } from './shared/toolbar.js';
-import { BadgeManager } from './badge-manager/badge-manager.js';
-import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
+import { AuthManager } from './features/auth/auth-manager.js';
+import { FirestoreSync } from './infra/firestore-sync.js';
+import { ClassManager } from './features/class/index.js';
+import { TagGame } from './features/tag-game/tag-game.js';
+import { GroupManager } from './features/group-manager/group-manager.js';
+import { WizardManager } from './features/wizard/wizard.js';
+import { Whistle } from './features/tools/whistle.js';
+import { QuickTimer } from './features/tools/quick-timer.js';
+import { Toolbar } from './features/tools/toolbar.js';
+import { BadgeManager } from './features/badge/badge-manager.js';
+import { BadgeCollectionUI } from './features/badge/badge-collection-ui.js';
+import { ConsentManager } from './features/auth/consent-manager.js';
+import { UI } from './shared/ui-utils.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', requiresClass: false },
@@ -36,6 +38,9 @@ function init() {
   Store.migrateFromLegacy();
   AuthManager.init(onAuthStateChanged);
   window.addEventListener('pet-data-updated', onStoreDataUpdated);
+  window.addEventListener('pet-storage-full', () => {
+    UI.showToast('저장 공간이 부족합니다. 불필요한 데이터를 정리해 주세요.', 'error');
+  });
 }
 
 function onStoreDataUpdated() {
@@ -62,10 +67,13 @@ function onStoreDataUpdated() {
 function onAuthStateChanged() {
   const user = AuthManager.getCurrentUser();
   if (!user) {
-    if (!isLoginPage()) {
-      window.location.replace('login.html');
+    // SCREENSHOT_MODE: skip auth redirect
+    if (!window.__SCREENSHOT_MODE__) {
+      if (!isLoginPage()) {
+        window.location.replace('login.html');
+      }
+      return;
     }
-    return;
   }
 
   bootstrapAfterAuth();
@@ -82,13 +90,27 @@ async function bootstrapAfterAuth() {
   if (isBootstrapped) return;
   isBootstrapped = true;
 
-  try {
-    await FirestoreSync.init();
-  } catch (error) {
-    console.warn('[App] Firestore sync failed:', error);
+  // SCREENSHOT_MODE: skip Firestore, consent, profile
+  if (!window.__SCREENSHOT_MODE__) {
+    try {
+      await FirestoreSync.init();
+    } catch (error) {
+      console.warn('[App] Firestore sync failed:', error);
+      UI.showToast('클라우드 연결 실패. 로컬 모드로 진행합니다.', 'error');
+    }
   }
 
   hideStartupSplash();
+
+  if (!window.__SCREENSHOT_MODE__) {
+    // 약관 동의 게이트 (미동의 시 로그아웃)
+    const consented = await ConsentManager.ensureConsent();
+    if (!consented) {
+      await AuthManager.signOut();
+      window.location.replace('login.html');
+      return;
+    }
+  }
 
   // 프로필 이름 + 이미지 세팅
   const user = AuthManager.getCurrentUser();
@@ -280,6 +302,7 @@ async function syncSelectedClassToCloud(classId) {
     await FirestoreSync.setSelectedClass(classId);
   } catch (error) {
     console.warn('[App] selectedClass sync failed:', error);
+    UI.showToast('학급 동기화에 실패했습니다', 'error');
   }
 }
 

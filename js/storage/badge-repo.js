@@ -4,7 +4,7 @@
    ============================================ */
 
 import { KEYS, get, set, generateId } from './base-repo.js';
-import { XP_PER_BADGE, DEFAULT_THERMOSTAT } from '../badge-manager/badge-config.js';
+import { XP_PER_BADGE, DEFAULT_THERMOSTAT } from '../features/badge/badge-config.js';
 
 // === 배지 로그 ===
 
