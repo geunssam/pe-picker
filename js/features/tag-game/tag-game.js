@@ -132,6 +132,21 @@ function setupEventListeners() {
   // 배지 부여 버튼
   $('tag-badge-btn')?.addEventListener('click', openBadgeModal);
 
+  // 학생 카드 토글 (이벤트 위임)
+  $('tag-student-cards')?.addEventListener('click', e => {
+    const removeBtn = e.target.closest('.tag-card-remove');
+    if (removeBtn) toggleStudentCard(removeBtn);
+  });
+
+  // 번호 범위 삭제 (이벤트 위임)
+  $('tag-number-ranges')?.addEventListener('click', e => {
+    const removeBtn = e.target.closest('.btn-remove-range');
+    if (removeBtn) removeNumberRange(removeBtn);
+  });
+
+  // 번호 범위 추가 버튼
+  $('tag-add-range-btn')?.addEventListener('click', () => addNumberRange('tag'));
+
   // 폴딩 토글
   document.querySelectorAll('.tag-collapse-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -272,7 +287,7 @@ function addNumberRange(prefix) {
       <label style="font-size: var(--font-size-xs); color: var(--text-tertiary)">끝 번호</label>
       <input class="input range-end" type="number" value="20" min="1" max="99" style="margin-top: var(--space-xs)" />
     </div>
-    <button type="button" class="btn-icon" style="width: 28px; height: 28px; border: none; background: var(--bg-danger, rgba(245,124,124,0.15)); color: var(--color-danger, #e74c3c); border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-top: 16px" onclick="TagGame.removeNumberRange(this)">✕</button>
+    <button type="button" class="btn-icon btn-remove-range" style="width: 28px; height: 28px; border: none; background: var(--bg-danger, rgba(245,124,124,0.15)); color: var(--color-danger, #e74c3c); border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-top: 16px">✕</button>
   `;
   container.appendChild(row);
 }
@@ -389,7 +404,7 @@ function createStudentCard(container, name, isExcluded = false, gender = null) {
   if (gender === 'male') cls += ' gender-male';
   if (gender === 'female') cls += ' gender-female';
   card.className = cls;
-  card.innerHTML = `<span>${UI.escapeHtml(name)}</span><button class="tag-card-remove" onclick="TagGame.toggleStudentCard(this)">×</button>`;
+  card.innerHTML = `<span>${UI.escapeHtml(name)}</span><button class="tag-card-remove">×</button>`;
   container.appendChild(card);
 }
 

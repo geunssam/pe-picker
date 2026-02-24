@@ -6,6 +6,8 @@ import { UI } from '../../shared/ui-utils.js';
 import { Icons } from '../../shared/icons.js';
 import { deleteClassFromFirestore } from './class-firestore.js';
 
+let landingDelegationSetup = false;
+
 export function renderLandingClassList() {
   const container = document.getElementById('landing-class-list');
   if (!container) return;
@@ -27,7 +29,7 @@ export function renderLandingClassList() {
     .map(cls => {
       const gc = cls.teamCount || cls.teams?.length || 6;
       return `
-        <div class="landing-class-card" onclick="App.onClassSelected('${cls.id}')">
+        <div class="landing-class-card" data-class-id="${cls.id}">
           <div class="landing-card-info">
             <div class="landing-card-name">${UI.escapeHtml(cls.name)}</div>
             <div class="landing-card-meta">
@@ -35,15 +37,36 @@ export function renderLandingClassList() {
               <span>${Icons.users(14)} ${gc}모둠</span>
             </div>
           </div>
-          <div class="landing-card-actions" onclick="event.stopPropagation();">
-            <button class="btn btn-sm btn-secondary" onclick="ClassManager.openRosterModal('${cls.id}', ClassManager.renderLandingClassList)">편집</button>
-            <button class="btn btn-sm btn-primary" onclick="ClassManager.openTeamModal('${cls.id}', ClassManager.renderLandingClassList)">모둠</button>
-            <button class="btn btn-sm btn-danger" onclick="ClassManager.deleteClass('${cls.id}')">삭제</button>
+          <div class="landing-card-actions">
+            <button class="btn btn-sm btn-secondary" data-action="edit" data-class-id="${cls.id}">편집</button>
+            <button class="btn btn-sm btn-primary" data-action="team" data-class-id="${cls.id}">모둠</button>
+            <button class="btn btn-sm btn-danger" data-action="delete" data-class-id="${cls.id}">삭제</button>
           </div>
         </div>
       `;
     })
     .join('');
+
+  // 이벤트 위임 (한 번만 등록)
+  if (!landingDelegationSetup) {
+    landingDelegationSetup = true;
+    container.addEventListener('click', e => {
+      const actionBtn = e.target.closest('[data-action]');
+      if (actionBtn) {
+        e.stopPropagation();
+        const classId = actionBtn.dataset.classId;
+        const action = actionBtn.dataset.action;
+        if (action === 'edit')
+          window.ClassManager.openRosterModal(classId, window.ClassManager.renderLandingClassList);
+        else if (action === 'team')
+          window.ClassManager.openTeamModal(classId, window.ClassManager.renderLandingClassList);
+        else if (action === 'delete') window.ClassManager.deleteClass(classId);
+        return;
+      }
+      const card = e.target.closest('.landing-class-card');
+      if (card) window.App.onClassSelected(card.dataset.classId);
+    });
+  }
 }
 
 export async function deleteClass(id) {
