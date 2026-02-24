@@ -10,11 +10,11 @@ import { ClassManager } from './features/class/index.js';
 import { TagGame } from './features/tag-game/tag-game.js';
 import { GroupManager } from './features/group-manager/group-manager.js';
 import { WizardManager } from './features/wizard/wizard.js';
-import { Whistle } from './shared/whistle.js';
-import { QuickTimer } from './shared/quick-timer.js';
-import { Toolbar } from './shared/toolbar.js';
-import { BadgeManager } from './badge-manager/badge-manager.js';
-import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
+import { Whistle } from './features/tools/whistle.js';
+import { QuickTimer } from './features/tools/quick-timer.js';
+import { Toolbar } from './features/tools/toolbar.js';
+import { BadgeManager } from './features/badge/badge-manager.js';
+import { BadgeCollectionUI } from './features/badge/badge-collection-ui.js';
 import { ConsentManager } from './features/auth/consent-manager.js';
 import { UI } from './shared/ui-utils.js';
 

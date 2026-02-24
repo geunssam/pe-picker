@@ -4,16 +4,16 @@
    ============================================ */
 
 // ── 배지 이미지 import (Vite가 해시 경로로 변환) ──
-import imgCooperation from '../../assets/badges/협동.png';
-import imgRespect from '../../assets/badges/존중.png';
-import imgConsideration from '../../assets/badges/배려.png';
-import imgSafety from '../../assets/badges/안전.png';
-import imgLeadership from '../../assets/badges/리더십.png';
-import imgTeamwork from '../../assets/badges/팀워크.png';
-import imgFairplay from '../../assets/badges/페어플레이.png';
-import imgVictory from '../../assets/badges/승리.png';
-import imgChallenge from '../../assets/badges/도전.png';
-import imgPositivity from '../../assets/badges/긍정.png';
+import imgCooperation from '../../../assets/badges/협동.png';
+import imgRespect from '../../../assets/badges/존중.png';
+import imgConsideration from '../../../assets/badges/배려.png';
+import imgSafety from '../../../assets/badges/안전.png';
+import imgLeadership from '../../../assets/badges/리더십.png';
+import imgTeamwork from '../../../assets/badges/팀워크.png';
+import imgFairplay from '../../../assets/badges/페어플레이.png';
+import imgVictory from '../../../assets/badges/승리.png';
+import imgChallenge from '../../../assets/badges/도전.png';
+import imgPositivity from '../../../assets/badges/긍정.png';
 
 /** 배지 1개당 XP */
 export const XP_PER_BADGE = 10;

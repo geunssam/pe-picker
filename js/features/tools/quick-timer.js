@@ -3,7 +3,7 @@
    whistle.js → timer.js 단방향 의존
    ============================================ */
 
-import { TimerModule } from './timer.js';
+import { TimerModule } from '../../shared/timer.js';
 import { Whistle } from './whistle.js';
 
 let panel = null;

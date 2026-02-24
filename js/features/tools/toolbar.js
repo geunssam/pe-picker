@@ -5,7 +5,7 @@
 
 import { Whistle } from './whistle.js';
 import { QuickTimer } from './quick-timer.js';
-import { UI } from './ui-utils.js';
+import { UI } from '../../shared/ui-utils.js';
 
 // === DOM 참조 ===
 let toolbar = null;

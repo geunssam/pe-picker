@@ -11,7 +11,7 @@ import tagGameHtml from './features/tag-game/tag-game.html?raw';
 import groupManagerHtml from './features/group-manager/group-manager.html?raw';
 import settingsHtml from './features/class/settings.html?raw';
 import wizardHtml from './features/wizard/wizard.html?raw';
-import badgeCollectionHtml from '../templates/pages/badge-collection.html?raw';
+import badgeCollectionHtml from './features/badge/badge-collection.html?raw';
 
 // ── Modals ──
 import classRosterHtml from './features/class/class-roster-modal.html?raw';
@@ -25,20 +25,20 @@ import gmGenderHtml from './features/group-manager/gm-gender-modal.html?raw';
 import overflowHtml from './features/group-manager/overflow-modal.html?raw';
 import shortageHtml from './features/group-manager/shortage-modal.html?raw';
 import emptyStudentsHtml from './features/class/empty-students-modal.html?raw';
-import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
+import badgeAwardHtml from './features/badge/badge-award-modal.html?raw';
 import consentHtml from './features/auth/consent-modal.html?raw';
 
 // ── Whistle FAB ──
-import whistleFabHtml from '../templates/whistle-fab.html?raw';
+import whistleFabHtml from './features/tools/whistle-fab.html?raw';
 
 // ── Timer FAB ──
-import timerFabHtml from '../templates/timer-fab.html?raw';
+import timerFabHtml from './features/tools/timer-fab.html?raw';
 
 // ── Right Toolbar ──
-import rightToolbarHtml from '../templates/right-toolbar.html?raw';
+import rightToolbarHtml from './features/tools/right-toolbar.html?raw';
 
 // ── Left Drawer ──
-import leftDrawerHtml from '../templates/left-drawer.html?raw';
+import leftDrawerHtml from './features/tools/left-drawer.html?raw';
 
 // ── Footer ──
 import footerHtml from '../templates/footer.html?raw';

@@ -9,7 +9,7 @@ import {
 import { decodeTeamsFromFirestore } from '../shared/firestore-utils.js';
 import { generateId } from '../storage/base-repo.js';
 import { BadgeRepo } from '../storage/badge-repo.js';
-import { XP_PER_BADGE } from '../badge-manager/badge-config.js';
+import { XP_PER_BADGE } from '../features/badge/badge-config.js';
 import {
   collection,
   doc,
