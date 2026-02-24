@@ -4,7 +4,7 @@
    ============================================ */
 
 import { Store } from './shared/store.js';
-import { AuthManager } from './auth-manager.js';
+import { AuthManager } from './features/auth/auth-manager.js';
 import { generateId } from './storage/base-repo.js';
 import { syncClassToFirestore } from './class-management/class-firestore.js';
 import { syncTeacherProfileToFirestore } from './firestore-sync.js';

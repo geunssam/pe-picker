@@ -1,6 +1,7 @@
 import { AuthManager } from './auth-manager.js';
-import { isFirebaseConfigReady } from './firebase-config.js';
-import { syncTeacherProfileToFirestore } from './firestore-sync.js';
+import { isFirebaseConfigReady } from '../../firebase-config.js';
+import { syncTeacherProfileToFirestore } from '../../firestore-sync.js';
+import './login.css';
 
 function setLoading(loading) {
   const btn = document.getElementById('google-login-btn');

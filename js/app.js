@@ -4,7 +4,7 @@
 
 import { mountTemplates } from './template-loader.js';
 import { Store } from './shared/store.js';
-import { AuthManager } from './auth-manager.js';
+import { AuthManager } from './features/auth/auth-manager.js';
 import { FirestoreSync } from './firestore-sync.js';
 import { ClassManager } from './class-management/index.js';
 import { TagGame } from './tag-game/tag-game.js';
@@ -15,7 +15,7 @@ import { QuickTimer } from './shared/quick-timer.js';
 import { Toolbar } from './shared/toolbar.js';
 import { BadgeManager } from './badge-manager/badge-manager.js';
 import { BadgeCollectionUI } from './badge-manager/badge-collection-ui.js';
-import { ConsentManager } from './consent-manager.js';
+import { ConsentManager } from './features/auth/consent-manager.js';
 import { UI } from './shared/ui-utils.js';
 
 const ROUTES = {

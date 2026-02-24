@@ -1,5 +1,5 @@
 import { Store } from './shared/store.js';
-import { AuthManager } from './auth-manager.js';
+import { AuthManager } from './features/auth/auth-manager.js';
 import { getFirestoreInstance } from './firebase-config.js';
 import { withTimeout } from './shared/promise-utils.js';
 import {

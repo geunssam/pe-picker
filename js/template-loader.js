@@ -26,7 +26,7 @@ import overflowHtml from '../templates/modals/overflow.html?raw';
 import shortageHtml from '../templates/modals/shortage.html?raw';
 import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
 import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
-import consentHtml from '../templates/modals/consent.html?raw';
+import consentHtml from './features/auth/consent-modal.html?raw';
 
 // ── Whistle FAB ──
 import whistleFabHtml from '../templates/whistle-fab.html?raw';

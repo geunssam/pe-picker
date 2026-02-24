@@ -1,4 +1,4 @@
-import { getAuthInstance, isFirebaseConfigReady } from './firebase-config.js';
+import { getAuthInstance, isFirebaseConfigReady } from '../../firebase-config.js';
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -7,7 +7,7 @@ import {
   setPersistence,
   browserLocalPersistence,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { withTimeout } from './shared/promise-utils.js';
+import { withTimeout } from '../../shared/promise-utils.js';
 
 let currentUser = null;
 let initialized = false;
