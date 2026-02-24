@@ -6,7 +6,7 @@ import { mountTemplates } from './template-loader.js';
 import { Store } from './shared/store.js';
 import { AuthManager } from './features/auth/auth-manager.js';
 import { FirestoreSync } from './infra/firestore-sync.js';
-import { ClassManager } from './class-management/index.js';
+import { ClassManager } from './features/class/index.js';
 import { TagGame } from './tag-game/tag-game.js';
 import { GroupManager } from './group-manager/group-manager.js';
 import { WizardManager } from './features/wizard/wizard.js';

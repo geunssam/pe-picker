@@ -2,8 +2,8 @@
  * 학급 모달 열기/닫기/저장 — Roster + Team 2분할
  */
 import { state } from './state.js';
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
 import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
 import {
   initializeRosterState,

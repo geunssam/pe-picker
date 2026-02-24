@@ -3,7 +3,7 @@
  * 기존 API를 유지하면서 분리된 모듈들을 통합
  */
 import { state } from './state.js';
-import { Store } from '../shared/store.js';
+import { Store } from '../../shared/store.js';
 import { normalizeStudentName } from './helpers.js';
 import {
   handleRosterInput,

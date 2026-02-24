@@ -6,7 +6,7 @@
 import { Store } from '../../shared/store.js';
 import { AuthManager } from '../auth/auth-manager.js';
 import { generateId } from '../../storage/base-repo.js';
-import { syncClassToFirestore } from '../../class-management/class-firestore.js';
+import { syncClassToFirestore } from '../class/class-firestore.js';
 import { syncTeacherProfileToFirestore } from '../../infra/firestore-sync.js';
 import './wizard.css';
 

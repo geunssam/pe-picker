@@ -4,8 +4,8 @@
  * Team: 미배정 풀 + 모둠별 드래그앤드롭
  */
 import { state } from './state.js';
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
 import { normalizeStudentName, sortStudentsByNumber, createModalStudent } from './helpers.js';
 
 // ========== 공유: 알약 카드 HTML 생성 ==========

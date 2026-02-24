@@ -2,7 +2,7 @@
  * CSV 가져오기 + 일괄등록 모달
  */
 import { state } from './state.js';
-import { UI } from '../shared/ui-utils.js';
+import { UI } from '../../shared/ui-utils.js';
 import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
 import { applyImportedStudents } from './modal-editor.js';
 

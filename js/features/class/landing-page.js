@@ -1,9 +1,9 @@
 /**
  * 학급 선택 랜딩 페이지
  */
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
-import { Icons } from '../shared/icons.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Icons } from '../../shared/icons.js';
 import { deleteClassFromFirestore } from './class-firestore.js';
 
 export function renderLandingClassList() {

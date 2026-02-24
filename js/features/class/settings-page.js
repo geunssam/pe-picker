@@ -1,9 +1,9 @@
 /**
  * 설정 페이지 UI
  */
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
-import { Icons } from '../shared/icons.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Icons } from '../../shared/icons.js';
 
 export function onSettingsPageEnter() {
   const cls = Store.getSelectedClass();

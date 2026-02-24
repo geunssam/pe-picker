@@ -6,17 +6,17 @@
 import navbarHtml from '../templates/navbar.html?raw';
 
 // ── Pages ──
-import classSelectorHtml from '../templates/pages/class-selector.html?raw';
+import classSelectorHtml from './features/class/class-selector.html?raw';
 import tagGameHtml from '../templates/pages/tag-game.html?raw';
 import groupManagerHtml from '../templates/pages/group-manager.html?raw';
-import settingsHtml from '../templates/pages/settings.html?raw';
+import settingsHtml from './features/class/settings.html?raw';
 import wizardHtml from './features/wizard/wizard.html?raw';
 import badgeCollectionHtml from '../templates/pages/badge-collection.html?raw';
 
 // ── Modals ──
-import classRosterHtml from '../templates/modals/class-roster.html?raw';
-import classTeamHtml from '../templates/modals/class-team.html?raw';
-import classBulkHtml from '../templates/modals/class-bulk.html?raw';
+import classRosterHtml from './features/class/class-roster-modal.html?raw';
+import classTeamHtml from './features/class/class-team-modal.html?raw';
+import classBulkHtml from './features/class/class-bulk-modal.html?raw';
 import tagNumberHtml from '../templates/modals/tag-number.html?raw';
 import tagGenderHtml from '../templates/modals/tag-gender.html?raw';
 import manualInputHtml from '../templates/modals/manual-input.html?raw';
@@ -24,7 +24,7 @@ import gmNumberHtml from '../templates/modals/gm-number.html?raw';
 import gmGenderHtml from '../templates/modals/gm-gender.html?raw';
 import overflowHtml from '../templates/modals/overflow.html?raw';
 import shortageHtml from '../templates/modals/shortage.html?raw';
-import emptyStudentsHtml from '../templates/modals/empty-students.html?raw';
+import emptyStudentsHtml from './features/class/empty-students-modal.html?raw';
 import badgeAwardHtml from '../templates/modals/badge-award.html?raw';
 import consentHtml from './features/auth/consent-modal.html?raw';
 

@@ -1,6 +1,6 @@
-import { withTimeout } from '../shared/promise-utils.js';
-import { AuthManager } from '../features/auth/auth-manager.js';
-import { getFirestoreInstance } from '../infra/firebase-config.js';
+import { withTimeout } from '../../shared/promise-utils.js';
+import { AuthManager } from '../auth/auth-manager.js';
+import { getFirestoreInstance } from '../../infra/firebase-config.js';
 import {
   collection,
   doc,

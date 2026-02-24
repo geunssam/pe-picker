@@ -2,7 +2,7 @@
  * ClassManager 순수 헬퍼 함수들
  * DOM/상태 의존성 없음
  */
-import { generateId } from '../storage/base-repo.js';
+import { generateId } from '../../storage/base-repo.js';
 
 export function sanitizeGender(value) {
   if (value === 'male' || value === '남' || value === '남자') return 'male';

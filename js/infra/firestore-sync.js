@@ -5,7 +5,7 @@ import { withTimeout } from '../shared/promise-utils.js';
 import {
   syncClassToFirestore,
   hydrateStudentsFromFirestore,
-} from '../class-management/class-firestore.js';
+} from '../features/class/class-firestore.js';
 import { decodeTeamsFromFirestore } from '../shared/firestore-utils.js';
 import { generateId } from '../storage/base-repo.js';
 import { BadgeRepo } from '../storage/badge-repo.js';
