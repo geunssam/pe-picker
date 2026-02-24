@@ -12,7 +12,7 @@ import tagGameHtml from './features/tag-game/tag-game.html?raw';
 import groupManagerHtml from './features/group-manager/group-manager.html?raw';
 import settingsHtml from './features/class/settings.html?raw';
 import wizardHtml from './features/wizard/wizard.html?raw';
-import badgeCollectionHtml from './features/badge/badge-collection.html?raw';
+import classStatsHtml from './features/class-stats/class-stats.html?raw';
 
 // ── Modals ──
 import classRosterHtml from './features/class/class-roster-modal.html?raw';
@@ -27,6 +27,7 @@ import overflowHtml from './features/group-manager/overflow-modal.html?raw';
 import shortageHtml from './features/group-manager/shortage-modal.html?raw';
 import emptyStudentsHtml from './features/class/empty-students-modal.html?raw';
 import badgeAwardHtml from './features/badge/badge-award-modal.html?raw';
+import thermoModalHtml from './features/class-stats/thermo-modal.html?raw';
 import consentHtml from './features/auth/consent-modal.html?raw';
 
 // ── Whistle FAB ──
@@ -74,7 +75,7 @@ export function mountTemplates() {
       classSelectorHtml +
       tagGameHtml +
       groupManagerHtml +
-      badgeCollectionHtml +
+      classStatsHtml +
       settingsHtml +
       wizardHtml
   );
@@ -93,6 +94,7 @@ export function mountTemplates() {
     gmNumberHtml +
     gmGenderHtml +
     badgeAwardHtml +
+    thermoModalHtml +
     consentHtml;
   appContainer.insertAdjacentHTML('afterend', modalsHtml);
 

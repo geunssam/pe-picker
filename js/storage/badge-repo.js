@@ -144,9 +144,8 @@ function getStudentRanking(classId, limit = 5) {
     map[log.studentId].count++;
   }
 
-  return Object.values(map)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, limit);
+  const sorted = Object.values(map).sort((a, b) => b.count - a.count);
+  return limit > 0 ? sorted.slice(0, limit) : sorted;
 }
 
 /**

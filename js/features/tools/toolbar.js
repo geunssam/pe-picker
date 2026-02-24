@@ -196,12 +196,21 @@ function init() {
   const thermoBtn = document.getElementById('toolbar-thermo-btn');
   if (thermoBtn) {
     thermoBtn.addEventListener('click', () => {
-      window.App.navigateTo('badge-collection');
-      setTimeout(() => {
-        document.getElementById('badge-tab-class')?.click();
-      }, 100);
+      UI.showModal('thermo-modal-overlay');
+      window.dispatchEvent(new CustomEvent('thermo-modal-open'));
     });
   }
+
+  // 온도계 모달 닫기
+  document.getElementById('thermo-modal-close')?.addEventListener('click', () => {
+    UI.hideModal('thermo-modal-overlay');
+  });
+  document.getElementById('thermo-modal-close-btn')?.addEventListener('click', () => {
+    UI.hideModal('thermo-modal-overlay');
+  });
+  document.getElementById('thermo-modal-overlay')?.addEventListener('click', e => {
+    if (e.target.id === 'thermo-modal-overlay') UI.hideModal('thermo-modal-overlay');
+  });
 
   // === 드로어 ===
   if (hamburger) {

@@ -1,13 +1,19 @@
 /* ============================================
-   PE Picker - Badge Collection UI
-   배지도감 탭 렌더링 (개인/학급 통계/온도계)
+   PE Picker - Class Stats UI
+   학급 통계 탭 렌더링 (개인 배지/학급 통계/학생별 랭킹)
    ============================================ */
 
 import { Store } from '../../shared/store.js';
 import { UI } from '../../shared/ui-utils.js';
 import { Icons } from '../../shared/icons.js';
-import { BADGE_TYPES, BADGE_KEYS, getLevelInfo, DEFAULT_THERMOSTAT } from './badge-config.js';
+import {
+  BADGE_TYPES,
+  BADGE_KEYS,
+  getLevelInfo,
+  DEFAULT_THERMOSTAT,
+} from '../badge/badge-config.js';
 import { FirestoreSync } from '../../infra/firestore-sync.js';
+import './class-stats.css';
 
 let currentTab = 'personal'; // 'personal' | 'class'
 let editMilestones = []; // 편집 중인 마일스톤
@@ -19,15 +25,24 @@ function init() {
     .getElementById('badge-tab-personal')
     ?.addEventListener('click', () => switchTab('personal'));
   document.getElementById('badge-tab-class')?.addEventListener('click', () => switchTab('class'));
+  document
+    .getElementById('badge-tab-ranking')
+    ?.addEventListener('click', () => switchTab('ranking'));
 
   // 자유 배지 부여
   document.getElementById('badge-free-award-btn')?.addEventListener('click', () => {
     window.BadgeManager.openModal({ mode: 'individual', context: 'badge-collection' });
   });
 
-  // 온도계 설정
+  // 온도계 모달 설정
   document.getElementById('thermo-settings-btn')?.addEventListener('click', toggleThermoSettings);
   document.getElementById('thermo-save-btn')?.addEventListener('click', saveThermoSettings);
+
+  // 온도계 모달 열림 이벤트
+  window.addEventListener('thermo-modal-open', () => {
+    const cls = Store.getSelectedClass();
+    if (cls) renderThermometer(cls.id);
+  });
 
   // 배지 상세 모달 닫기
   document.getElementById('badge-detail-close')?.addEventListener('click', closeBadgeDetail);
@@ -52,7 +67,7 @@ function init() {
 
   // 배지 업데이트 이벤트 수신
   window.addEventListener('badge-updated', () => {
-    if (document.getElementById('page-badge-collection')?.classList.contains('active')) {
+    if (document.getElementById('page-class-stats')?.classList.contains('active')) {
       onPageEnter();
     }
   });
@@ -61,8 +76,10 @@ function init() {
 function onPageEnter() {
   if (currentTab === 'personal') {
     renderStudentCards();
-  } else {
+  } else if (currentTab === 'class') {
     renderClassView();
+  } else if (currentTab === 'ranking') {
+    renderRankingView();
   }
 }
 
@@ -71,17 +88,22 @@ function switchTab(tab) {
 
   document.getElementById('badge-tab-personal')?.classList.toggle('active', tab === 'personal');
   document.getElementById('badge-tab-class')?.classList.toggle('active', tab === 'class');
+  document.getElementById('badge-tab-ranking')?.classList.toggle('active', tab === 'ranking');
 
   const personalView = document.getElementById('badge-personal-view');
   const classView = document.getElementById('badge-class-view');
+  const rankingView = document.getElementById('badge-ranking-view');
 
   if (personalView) personalView.style.display = tab === 'personal' ? '' : 'none';
   if (classView) classView.style.display = tab === 'class' ? '' : 'none';
+  if (rankingView) rankingView.style.display = tab === 'ranking' ? '' : 'none';
 
   if (tab === 'personal') {
     renderStudentCards();
-  } else {
+  } else if (tab === 'class') {
     renderClassView();
+  } else if (tab === 'ranking') {
+    renderRankingView();
   }
 }
 
@@ -304,7 +326,6 @@ function renderClassView() {
   const cls = Store.getSelectedClass();
   if (!cls) return;
 
-  renderThermometer(cls.id);
   renderClassBadgeStats(cls.id);
   renderStudentRanking(cls.id);
 }
@@ -419,20 +440,31 @@ function renderClassBadgeStats(classId) {
   const container = document.getElementById('badge-class-stats');
   if (!container) return;
 
-  container.innerHTML = BADGE_KEYS.map(key => {
-    const badge = BADGE_TYPES[key];
-    const count = counts[key] || 0;
-    const emptyClass = count === 0 ? ' empty' : '';
-    return `<div class="badge-inv-item${emptyClass}">
-      <img class="badge-inv-img" src="${badge.image}" alt="${badge.name}" />
-      <span class="badge-inv-count">${count}</span>
-      <span class="badge-inv-name">${badge.name}</span>
+  const total = BADGE_KEYS.reduce((sum, k) => sum + (counts[k] || 0), 0);
+
+  container.innerHTML = `
+    <div class="badge-chart-summary">전체 배지 <strong>${total}</strong>개</div>
+    <div class="badge-chart-grid">
+      ${BADGE_KEYS.map(key => {
+        const badge = BADGE_TYPES[key];
+        const count = counts[key] || 0;
+        return `<div class="badge-chart-card">
+          <img class="badge-chart-img" src="${badge.image}" alt="${badge.name}" />
+          <span class="badge-chart-name">${badge.name}</span>
+          <span class="badge-chart-count" style="color: ${badge.color}">${count}</span>
+        </div>`;
+      }).join('')}
     </div>`;
-  }).join('');
+}
+
+function renderRankingView() {
+  const cls = Store.getSelectedClass();
+  if (!cls) return;
+  renderStudentRanking(cls.id);
 }
 
 function renderStudentRanking(classId) {
-  const ranking = Store.getStudentRanking(classId, 5);
+  const ranking = Store.getStudentRanking(classId, 0); // 0 = 전체
   const list = document.getElementById('badge-ranking-list');
   if (!list) return;
 
@@ -486,7 +518,7 @@ function saveThermoSettings() {
   UI.showToast('온도계 설정이 저장되었습니다', 'success');
 }
 
-export const BadgeCollectionUI = {
+export const ClassStatsUI = {
   init,
   onPageEnter,
 };

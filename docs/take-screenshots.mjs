@@ -158,7 +158,7 @@ async function main() {
   await capture('Group manager', '04-group-manager.png');
 
   // Badge collection - personal tab
-  await page.evaluate(() => { window.location.hash = '#badge-collection'; });
+  await page.evaluate(() => { window.location.hash = '#class-stats'; });
   await page.waitForTimeout(500);
   await capture('Badge personal', '05-badge-personal.png');
 

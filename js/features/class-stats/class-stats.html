@@ -1,8 +1,8 @@
-<div id="page-badge-collection" class="page-view">
+<div id="page-class-stats" class="page-view">
   <div class="page-header">
     <div>
-      <div class="page-title">배지도감</div>
-      <div class="page-subtitle">인성 배지 수집과 학급 온도계</div>
+      <div class="page-title">학급 통계</div>
+      <div class="page-subtitle">인성 배지 수집과 학급 현황</div>
     </div>
     <div class="badge-header-actions">
       <button class="badge-header-btn" id="badge-guide-open-btn" title="배지설명">
@@ -20,7 +20,7 @@
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span>배지설명</span>
+        <span>배지도감</span>
       </button>
       <button
         class="badge-header-btn badge-header-btn--primary"
@@ -40,7 +40,7 @@
           <circle cx="12" cy="16" r="6" />
           <path d="M8.523 11.11 7 2l5 3 5-3-1.523 9.11" />
         </svg>
-        <span>부여</span>
+        <span>메달부여</span>
       </button>
     </div>
   </div>
@@ -76,9 +76,30 @@
         stroke-linecap="round"
         stroke-linejoin="round"
       >
-        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+        <path d="M12 20V10M18 20V4M6 20v-4" />
       </svg>
       학급 통계
+    </button>
+    <button class="badge-inner-tab" id="badge-tab-ranking" data-tab="ranking">
+      <svg
+        class="icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      </svg>
+      학생별 랭킹
     </button>
   </div>
 
@@ -108,108 +129,6 @@
 
   <!-- === 학급 통계 탭 === -->
   <div id="badge-class-view" style="display: none">
-    <!-- 온도계 (세로형) -->
-    <div class="thermo-card">
-      <div class="thermo-header">
-        <span class="thermo-title"
-          ><svg
-            class="icon"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
-          </svg>
-          학급 온도계</span
-        >
-        <button class="btn btn-sm btn-secondary" id="thermo-settings-btn">
-          <svg
-            class="icon"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-            />
-          </svg>
-          설정
-        </button>
-      </div>
-
-      <!-- 세로 온도계 비주얼 — overflow 차단 -->
-      <div class="thermo-visual">
-        <!-- 마일스톤 라벨 (왼쪽 열) -->
-        <div class="thermo-ms-col" id="thermo-milestones"></div>
-
-        <!-- 온도계 본체 (오른쪽 열) -->
-        <div class="thermo-body-col">
-          <div class="thermo-tube">
-            <div class="thermo-tube-bg"></div>
-            <div class="thermo-tube-fill" id="thermo-bar-fill"></div>
-            <div id="thermo-scale" class="thermo-scale"></div>
-          </div>
-          <div class="thermo-bulb">
-            <div class="thermo-bulb-fill"></div>
-            <div class="thermo-face">
-              <div class="thermo-eyes">
-                <span class="thermo-eye"></span>
-                <span class="thermo-eye"></span>
-              </div>
-              <div class="thermo-mouth"></div>
-            </div>
-          </div>
-          <div class="thermo-cheeks">
-            <span class="thermo-cheek left"></span>
-            <span class="thermo-cheek right"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 현재 온도 + 진행 바 -->
-      <div class="thermo-temp" id="thermo-temp-display">0°C</div>
-      <div class="thermo-progress-bar">
-        <div class="thermo-progress-fill" id="thermo-progress-fill"></div>
-        <span class="thermo-progress-text" id="thermo-progress-text">0°C (0 / 200)</span>
-      </div>
-
-      <!-- 온도계 설정 (인라인 토글) -->
-      <div id="thermo-settings-panel" class="thermo-settings">
-        <div class="thermo-setting-row">
-          <label>100°C 기준</label>
-          <input
-            type="number"
-            id="thermo-target-input"
-            class="input input-sm"
-            value="200"
-            min="10"
-            max="9999"
-            style="width: 80px"
-          />
-          <span style="font-size: var(--font-size-xs)">개 배지</span>
-        </div>
-        <div id="thermo-milestone-editor"></div>
-        <button
-          class="btn btn-sm btn-primary"
-          id="thermo-save-btn"
-          style="margin-top: var(--space-sm)"
-        >
-          저장
-        </button>
-      </div>
-    </div>
-
     <!-- 배지 타입별 통계 -->
     <div class="section">
       <div class="section-title">
@@ -228,32 +147,13 @@
         </svg>
         배지 타입별 통계
       </div>
-      <div id="badge-class-stats" class="badge-stats-row"></div>
+      <div id="badge-class-stats" class="badge-chart-container"></div>
     </div>
+  </div>
 
-    <!-- 학생별 순위 -->
+  <!-- === 학생별 랭킹 탭 === -->
+  <div id="badge-ranking-view" style="display: none">
     <div id="badge-ranking-section" class="badge-ranking">
-      <div class="badge-ranking-title">
-        <svg
-          class="icon"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-          <path d="M4 22h16" />
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-        </svg>
-        학생별 TOP 5
-      </div>
       <div id="badge-ranking-list"></div>
     </div>
   </div>
