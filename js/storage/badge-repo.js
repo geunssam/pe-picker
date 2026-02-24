@@ -149,6 +149,167 @@ function getStudentRanking(classId, limit = 5) {
 }
 
 /**
+ * 학급 최근 배지 로그 (시간 역순)
+ * @param {string} classId - 학급 ID
+ * @param {number} [limit=10] - 가져올 개수
+ * @returns {Array}
+ */
+function getRecentBadgeLogs(classId, limit = 10) {
+  const logs = getBadgeLogsByClass(classId);
+  return logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, limit);
+}
+
+/**
+ * 학급 기간별 배지 수
+ * @param {string} classId - 학급 ID
+ * @param {Date} from - 시작 시간
+ * @param {Date} to - 종료 시간
+ * @returns {number}
+ */
+function getBadgeCountByPeriod(classId, from, to) {
+  return getBadgeLogsByClass(classId).filter(log => {
+    const d = new Date(log.timestamp);
+    return d >= from && d < to;
+  }).length;
+}
+
+/**
+ * 최근 N주 주간 배지 수 배열
+ * @param {string} classId
+ * @param {number} [weeks=6]
+ * @returns {Array<{label: string, count: number}>}
+ */
+function getWeeklyBadgeCounts(classId, weeks = 6) {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const thisMonday = new Date(now);
+  thisMonday.setHours(0, 0, 0, 0);
+  thisMonday.setDate(thisMonday.getDate() - mondayOffset);
+
+  const result = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const from = new Date(thisMonday);
+    from.setDate(from.getDate() - i * 7);
+    const to = new Date(from);
+    to.setDate(to.getDate() + 7);
+    const end = i === 0 ? now : to;
+    const count = getBadgeCountByPeriod(classId, from, end);
+    const m = from.getMonth() + 1;
+    const d = from.getDate();
+    const label = i === 0 ? '이번 주' : `${m}/${d}`;
+    result.push({ label, count, from, to: end });
+  }
+  return result;
+}
+
+/**
+ * 최근 N개월 월간 배지 수 배열
+ * @param {string} classId
+ * @param {number} [months=6]
+ * @returns {Array<{label: string, count: number}>}
+ */
+function getMonthlyBadgeCounts(classId, months = 6) {
+  const now = new Date();
+  const result = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const from = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const to = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const end = i === 0 ? now : to;
+    const count = getBadgeCountByPeriod(classId, from, end);
+    const label = i === 0 ? '이번 달' : `${from.getMonth() + 1}월`;
+    result.push({ label, count, from, to: end });
+  }
+  return result;
+}
+
+/**
+ * 현재 학기 월별 배지 수 배열
+ * 1학기: 3~8월 / 2학기: 9~2월
+ * @param {string} classId
+ * @returns {Array<{label: string, count: number}>}
+ */
+function getSemesterBadgeCounts(classId) {
+  const now = new Date();
+  const month = now.getMonth(); // 0-indexed
+  let semesterStart;
+  if (month >= 2 && month <= 7) {
+    semesterStart = new Date(now.getFullYear(), 2, 1);
+  } else if (month >= 8) {
+    semesterStart = new Date(now.getFullYear(), 8, 1);
+  } else {
+    semesterStart = new Date(now.getFullYear() - 1, 8, 1);
+  }
+
+  const result = [];
+  const cur = new Date(semesterStart);
+  while (cur < now) {
+    const from = new Date(cur);
+    const nextMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    const to = nextMonth > now ? now : nextMonth;
+    const count = getBadgeCountByPeriod(classId, from, to);
+    const isCurrent =
+      from.getMonth() === now.getMonth() && from.getFullYear() === now.getFullYear();
+    const label = isCurrent ? '이번 달' : `${from.getMonth() + 1}월`;
+    result.push({ label, count, from, to });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return result;
+}
+
+/**
+ * 커스텀 기간 배지 수 배열 (자동 그루핑)
+ * 14일 이하 → 일별 / 90일 이하 → 주별 / 그 외 → 월별
+ * @param {string} classId
+ * @param {Date} fromDate
+ * @param {Date} toDate
+ * @returns {Array<{label: string, count: number}>}
+ */
+function getCustomRangeBadgeCounts(classId, fromDate, toDate) {
+  const diffDays = Math.ceil((toDate - fromDate) / 86400000);
+  const result = [];
+
+  if (diffDays <= 14) {
+    // 일별
+    const cur = new Date(fromDate);
+    while (cur < toDate) {
+      const from = new Date(cur);
+      const to = new Date(cur);
+      to.setDate(to.getDate() + 1);
+      const end = to > toDate ? toDate : to;
+      const count = getBadgeCountByPeriod(classId, from, end);
+      result.push({ label: `${from.getMonth() + 1}/${from.getDate()}`, count, from, to: end });
+      cur.setDate(cur.getDate() + 1);
+    }
+  } else if (diffDays <= 90) {
+    // 주별
+    const cur = new Date(fromDate);
+    while (cur < toDate) {
+      const from = new Date(cur);
+      const to = new Date(cur);
+      to.setDate(to.getDate() + 7);
+      const end = to > toDate ? toDate : to;
+      const count = getBadgeCountByPeriod(classId, from, end);
+      result.push({ label: `${from.getMonth() + 1}/${from.getDate()}`, count, from, to: end });
+      cur.setDate(cur.getDate() + 7);
+    }
+  } else {
+    // 월별
+    const cur = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+    while (cur < toDate) {
+      const from = new Date(cur);
+      const nextMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      const to = nextMonth > toDate ? toDate : nextMonth;
+      const actualFrom = from < fromDate ? fromDate : from;
+      const count = getBadgeCountByPeriod(classId, actualFrom, to);
+      result.push({ label: `${from.getMonth() + 1}월`, count, from: actualFrom, to });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  }
+  return result;
+}
+
+/**
  * 배지 로그 초기화
  * @param {string} [classId] - 학급 ID (없으면 전체 삭제)
  */
@@ -203,6 +364,12 @@ export const BadgeRepo = {
   getClassTotalBadges,
   getClassBadgeCounts,
   getStudentRanking,
+  getRecentBadgeLogs,
+  getBadgeCountByPeriod,
+  getWeeklyBadgeCounts,
+  getMonthlyBadgeCounts,
+  getSemesterBadgeCounts,
+  getCustomRangeBadgeCounts,
   clearBadgeLogs,
   getAllThermostatSettings,
   getThermostatSettings,

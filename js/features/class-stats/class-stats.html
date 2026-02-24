@@ -105,8 +105,48 @@
 
   <!-- === 개인 배지 탭 === -->
   <div id="badge-personal-view">
-    <!-- 학생 카드 그리드 -->
-    <div id="badge-student-card-grid" class="badge-student-card-grid"></div>
+    <!-- 최근 활동 타임라인 -->
+    <div class="section">
+      <div class="section-title">
+        <svg
+          class="icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        최근 활동
+      </div>
+      <div id="badge-timeline" class="badge-timeline-container"></div>
+    </div>
+    <!-- 학생 개인 배지 -->
+    <div class="section">
+      <div class="section-title">
+        <svg
+          class="icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        학생 개인
+      </div>
+      <div id="badge-student-card-grid" class="badge-student-card-grid"></div>
+    </div>
   </div>
 
   <!-- 학생 배지 상세 모달 -->
@@ -149,6 +189,27 @@
       </div>
       <div id="badge-class-stats" class="badge-chart-container"></div>
     </div>
+
+    <!-- 기간별 추이 -->
+    <div class="section">
+      <div class="section-title">
+        <svg
+          class="icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+        주간 추이
+      </div>
+      <div id="badge-period-stats" class="badge-period-container"></div>
+    </div>
   </div>
 
   <!-- === 학생별 랭킹 탭 === -->
@@ -169,6 +230,28 @@
     <div class="badge-guide-title">인성 배지 10종</div>
     <div class="badge-guide-subtitle">수업 활동 중 경쟁&협동&존중을 배워요!</div>
     <div id="badge-guide-grid" class="badge-guide-grid"></div>
+  </div>
+</div>
+
+<!-- 날짜 범위 설정 모달 -->
+<div id="date-range-modal" class="badge-date-range-overlay" style="display: none">
+  <div class="badge-date-range-card">
+    <button class="badge-date-range-close" id="date-range-close">×</button>
+    <div class="badge-date-range-title">기간 직접 설정</div>
+    <div class="badge-date-range-body">
+      <div class="badge-date-range-field">
+        <label for="date-range-from">시작일</label>
+        <input type="date" id="date-range-from" />
+      </div>
+      <div class="badge-date-range-field">
+        <label for="date-range-to">종료일</label>
+        <input type="date" id="date-range-to" />
+      </div>
+    </div>
+    <div class="badge-date-range-footer">
+      <button class="badge-date-range-cancel" id="date-range-cancel">취소</button>
+      <button class="badge-date-range-apply" id="date-range-apply">적용</button>
+    </div>
   </div>
 </div>
 

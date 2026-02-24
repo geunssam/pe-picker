@@ -395,6 +395,97 @@
   font-weight: 800;
 }
 
+/* 도넛 차트 */
+.badge-donut-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.badge-donut-chart {
+  width: 180px;
+  height: 180px;
+}
+
+/* 배지 프로그레스 바 */
+.badge-chart-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.badge-chart-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.badge-chart-pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+/* 최다/최소 배지 하이라이트 */
+.badge-highlight-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.badge-highlight-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid;
+}
+
+.badge-highlight--top {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.badge-highlight--low {
+  border-color: rgba(156, 163, 175, 0.3);
+  background: rgba(156, 163, 175, 0.06);
+}
+
+.badge-highlight-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.badge-highlight-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.badge-highlight-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.badge-highlight-value {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge-highlight-value strong {
+  color: var(--color-primary);
+}
+
 @media (max-width: 400px) {
   .badge-chart-img {
     width: 36px;
@@ -406,6 +497,299 @@
   .badge-chart-grid {
     gap: var(--space-xs);
   }
+  .badge-highlight-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   기간별 추이 카드
+   ======================================== */
+.badge-period-container {
+  margin-bottom: var(--space-lg);
+}
+
+.badge-period-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.badge-period-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--bg-white);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.badge-period-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.badge-period-num {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.badge-period-diff {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-period-diff--up {
+  color: #10b981;
+}
+
+.badge-period-diff--down {
+  color: #ef4444;
+}
+
+.badge-period-diff--same {
+  color: var(--text-tertiary);
+}
+
+/* 기간 선택 탭 */
+.badge-period-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.badge-period-tab {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.badge-period-tab.active {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-period-tab:active {
+  transform: scale(0.96);
+}
+
+/* 2열 카드 (커스텀 모드) */
+.badge-period-cards--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* 꺾은선 그래프 */
+.badge-chart-line-wrap {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.badge-line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 날짜 범위 모달 */
+.badge-date-range-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.badge-date-range-overlay.open {
+  opacity: 1;
+}
+
+.badge-date-range-card {
+  position: relative;
+  background: var(--bg-white);
+  border-radius: var(--radius-xl, 20px);
+  padding: var(--space-xl) var(--space-lg) var(--space-lg);
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.badge-date-range-overlay.open .badge-date-range-card {
+  transform: scale(1);
+}
+
+.badge-date-range-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.badge-date-range-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.badge-date-range-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.badge-date-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.badge-date-range-field label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.badge-date-range-field input[type='date'] {
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-white);
+}
+
+.badge-date-range-footer {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.badge-date-range-cancel {
+  flex: 1;
+  padding: var(--space-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.badge-date-range-apply {
+  flex: 1;
+  padding: var(--space-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+.badge-date-range-apply:active {
+  opacity: 0.85;
+}
+
+/* ========================================
+   최근 활동 타임라인
+   ======================================== */
+.badge-timeline-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-timeline-empty {
+  text-align: center;
+  padding: var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.badge-timeline-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.badge-timeline-item:last-child {
+  border-bottom: none;
+}
+
+.badge-timeline-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.badge-timeline-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-timeline-name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge-timeline-badge {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-timeline-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ========================================

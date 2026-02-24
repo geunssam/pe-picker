@@ -16,6 +16,8 @@ import { FirestoreSync } from '../../infra/firestore-sync.js';
 import './class-stats.css';
 
 let currentTab = 'personal'; // 'personal' | 'class'
+let periodMode = '4week'; // '4week' | 'monthly' | 'semester' | 'custom'
+let customRange = { from: null, to: null }; // 직접 설정 기간
 let editMilestones = []; // 편집 중인 마일스톤
 let currentModalStudentId = null; // 학생 모달에 열린 학생 ID
 
@@ -65,6 +67,14 @@ function init() {
     if (e.target.id === 'badge-guide-modal') closeBadgeGuide();
   });
 
+  // 날짜 범위 모달
+  document.getElementById('date-range-close')?.addEventListener('click', closeDateRangeModal);
+  document.getElementById('date-range-cancel')?.addEventListener('click', closeDateRangeModal);
+  document.getElementById('date-range-apply')?.addEventListener('click', applyDateRange);
+  document.getElementById('date-range-modal')?.addEventListener('click', e => {
+    if (e.target.id === 'date-range-modal') closeDateRangeModal();
+  });
+
   // 배지 업데이트 이벤트 수신
   window.addEventListener('badge-updated', () => {
     if (document.getElementById('page-class-stats')?.classList.contains('active')) {
@@ -75,7 +85,7 @@ function init() {
 
 function onPageEnter() {
   if (currentTab === 'personal') {
-    renderStudentCards();
+    renderPersonalView();
   } else if (currentTab === 'class') {
     renderClassView();
   } else if (currentTab === 'ranking') {
@@ -99,7 +109,7 @@ function switchTab(tab) {
   if (rankingView) rankingView.style.display = tab === 'ranking' ? '' : 'none';
 
   if (tab === 'personal') {
-    renderStudentCards();
+    renderPersonalView();
   } else if (tab === 'class') {
     renderClassView();
   } else if (tab === 'ranking') {
@@ -107,7 +117,38 @@ function switchTab(tab) {
   }
 }
 
-// === 개인 배지 탭 — 학생 카드 그리드 ===
+// === 이름 없는 학생 복구 (배지 로그에서 이름 가져오기) ===
+function recoverStudentNames(cls) {
+  if (!cls?.students?.length) return false;
+  let recovered = false;
+
+  cls.students.forEach(s => {
+    if (s.name && s.name.trim()) return; // 이름 있으면 패스
+    // 배지 로그에서 이름 복구 시도
+    const logs = Store.getBadgeLogsByStudent(cls.id, s.id);
+    const logName = logs.find(l => l.studentName)?.studentName;
+    if (logName) {
+      s.name = logName;
+      recovered = true;
+    }
+  });
+
+  if (recovered) {
+    // 복구된 이름을 영구 저장
+    Store.updateClass(cls.id, cls.name, cls.students, cls.teamNames, cls.teams, cls.teamCount);
+  }
+  return recovered;
+}
+
+// === 개인 배지 탭 ===
+function renderPersonalView() {
+  const cls = Store.getSelectedClass();
+  if (!cls) return;
+  recoverStudentNames(cls);
+  renderTimeline(cls.id);
+  renderStudentCards();
+}
+
 function renderStudentCards() {
   const grid = document.getElementById('badge-student-card-grid');
   if (!grid) return;
@@ -118,7 +159,10 @@ function renderStudentCards() {
     return;
   }
 
-  grid.innerHTML = cls.students
+  // 이름 있는 학생만 표시 (recoverStudentNames 이후)
+  const named = cls.students.filter(s => s.name && s.name.trim());
+
+  grid.innerHTML = named
     .map(s => {
       const xp = Store.getStudentXp(cls.id, s.id);
       const levelInfo = getLevelInfo(xp);
@@ -166,9 +210,9 @@ function renderStudentModalContent(cls, student) {
   const levelInfo = getLevelInfo(xp);
   const badgeCounts = Store.getStudentBadgeCounts(cls.id, studentId);
 
-  // 이름
+  // 이름 (빈 경우 번호 폴백)
   const nameEl = document.getElementById('badge-student-modal-name');
-  if (nameEl) nameEl.textContent = student.name;
+  if (nameEl) nameEl.textContent = student.name || `${student.number || '?'}번`;
 
   // 레벨 + XP
   const levelText = document.getElementById('badge-modal-level-text');
@@ -327,7 +371,7 @@ function renderClassView() {
   if (!cls) return;
 
   renderClassBadgeStats(cls.id);
-  renderStudentRanking(cls.id);
+  renderPeriodStats(cls.id);
 }
 
 function renderThermometer(classId) {
@@ -441,20 +485,435 @@ function renderClassBadgeStats(classId) {
   if (!container) return;
 
   const total = BADGE_KEYS.reduce((sum, k) => sum + (counts[k] || 0), 0);
+  const maxCount = Math.max(...BADGE_KEYS.map(k => counts[k] || 0), 1);
+
+  // 최다/최소 배지 찾기
+  const sorted = BADGE_KEYS.filter(k => (counts[k] || 0) > 0).sort(
+    (a, b) => (counts[b] || 0) - (counts[a] || 0)
+  );
+  const topKey = sorted[0] || null;
+  const bottomKey = sorted.length > 1 ? sorted[sorted.length - 1] : null;
+
+  const donutSvg = total > 0 ? buildDonutChart(counts, total) : '';
 
   container.innerHTML = `
     <div class="badge-chart-summary">전체 배지 <strong>${total}</strong>개</div>
+    ${donutSvg ? `<div class="badge-donut-wrap">${donutSvg}</div>` : ''}
     <div class="badge-chart-grid">
       ${BADGE_KEYS.map(key => {
         const badge = BADGE_TYPES[key];
         const count = counts[key] || 0;
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        const barWidth = total > 0 ? Math.round((count / maxCount) * 100) : 0;
         return `<div class="badge-chart-card">
           <img class="badge-chart-img" src="${badge.image}" alt="${badge.name}" />
           <span class="badge-chart-name">${badge.name}</span>
           <span class="badge-chart-count" style="color: ${badge.color}">${count}</span>
+          <div class="badge-chart-bar">
+            <div class="badge-chart-bar-fill" style="width: ${barWidth}%; background: ${badge.color}"></div>
+          </div>
+          <span class="badge-chart-pct">${pct}%</span>
         </div>`;
       }).join('')}
+    </div>
+    ${total > 0 ? renderBadgeHighlight(topKey, bottomKey, counts, total) : ''}`;
+}
+
+// === 최다/최소 배지 하이라이트 ===
+function renderBadgeHighlight(topKey, bottomKey, counts, total) {
+  const topBadge = topKey ? BADGE_TYPES[topKey] : null;
+  const bottomBadge = bottomKey ? BADGE_TYPES[bottomKey] : null;
+  const topPct = topKey ? Math.round(((counts[topKey] || 0) / total) * 100) : 0;
+  const bottomPct = bottomKey ? Math.round(((counts[bottomKey] || 0) / total) * 100) : 0;
+
+  return `<div class="badge-highlight-row">
+    ${
+      topBadge
+        ? `<div class="badge-highlight-card badge-highlight--top">
+      <img src="${topBadge.image}" alt="${topBadge.name}" class="badge-highlight-img" />
+      <div class="badge-highlight-text">
+        <span class="badge-highlight-label">우리 반 최고 덕목</span>
+        <span class="badge-highlight-value">${topBadge.name} <strong>${topPct}%</strong></span>
+      </div>
+    </div>`
+        : ''
+    }
+    ${
+      bottomBadge
+        ? `<div class="badge-highlight-card badge-highlight--low">
+      <img src="${bottomBadge.image}" alt="${bottomBadge.name}" class="badge-highlight-img" />
+      <div class="badge-highlight-text">
+        <span class="badge-highlight-label">더 키워볼 덕목</span>
+        <span class="badge-highlight-value">${bottomBadge.name} <strong>${bottomPct}%</strong></span>
+      </div>
+    </div>`
+        : ''
+    }
+  </div>`;
+}
+
+// === SVG 도넛 차트 ===
+function buildDonutChart(counts, total) {
+  const size = 180;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerR = 72;
+  const innerR = 44;
+
+  // 0이 아닌 배지만 추출, 큰 순서로 정렬
+  const slices = BADGE_KEYS.filter(k => (counts[k] || 0) > 0)
+    .map(k => ({ key: k, count: counts[k], badge: BADGE_TYPES[k] }))
+    .sort((a, b) => b.count - a.count);
+
+  if (slices.length === 0) return '';
+
+  let angle = -90; // 12시 방향부터 시작
+  const paths = slices.map(s => {
+    const sweep = (s.count / total) * 360;
+    const startRad = (angle * Math.PI) / 180;
+    const endRad = ((angle + sweep) * Math.PI) / 180;
+
+    const x1o = cx + outerR * Math.cos(startRad);
+    const y1o = cy + outerR * Math.sin(startRad);
+    const x2o = cx + outerR * Math.cos(endRad);
+    const y2o = cy + outerR * Math.sin(endRad);
+    const x1i = cx + innerR * Math.cos(endRad);
+    const y1i = cy + innerR * Math.sin(endRad);
+    const x2i = cx + innerR * Math.cos(startRad);
+    const y2i = cy + innerR * Math.sin(startRad);
+
+    const largeArc = sweep > 180 ? 1 : 0;
+
+    const d = [
+      `M ${x1o} ${y1o}`,
+      `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2o} ${y2o}`,
+      `L ${x1i} ${y1i}`,
+      `A ${innerR} ${innerR} 0 ${largeArc} 0 ${x2i} ${y2i}`,
+      'Z',
+    ].join(' ');
+
+    angle += sweep;
+    return `<path d="${d}" fill="${s.badge.color}" opacity="0.85" />`;
+  });
+
+  return `<svg viewBox="0 0 ${size} ${size}" class="badge-donut-chart">
+    ${paths.join('')}
+    <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="800" fill="var(--text-primary)">${total}</text>
+    <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-tertiary)">전체</text>
+  </svg>`;
+}
+
+// === 최근 활동 타임라인 ===
+function renderTimeline(classId) {
+  const container = document.getElementById('badge-timeline');
+  if (!container) return;
+
+  const logs = Store.getRecentBadgeLogs(classId, 10);
+  if (logs.length === 0) {
+    container.innerHTML = '<div class="badge-timeline-empty">아직 배지 기록이 없습니다</div>';
+    return;
+  }
+
+  container.innerHTML = logs
+    .map(log => {
+      const badge = BADGE_TYPES[log.badgeType];
+      if (!badge) return '';
+      const time = formatRelativeTime(log.timestamp);
+      return `<div class="badge-timeline-item">
+        <img class="badge-timeline-img" src="${badge.image}" alt="${badge.name}" />
+        <div class="badge-timeline-info">
+          <span class="badge-timeline-name">${UI.escapeHtml(log.studentName)}</span>
+          <span class="badge-timeline-badge" style="color: ${badge.color}">${badge.name}</span>
+        </div>
+        <span class="badge-timeline-time">${time}</span>
+      </div>`;
+    })
+    .join('');
+}
+
+function formatRelativeTime(isoStr) {
+  const now = new Date();
+  const d = new Date(isoStr);
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+
+  if (diffMin < 1) return '방금';
+  if (diffMin < 60) return `${diffMin}분 전`;
+  if (diffHr < 24) return `${diffHr}시간 전`;
+  if (diffDay < 7) return `${diffDay}일 전`;
+
+  const m = d.getMonth() + 1;
+  const dd = d.getDate();
+  return `${m}/${dd}`;
+}
+
+// === 기간별 추이 ===
+function renderPeriodStats(classId) {
+  const container = document.getElementById('badge-period-stats');
+  if (!container) return;
+
+  // 데이터 조회
+  const data = getPeriodData(classId);
+  const totalCount = Store.getClassTotalBadges(classId);
+
+  // 현재 기간 vs 이전 기간 비교
+  const current = data.length > 0 ? data[data.length - 1] : { count: 0 };
+  const prev = data.length >= 2 ? data[data.length - 2] : { count: 0 };
+  const diff = current.count - prev.count;
+
+  let diffLabel, diffClass;
+  if (diff > 0) {
+    diffLabel = `+${diff}`;
+    diffClass = 'badge-period-diff--up';
+  } else if (diff < 0) {
+    diffLabel = `${diff}`;
+    diffClass = 'badge-period-diff--down';
+  } else {
+    diffLabel = '±0';
+    diffClass = 'badge-period-diff--same';
+  }
+
+  const periodLabels = {
+    '4week': { cur: '이번 주', prev: '지난 주', diff: '지난 주 대비' },
+    monthly: { cur: '이번 달', prev: '지난 달', diff: '지난 달 대비' },
+    semester: { cur: '이번 달', prev: '지난 달', diff: '지난 달 대비' },
+    custom: { cur: '선택 기간', prev: '', diff: '' },
+  };
+  const labels = periodLabels[periodMode];
+
+  // 기간 선택 탭
+  const tabs = [
+    { key: '4week', label: '4주' },
+    { key: 'monthly', label: '월간' },
+    { key: 'semester', label: '학기' },
+    { key: 'custom', label: '직접 설정' },
+  ];
+  const tabsHtml = tabs
+    .map(
+      t =>
+        `<button class="badge-period-tab${periodMode === t.key ? ' active' : ''}" data-period="${t.key}">${t.label}</button>`
+    )
+    .join('');
+
+  // 요약 카드 (커스텀 모드는 선택 기간 합계만)
+  let cardsHtml;
+  if (periodMode === 'custom') {
+    const rangeTotal = data.reduce((s, d) => s + d.count, 0);
+    const rangeLabel =
+      customRange.from && customRange.to
+        ? `${fmtDate(customRange.from)} ~ ${fmtDate(customRange.to)}`
+        : '';
+    cardsHtml = `<div class="badge-period-cards badge-period-cards--2">
+      <div class="badge-period-card">
+        <span class="badge-period-label">${rangeLabel || '선택 기간'}</span>
+        <span class="badge-period-num">${rangeTotal}</span>
+      </div>
+      <div class="badge-period-card">
+        <span class="badge-period-label">누적 합계</span>
+        <span class="badge-period-num">${totalCount}</span>
+      </div>
     </div>`;
+  } else {
+    cardsHtml = `<div class="badge-period-cards">
+      <div class="badge-period-card">
+        <span class="badge-period-label">${labels.cur}</span>
+        <span class="badge-period-num">${current.count}</span>
+        <span class="badge-period-diff ${diffClass}">${labels.diff} ${diffLabel}</span>
+      </div>
+      <div class="badge-period-card">
+        <span class="badge-period-label">${labels.prev}</span>
+        <span class="badge-period-num">${prev.count}</span>
+      </div>
+      <div class="badge-period-card">
+        <span class="badge-period-label">누적 합계</span>
+        <span class="badge-period-num">${totalCount}</span>
+      </div>
+    </div>`;
+  }
+
+  // 그래프
+  const chartSvg =
+    data.length >= 2
+      ? buildLineChart(data)
+      : '<div class="badge-timeline-empty">데이터가 부족합니다</div>';
+
+  container.innerHTML = `
+    <div class="badge-period-tabs">${tabsHtml}</div>
+    ${cardsHtml}
+    <div class="badge-chart-line-wrap">${chartSvg}</div>`;
+
+  // 탭 이벤트 위임
+  container.querySelectorAll('.badge-period-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.period;
+      if (key === 'custom') {
+        openDateRangeModal();
+        return;
+      }
+      periodMode = key;
+      renderPeriodStats(classId);
+    });
+  });
+}
+
+function getPeriodData(classId) {
+  switch (periodMode) {
+    case 'monthly':
+      return Store.getMonthlyBadgeCounts(classId, 6);
+    case 'semester':
+      return Store.getSemesterBadgeCounts(classId);
+    case 'custom':
+      if (customRange.from && customRange.to) {
+        return Store.getCustomRangeBadgeCounts(classId, customRange.from, customRange.to);
+      }
+      return [];
+    default:
+      return Store.getWeeklyBadgeCounts(classId, 6);
+  }
+}
+
+function fmtDate(d) {
+  const m = d.getMonth() + 1;
+  const dd = d.getDate();
+  return `${m}/${dd}`;
+}
+
+// === 날짜 범위 모달 ===
+function openDateRangeModal() {
+  const modal = document.getElementById('date-range-modal');
+  if (!modal) return;
+
+  // 기본값: 최근 30일
+  const now = new Date();
+  const from = customRange.from || new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const toDate = customRange.to || now;
+
+  const fromInput = document.getElementById('date-range-from');
+  const toInput = document.getElementById('date-range-to');
+  if (fromInput) fromInput.value = toISODate(from);
+  if (toInput) toInput.value = toISODate(toDate);
+
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
+}
+
+function closeDateRangeModal() {
+  const modal = document.getElementById('date-range-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 200);
+  }
+}
+
+function applyDateRange() {
+  const fromVal = document.getElementById('date-range-from')?.value;
+  const toVal = document.getElementById('date-range-to')?.value;
+
+  if (!fromVal || !toVal) {
+    UI.showToast('시작일과 종료일을 모두 선택해주세요', 'warning');
+    return;
+  }
+
+  const from = new Date(fromVal);
+  const to = new Date(toVal);
+  to.setHours(23, 59, 59, 999);
+
+  if (from > to) {
+    UI.showToast('시작일이 종료일보다 늦을 수 없습니다', 'warning');
+    return;
+  }
+
+  customRange = { from, to };
+  periodMode = 'custom';
+  closeDateRangeModal();
+
+  const cls = Store.getSelectedClass();
+  if (cls) renderPeriodStats(cls.id);
+}
+
+function toISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+// === SVG 꺾은선 그래프 (범용) ===
+function buildLineChart(data) {
+  const W = 320;
+  const H = 140;
+  const padL = 32;
+  const padR = 12;
+  const padT = 20;
+  const padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const counts = data.map(d => d.count);
+  const maxVal = Math.max(...counts, 1);
+  const yMax = Math.ceil(maxVal * 1.2) || 1;
+  const n = data.length;
+
+  const points = data.map((d, i) => {
+    const x = padL + (n > 1 ? (i / (n - 1)) * chartW : chartW / 2);
+    const y = padT + chartH - (d.count / yMax) * chartH;
+    return { x, y, count: d.count, label: d.label };
+  });
+
+  const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+
+  const areaPath = [
+    `M ${points[0].x},${padT + chartH}`,
+    ...points.map(p => `L ${p.x},${p.y}`),
+    `L ${points[n - 1].x},${padT + chartH}`,
+    'Z',
+  ].join(' ');
+
+  const yTicks = [0, Math.round(yMax / 2), yMax];
+  const yTickLines = yTicks
+    .map(v => {
+      const y = padT + chartH - (v / yMax) * chartH;
+      return `
+        <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />
+        <text x="${padL - 6}" y="${y + 4}" text-anchor="end" fill="#9ca3af" font-size="10">${v}</text>`;
+    })
+    .join('');
+
+  // X축 레이블 (너무 많으면 간격 조절)
+  const step = n > 8 ? Math.ceil(n / 6) : 1;
+  const xLabels = points
+    .filter((_, i) => i % step === 0 || i === n - 1)
+    .map(
+      p =>
+        `<text x="${p.x}" y="${H - 6}" text-anchor="middle" fill="#9ca3af" font-size="10">${p.label}</text>`
+    )
+    .join('');
+
+  const dots = points
+    .map(
+      p => `
+      <circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--color-primary)" stroke="#fff" stroke-width="2" />
+      <text x="${p.x}" y="${p.y - 8}" text-anchor="middle" fill="var(--color-primary)" font-size="10" font-weight="700">${p.count}</text>`
+    )
+    .join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="badge-line-chart">
+    <defs>
+      <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.2" />
+        <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.02" />
+      </linearGradient>
+    </defs>
+    ${yTickLines}
+    <path d="${areaPath}" fill="url(#chart-grad)" />
+    <polyline points="${polyline}" fill="none" stroke="var(--color-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    ${dots}
+    ${xLabels}
+  </svg>`;
 }
 
 function renderRankingView() {

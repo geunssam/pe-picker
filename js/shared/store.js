@@ -112,6 +112,30 @@ function getStudentRanking(classId, limit) {
   return BadgeRepo.getStudentRanking(classId, limit);
 }
 
+function getRecentBadgeLogs(classId, limit) {
+  return BadgeRepo.getRecentBadgeLogs(classId, limit);
+}
+
+function getBadgeCountByPeriod(classId, from, to) {
+  return BadgeRepo.getBadgeCountByPeriod(classId, from, to);
+}
+
+function getWeeklyBadgeCounts(classId, weeks) {
+  return BadgeRepo.getWeeklyBadgeCounts(classId, weeks);
+}
+
+function getMonthlyBadgeCounts(classId, months) {
+  return BadgeRepo.getMonthlyBadgeCounts(classId, months);
+}
+
+function getSemesterBadgeCounts(classId) {
+  return BadgeRepo.getSemesterBadgeCounts(classId);
+}
+
+function getCustomRangeBadgeCounts(classId, from, to) {
+  return BadgeRepo.getCustomRangeBadgeCounts(classId, from, to);
+}
+
 function clearBadgeLogs(classId) {
   return BadgeRepo.clearBadgeLogs(classId);
 }
@@ -426,6 +450,12 @@ export const Store = {
   getClassTotalBadges,
   getClassBadgeCounts,
   getStudentRanking,
+  getRecentBadgeLogs,
+  getBadgeCountByPeriod,
+  getWeeklyBadgeCounts,
+  getMonthlyBadgeCounts,
+  getSemesterBadgeCounts,
+  getCustomRangeBadgeCounts,
   clearBadgeLogs,
   getThermostatSettings,
   saveThermostatSettings,
