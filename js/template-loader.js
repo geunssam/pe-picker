@@ -6,6 +6,7 @@
 import navbarHtml from '../templates/navbar.html?raw';
 
 // ── Pages ──
+import dashboardHtml from './features/dashboard/dashboard.html?raw';
 import classSelectorHtml from './features/class/class-selector.html?raw';
 import tagGameHtml from './features/tag-game/tag-game.html?raw';
 import groupManagerHtml from './features/group-manager/group-manager.html?raw';
@@ -69,7 +70,8 @@ export function mountTemplates() {
   // 2. Pages — .app-container 내부에 삽입
   const appContainer = document.querySelector('.app-container');
   appContainer.innerHTML = resolveAssets(
-    classSelectorHtml +
+    dashboardHtml +
+      classSelectorHtml +
       tagGameHtml +
       groupManagerHtml +
       badgeCollectionHtml +

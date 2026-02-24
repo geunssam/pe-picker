@@ -1,0 +1,306 @@
+/* ============================================
+   PE Picker - Dashboard Styles
+   홈 대시보드 전용 스타일
+   ============================================ */
+
+.dash-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* === 섹션 공통 === */
+.dash-section {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-lg);
+}
+
+.dash-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.dash-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* === 빈 상태 === */
+.dash-empty {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.dash-empty-icon {
+  opacity: 0.4;
+  margin-bottom: var(--space-sm);
+}
+
+/* === 섹션 1: 학급 정보 카드 === */
+#dash-class-info {
+  padding: var(--space-md);
+}
+
+.dash-info-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.dash-info-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-sm);
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.dash-info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.dash-info-icon--student {
+  background: var(--gradient-primary);
+}
+
+.dash-info-icon--team {
+  background: var(--gradient-success);
+}
+
+.dash-info-icon--badge {
+  background: var(--gradient-secondary);
+}
+
+.dash-info-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.dash-info-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* === 섹션 2: 모둠 표 === */
+#dash-team-table .timetable-scroll {
+  margin-top: 0;
+}
+
+/* === 섹션 3: 온도계 === */
+.dash-thermo-temp {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-danger);
+}
+
+.dash-thermo-bar-wrap {
+  margin-bottom: var(--space-sm);
+}
+
+.dash-thermo-bar {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.dash-thermo-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.dash-thermo-label {
+  text-align: right;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--space-xs);
+}
+
+.dash-thermo-next {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.dash-ms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-ms-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.dash-ms-item.achieved {
+  color: var(--color-success-dark);
+  background: rgba(123, 224, 163, 0.08);
+}
+
+.dash-ms-check {
+  width: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-ms-temp {
+  font-weight: 600;
+  min-width: 38px;
+}
+
+.dash-ms-reward {
+  flex: 1;
+}
+
+/* === 섹션 4: 배지 랭킹 === */
+.dash-badge-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.dash-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px 2px 2px;
+  background: var(--bg-white);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dash-badge-chip-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.dash-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-ranking-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--bg-white);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.dash-medal {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.dash-medal--gold {
+  background: linear-gradient(135deg, #f5c07c, #f5a67c);
+}
+
+.dash-medal--silver {
+  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+}
+
+.dash-medal--bronze {
+  background: linear-gradient(135deg, #cd7f32, #b87333);
+}
+
+.dash-rank-num {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.dash-rank-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.dash-rank-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+/* === 반응형 === */
+@media (max-width: 480px) {
+  .dash-container {
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .dash-section {
+    padding: var(--space-md);
+  }
+
+  .dash-info-cards {
+    gap: var(--space-sm);
+  }
+
+  .dash-info-card {
+    padding: var(--space-sm) var(--space-xs);
+  }
+
+  .dash-info-value {
+    font-size: var(--font-size-lg);
+  }
+}

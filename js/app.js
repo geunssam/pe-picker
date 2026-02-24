@@ -15,12 +15,14 @@ import { QuickTimer } from './features/tools/quick-timer.js';
 import { Toolbar } from './features/tools/toolbar.js';
 import { BadgeManager } from './features/badge/badge-manager.js';
 import { BadgeCollectionUI } from './features/badge/badge-collection-ui.js';
+import { DashboardManager } from './features/dashboard/dashboard.js';
 import { ConsentManager } from './features/auth/consent-manager.js';
 import { UI } from './shared/ui-utils.js';
 
 const ROUTES = {
   wizard: { label: '학급 설정', requiresClass: false },
   'class-selector': { label: '학급 선택', requiresClass: false },
+  dashboard: { label: '홈', requiresClass: true },
   'tag-game': { label: '술래뽑기', requiresClass: true },
   'group-manager': { label: '모둠뽑기', requiresClass: true },
   'badge-collection': { label: '배지도감', requiresClass: true },
@@ -28,7 +30,7 @@ const ROUTES = {
 };
 
 const DEFAULT_ROUTE = 'class-selector';
-const DEFAULT_INNER_ROUTE = 'tag-game';
+const DEFAULT_INNER_ROUTE = 'dashboard';
 
 let currentRoute = null;
 let isBootstrapped = false;
@@ -46,6 +48,8 @@ function init() {
 function onStoreDataUpdated() {
   if (currentRoute === 'class-selector') {
     ClassManager.renderLandingClassList();
+  } else if (currentRoute === 'dashboard') {
+    DashboardManager.onPageEnter();
   } else if (currentRoute === 'settings') {
     ClassManager.onSettingsPageEnter();
   } else if (currentRoute === 'tag-game') {
@@ -166,6 +170,7 @@ async function bootstrapAfterAuth() {
   const hasClassData = Store.getClasses().length > 0 || Store.isTeacherOnboarded();
 
   ClassManager.init();
+  DashboardManager.init();
   TagGame.init();
   GroupManager.init();
   BadgeManager.init();
@@ -277,7 +282,9 @@ function activateRoute(route) {
   // 드로어 네비 활성 탭 동기화
   Toolbar.syncActiveTab(route);
 
-  if (route === 'tag-game') {
+  if (route === 'dashboard') {
+    DashboardManager.onPageEnter();
+  } else if (route === 'tag-game') {
     TagGame.onPageEnter();
   } else if (route === 'group-manager') {
     GroupManager.onPageEnter();
