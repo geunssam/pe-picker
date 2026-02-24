@@ -77,7 +77,7 @@ export function renderSettingsTeamTable() {
     return;
   }
 
-  let maxMembers = 3;
+  let maxMembers = 0;
   for (let i = 0; i < gc; i++) {
     const len = cls.teams[i] ? cls.teams[i].length : 0;
     if (len > maxMembers) maxMembers = len;
