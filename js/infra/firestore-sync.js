@@ -218,6 +218,14 @@ async function hydrateClassesFromFirestore() {
 
 /**
  * 학생 서브컬렉션의 badges → BadgeRepo의 badgeLogs 형식으로 변환
+ *
+ * 배지 필드명 매핑 (Firestore → localStorage):
+ *   - `type`  → `badgeType`
+ *   - `date`  → `timestamp`
+ *   - 나머지 필드(id, context, team, xp)는 동일
+ *
+ * @see syncBadgesToStudentDocs — 역방향 변환 (localStorage → Firestore)
+ * @see syncBadgeLogEntries — 역방향 변환 (localStorage → Firestore)
  */
 function hydrateBadgesFromStudents(classes) {
   const allLogs = [];
@@ -312,7 +320,14 @@ function startRealtimeClassSync() {
 
 /**
  * 배지 데이터를 학생 서브컬렉션의 badges 배열 + xp로 동기화
+ *
+ * 배지 필드명 매핑 (localStorage → Firestore):
+ *   - `badgeType`  → `type`
+ *   - `timestamp`  → `date`
+ *   - 나머지 필드(id, context, team, xp)는 동일
+ *
  * @param {Array} classes - 학급 배열 (없으면 Store에서 가져옴)
+ * @see hydrateBadgesFromStudents — 역방향 변환 (Firestore → localStorage)
  */
 async function syncBadgesToStudentDocs(classes) {
   const database = getDb();
@@ -368,7 +383,14 @@ async function syncBadgesToStudentDocs(classes) {
 
 /**
  * 새 배지 엔트리들을 해당 학생 문서에 추가
+ *
+ * 배지 필드명 매핑 (localStorage → Firestore):
+ *   - `badgeType`  → `type`
+ *   - `timestamp`  → `date`
+ *   - 나머지 필드(id, context, team, xp)는 동일
+ *
  * @param {Array} logEntries - 새로 생성된 배지 로그 배열
+ * @see hydrateBadgesFromStudents — 역방향 변환 (Firestore → localStorage)
  */
 export async function syncBadgeLogEntries(logEntries) {
   const database = getDb();
@@ -486,19 +508,23 @@ export async function syncTeacherProfileToFirestore(profile) {
   const uid = getCurrentUserId();
   if (!database || !uid) return;
 
-  const userRef = doc(database, 'users', uid);
-  await withTimeout(
-    setDoc(
-      userRef,
-      {
-        ...profile,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    ),
-    SYNC_TIMEOUT_MS,
-    'teacher profile sync'
-  );
+  try {
+    const userRef = doc(database, 'users', uid);
+    await withTimeout(
+      setDoc(
+        userRef,
+        {
+          ...profile,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      ),
+      SYNC_TIMEOUT_MS,
+      'teacher profile sync'
+    );
+  } catch (error) {
+    console.warn('[FirestoreSync] 교사 프로필 동기화 실패:', error);
+  }
 }
 
 export async function setSelectedClass(classId) {

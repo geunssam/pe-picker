@@ -96,6 +96,7 @@ async function bootstrapAfterAuth() {
       await FirestoreSync.init();
     } catch (error) {
       console.warn('[App] Firestore sync failed:', error);
+      UI.showToast('클라우드 연결 실패. 로컬 모드로 진행합니다.', 'error');
     }
   }
 
@@ -301,6 +302,7 @@ async function syncSelectedClassToCloud(classId) {
     await FirestoreSync.setSelectedClass(classId);
   } catch (error) {
     console.warn('[App] selectedClass sync failed:', error);
+    UI.showToast('학급 동기화에 실패했습니다', 'error');
   }
 }
 
