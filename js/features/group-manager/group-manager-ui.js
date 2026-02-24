@@ -3,8 +3,8 @@
    모둠뽑기 화면 렌더링
    ============================================ */
 
-import { UI } from '../shared/ui-utils.js';
-import { Icons } from '../shared/icons.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Icons } from '../../shared/icons.js';
 
 // === 모둠 카드 렌더링 (즉시) ===
 function renderGroups(groups, animate = false) {

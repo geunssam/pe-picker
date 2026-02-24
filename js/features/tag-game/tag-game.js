@@ -4,12 +4,13 @@
    3 Phase: 설정(1) → 결과(2) → 타이머(3)
    ============================================ */
 
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
-import { Sound } from '../shared/sound.js';
-import { IosUtils } from '../shared/ios-utils.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Sound } from '../../shared/sound.js';
+import { IosUtils } from '../../shared/ios-utils.js';
 import { TagGameUI } from './tag-game-ui.js';
-import { Icons } from '../shared/icons.js';
+import { Icons } from '../../shared/icons.js';
+import './tag-game.css';
 
 // --- 게임 상태 (원본 동일) ---
 let currentPhase = 1;

@@ -3,8 +3,8 @@
    술래뽑기 화면 렌더링 (원본 display 함수 이식)
    ============================================ */
 
-import { UI } from '../shared/ui-utils.js';
-import { Icons } from '../shared/icons.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Icons } from '../../shared/icons.js';
 
 // === 결과 카드 렌더 (원본 displayResults) ===
 function renderResultCards(its, angels) {

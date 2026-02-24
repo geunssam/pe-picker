@@ -3,12 +3,13 @@
    모둠뽑기 핵심 로직
    ============================================ */
 
-import { Store } from '../shared/store.js';
-import { UI } from '../shared/ui-utils.js';
-import { Sound } from '../shared/sound.js';
+import { Store } from '../../shared/store.js';
+import { UI } from '../../shared/ui-utils.js';
+import { Sound } from '../../shared/sound.js';
 import { GroupManagerUI } from './group-manager-ui.js';
-import { TimerModule } from '../shared/timer.js';
-import { Icons } from '../shared/icons.js';
+import { TimerModule } from '../../shared/timer.js';
+import { Icons } from '../../shared/icons.js';
+import './group-manager.css';
 
 let currentGroups = [];
 let currentPhase = 1; // 1=설정, 2=결과
