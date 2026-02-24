@@ -16,6 +16,8 @@ import { FirestoreSync } from '../../infra/firestore-sync.js';
 import './class-stats.css';
 
 let currentTab = 'personal'; // 'personal' | 'class'
+let studentSort = 'number'; // 'number' | 'badge'
+let rankingBadgeFilter = ''; // '' = 전체, 또는 badgeType 키
 let periodMode = '4week'; // '4week' | 'monthly' | 'semester' | 'custom'
 let customRange = { from: null, to: null }; // 직접 설정 기간
 let editMilestones = []; // 편집 중인 마일스톤
@@ -159,23 +161,50 @@ function renderStudentCards() {
     return;
   }
 
-  // 이름 있는 학생만 표시 (recoverStudentNames 이후)
-  const named = cls.students.filter(s => s.name && s.name.trim());
-
-  grid.innerHTML = named
+  // 이름 있는 학생만 + 배지 수 계산
+  const named = cls.students
+    .filter(s => s.name && s.name.trim())
     .map(s => {
       const xp = Store.getStudentXp(cls.id, s.id);
       const levelInfo = getLevelInfo(xp);
-      const totalBadges = Store.getStudentBadgeCounts(cls.id, s.id);
-      const badgeTotal = Object.values(totalBadges).reduce((a, b) => a + b, 0);
+      const counts = Store.getStudentBadgeCounts(cls.id, s.id);
+      const badgeTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+      return { ...s, xp, levelInfo, badgeTotal };
+    });
 
-      return `<button class="badge-stu-card" data-student-id="${s.id}">
+  // 정렬
+  if (studentSort === 'badge') {
+    named.sort((a, b) => b.badgeTotal - a.badgeTotal || a.number - b.number);
+  } else {
+    named.sort((a, b) => (a.number || 999) - (b.number || 999));
+  }
+
+  // 정렬 토글 버튼
+  const sortHtml = `<div class="badge-sort-row">
+    <button class="badge-sort-btn${studentSort === 'number' ? ' active' : ''}" data-sort="number">번호순</button>
+    <button class="badge-sort-btn${studentSort === 'badge' ? ' active' : ''}" data-sort="badge">배지순</button>
+  </div>`;
+
+  // 카드 렌더
+  const cardsHtml = named
+    .map(
+      s => `<button class="badge-stu-card" data-student-id="${s.id}">
         <span class="badge-stu-name">${UI.escapeHtml(s.name)}</span>
-        <span class="badge-stu-level">Lv.${levelInfo.level}</span>
-        <span class="badge-stu-count">${badgeTotal}개</span>
-      </button>`;
-    })
+        <span class="badge-stu-level">Lv.${s.levelInfo.level}</span>
+        <span class="badge-stu-count">${s.badgeTotal}개</span>
+      </button>`
+    )
     .join('');
+
+  grid.innerHTML = sortHtml + `<div class="badge-stu-cards-inner">${cardsHtml}</div>`;
+
+  // 정렬 버튼 이벤트
+  grid.querySelectorAll('.badge-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      studentSort = btn.dataset.sort;
+      renderStudentCards();
+    });
+  });
 
   // 카드 클릭 → 학생 배지 모달
   grid.querySelectorAll('.badge-stu-card').forEach(card => {
@@ -497,8 +526,7 @@ function renderClassBadgeStats(classId) {
   const donutSvg = total > 0 ? buildDonutChart(counts, total) : '';
 
   container.innerHTML = `
-    <div class="badge-chart-summary">전체 배지 <strong>${total}</strong>개</div>
-    ${donutSvg ? `<div class="badge-donut-wrap">${donutSvg}</div>` : ''}
+    ${donutSvg ? `<div class="badge-donut-wrap">${donutSvg}</div>` : `<div class="badge-chart-summary">전체 배지 <strong>${total}</strong>개</div>`}
     <div class="badge-chart-grid">
       ${BADGE_KEYS.map(key => {
         const badge = BADGE_TYPES[key];
@@ -517,6 +545,47 @@ function renderClassBadgeStats(classId) {
       }).join('')}
     </div>
     ${total > 0 ? renderBadgeHighlight(topKey, bottomKey, counts, total) : ''}`;
+
+  // 도넛 호버 툴팁
+  bindDonutTooltip(container);
+}
+
+function bindDonutTooltip(container) {
+  const wrap = container.querySelector('.badge-donut-wrap');
+  if (!wrap) return;
+  const tooltip = wrap.querySelector('#donut-tooltip');
+  if (!tooltip) return;
+
+  wrap.querySelectorAll('.badge-donut-chart path').forEach(path => {
+    path.addEventListener('mouseenter', e => {
+      const { badgeName, badgeCount, badgePct, badgeColor } = e.target.dataset;
+      tooltip.innerHTML = `<span class="donut-tip-dot" style="background:${badgeColor}"></span><span class="donut-tip-name">${badgeName}</span><span class="donut-tip-count">${badgeCount}개</span><span class="donut-tip-pct">${badgePct}%</span>`;
+      tooltip.classList.add('visible');
+    });
+
+    path.addEventListener('mousemove', e => {
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = `${e.clientX - rect.left}px`;
+      tooltip.style.top = `${e.clientY - rect.top - 50}px`;
+    });
+
+    path.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+
+    // 모바일 터치
+    path.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const { badgeName, badgeCount, badgePct, badgeColor } = e.target.dataset;
+      tooltip.innerHTML = `<span class="donut-tip-dot" style="background:${badgeColor}"></span><span class="donut-tip-name">${badgeName}</span><span class="donut-tip-count">${badgeCount}개</span><span class="donut-tip-pct">${badgePct}%</span>`;
+      tooltip.classList.add('visible');
+      const touch = e.touches[0];
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = `${touch.clientX - rect.left}px`;
+      tooltip.style.top = `${touch.clientY - rect.top - 50}px`;
+      setTimeout(() => tooltip.classList.remove('visible'), 2000);
+    });
+  });
 }
 
 // === 최다/최소 배지 하이라이트 ===
@@ -592,15 +661,18 @@ function buildDonutChart(counts, total) {
       'Z',
     ].join(' ');
 
+    const pct = Math.round((s.count / total) * 100);
     angle += sweep;
-    return `<path d="${d}" fill="${s.badge.color}" opacity="0.85" />`;
+    return `<path d="${d}" fill="${s.badge.color}" opacity="0.85"
+      data-badge-name="${s.badge.name}" data-badge-count="${s.count}"
+      data-badge-pct="${pct}" data-badge-color="${s.badge.color}" />`;
   });
 
   return `<svg viewBox="0 0 ${size} ${size}" class="badge-donut-chart">
     ${paths.join('')}
     <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="800" fill="var(--text-primary)">${total}</text>
     <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-tertiary)">전체</text>
-  </svg>`;
+  </svg><div class="donut-tooltip" id="donut-tooltip"></div>`;
 }
 
 // === 최근 활동 타임라인 ===
@@ -923,30 +995,61 @@ function renderRankingView() {
 }
 
 function renderStudentRanking(classId) {
-  const ranking = Store.getStudentRanking(classId, 0); // 0 = 전체
+  const section = document.getElementById('badge-ranking-section');
+  if (!section) return;
+
+  const ranking = Store.getStudentRanking(classId, 0, rankingBadgeFilter || null);
+
+  // 드롭다운 옵션
+  const options = [
+    '<option value="">전체 배지</option>',
+    ...BADGE_KEYS.map(
+      k =>
+        `<option value="${k}"${rankingBadgeFilter === k ? ' selected' : ''}>${BADGE_TYPES[k].name}</option>`
+    ),
+  ].join('');
+
+  const filterHtml = `<div class="badge-rank-filter">
+    <select class="badge-rank-select" id="ranking-badge-select">${options}</select>
+  </div>`;
+
   const list = document.getElementById('badge-ranking-list');
   if (!list) return;
 
   if (ranking.length === 0) {
-    list.innerHTML =
-      '<div style="padding: var(--space-md); text-align: center; font-size: var(--font-size-sm); color: var(--text-tertiary);">아직 배지 데이터가 없습니다</div>';
+    const emptyLabel = rankingBadgeFilter
+      ? `${BADGE_TYPES[rankingBadgeFilter].name} 배지 데이터가`
+      : '배지 데이터가';
+    list.innerHTML = `${filterHtml}<div style="padding: var(--space-md); text-align: center; font-size: var(--font-size-sm); color: var(--text-tertiary);">아직 ${emptyLabel} 없습니다</div>`;
+    bindRankingFilter(classId);
     return;
   }
 
   const medalClasses = ['rank-medal--gold', 'rank-medal--silver', 'rank-medal--bronze'];
-  list.innerHTML = ranking
-    .map((r, i) => {
-      const rankDisplay =
-        i < 3
-          ? `<span class="rank-medal ${medalClasses[i]}">${i + 1}</span>`
-          : `<span class="badge-rank-num">${i + 1}</span>`;
-      return `<div class="badge-ranking-item">
-      ${rankDisplay}
-      <span class="badge-rank-name">${UI.escapeHtml(r.studentName)}</span>
-      <span class="badge-rank-count">${r.count}개</span>
-    </div>`;
-    })
-    .join('');
+  list.innerHTML =
+    filterHtml +
+    ranking
+      .map((r, i) => {
+        const rankDisplay =
+          i < 3
+            ? `<span class="rank-medal ${medalClasses[i]}">${i + 1}</span>`
+            : `<span class="badge-rank-num">${i + 1}</span>`;
+        return `<div class="badge-ranking-item">
+        ${rankDisplay}
+        <span class="badge-rank-name">${UI.escapeHtml(r.studentName)}</span>
+        <span class="badge-rank-count">${r.count}개</span>
+      </div>`;
+      })
+      .join('');
+
+  bindRankingFilter(classId);
+}
+
+function bindRankingFilter(classId) {
+  document.getElementById('ranking-badge-select')?.addEventListener('change', e => {
+    rankingBadgeFilter = e.target.value;
+    renderStudentRanking(classId);
+  });
 }
 
 // === 온도계 설정 ===

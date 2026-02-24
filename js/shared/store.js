@@ -108,8 +108,8 @@ function getClassBadgeCounts(classId) {
   return BadgeRepo.getClassBadgeCounts(classId);
 }
 
-function getStudentRanking(classId, limit) {
-  return BadgeRepo.getStudentRanking(classId, limit);
+function getStudentRanking(classId, limit, badgeType) {
+  return BadgeRepo.getStudentRanking(classId, limit, badgeType);
 }
 
 function getRecentBadgeLogs(classId, limit) {

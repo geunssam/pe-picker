@@ -133,8 +133,9 @@ function getClassBadgeCounts(classId) {
  * @param {number} [limit=5] - 상위 N명
  * @returns {Array<{studentId: string, studentName: string, count: number}>}
  */
-function getStudentRanking(classId, limit = 5) {
-  const logs = getBadgeLogsByClass(classId);
+function getStudentRanking(classId, limit = 5, badgeType = null) {
+  let logs = getBadgeLogsByClass(classId);
+  if (badgeType) logs = logs.filter(log => log.badgeType === badgeType);
   const map = {};
 
   for (const log of logs) {

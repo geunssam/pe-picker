@@ -73,10 +73,37 @@
 
 /* === 개인 배지 뷰 — 학생 카드 그리드 === */
 .badge-student-card-grid {
+  margin-bottom: var(--space-lg);
+}
+
+.badge-sort-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.badge-sort-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.badge-sort-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.badge-stu-cards-inner {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
 }
 
 .badge-stu-card {
@@ -399,12 +426,85 @@
 .badge-donut-wrap {
   display: flex;
   justify-content: center;
+  padding: var(--space-lg) var(--space-md);
   margin-bottom: var(--space-md);
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-donut-wrap {
+  position: relative;
 }
 
 .badge-donut-chart {
   width: 180px;
   height: 180px;
+}
+
+.badge-donut-chart path {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.badge-donut-chart path:hover {
+  opacity: 1 !important;
+}
+
+.donut-tooltip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-white);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+
+.donut-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--bg-white);
+}
+
+.donut-tooltip.visible {
+  opacity: 1;
+}
+
+.donut-tip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tip-bg);
+  flex-shrink: 0;
+}
+
+.donut-tip-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.donut-tip-count {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.donut-tip-pct {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
 }
 
 /* 배지 프로그레스 바 */
@@ -1189,6 +1289,23 @@
   font-size: var(--font-size-sm);
   font-weight: 700;
   background: rgba(124, 158, 245, 0.06);
+}
+
+.badge-rank-filter {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-sm) var(--space-md) 0;
+}
+
+.badge-rank-select {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-white);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
 }
 
 .badge-ranking-item {
