@@ -66,6 +66,10 @@ function onStoreDataUpdated() {
   if (nameEl && cls) {
     nameEl.textContent = cls.name;
   }
+  const drawerClassName = document.getElementById('drawer-class-name');
+  if (drawerClassName && cls) {
+    drawerClassName.textContent = cls.name;
+  }
 }
 
 function onAuthStateChanged() {
@@ -121,19 +125,25 @@ async function bootstrapAfterAuth() {
   const profileNameEl = document.getElementById('navbar-profile-name');
   const profileImg = document.getElementById('navbar-profile-img');
 
+  const teacher = Store.getTeacherProfile();
+  const teacherName = teacher?.teacherName;
+  const displayName =
+    teacherName && teacherName !== '체육 선생님' ? teacherName : user?.displayName || '';
+
   if (profileNameEl) {
-    const teacher = Store.getTeacherProfile();
-    const teacherName = teacher?.teacherName;
-    // 위저드 이름이 없거나 기본값이면 구글 프로필명 사용
-    const name =
-      teacherName && teacherName !== '체육 선생님' ? teacherName : user?.displayName || '';
-    profileNameEl.textContent = name;
+    profileNameEl.textContent = displayName;
   }
 
   if (profileImg && user?.photoURL) {
     profileImg.src = user.photoURL;
     profileImg.style.display = '';
   }
+
+  // 드로어 프로필 동기화
+  const drawerName = document.getElementById('drawer-profile-name');
+  const drawerImg = document.getElementById('drawer-profile-img');
+  if (drawerName) drawerName.textContent = displayName;
+  if (drawerImg && user?.photoURL) drawerImg.src = user.photoURL;
 
   window.addEventListener('hashchange', handleRouteChange);
 
@@ -264,6 +274,11 @@ function activateRoute(route) {
     const nameEl = document.getElementById('navbar-class-name');
     if (nameEl && cls) {
       nameEl.textContent = cls.name;
+    }
+    // 드로어 학급명 동기화
+    const drawerClassName = document.getElementById('drawer-class-name');
+    if (drawerClassName && cls) {
+      drawerClassName.textContent = cls.name;
     }
   }
 

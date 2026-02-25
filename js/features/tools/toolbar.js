@@ -235,6 +235,26 @@ function init() {
         }
       });
     });
+
+    // 드로어 설정 버튼
+    const drawerSettingsBtn = document.getElementById('drawer-settings-btn');
+    if (drawerSettingsBtn) {
+      drawerSettingsBtn.addEventListener('click', () => {
+        closeDrawer();
+        window.App.navigateTo('settings');
+      });
+    }
+
+    // 드로어 로그아웃 버튼
+    const drawerLogoutBtn = document.getElementById('drawer-logout-btn');
+    if (drawerLogoutBtn) {
+      drawerLogoutBtn.addEventListener('click', async () => {
+        closeDrawer();
+        const { AuthManager } = await import('../auth/auth-manager.js');
+        await AuthManager.signOut();
+        window.location.replace('login.html');
+      });
+    }
   }
 
   // === 반응형 리사이즈 ===

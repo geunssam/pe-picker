@@ -386,8 +386,74 @@ function migrateFromLegacy() {
   // 학급 ID 마이그레이션
   migrateClassIds();
 
+  // 빈 이름 학생 → 배지 로그에서 이름 복구
+  migrateRecoverStudentNames();
+
+  // 무효 번호(0, NaN) 학생 → 자동 번호 배정
+  migrateFixStudentNumbers();
+
   // 유령 학생(name이 빈 문자열) 제거 마이그레이션
   migrateRemoveGhostStudents();
+}
+
+/**
+ * 빈 이름 학생 복구 마이그레이션
+ * 배지 로그에 남아 있는 studentName으로 이름 복구
+ */
+function migrateRecoverStudentNames() {
+  const classes = getClasses();
+  let changed = false;
+
+  classes.forEach(cls => {
+    if (!Array.isArray(cls.students)) return;
+    cls.students.forEach(s => {
+      if (typeof s !== 'object') return;
+      if (s.name && s.name.trim()) return; // 이름 있으면 패스
+      const logs = BadgeRepo.getBadgeLogsByStudent(cls.id, s.id);
+      const logName = logs.find(l => l.studentName)?.studentName;
+      if (logName) {
+        s.name = logName;
+        changed = true;
+      }
+    });
+  });
+
+  if (changed) {
+    saveClasses(classes);
+    console.log('[Store] 학생 이름 복구 마이그레이션 완료');
+  }
+}
+
+/**
+ * 무효 번호 보정 마이그레이션
+ * number <= 0 또는 NaN인 학생에게 자동 번호 배정
+ */
+function migrateFixStudentNumbers() {
+  const classes = getClasses();
+  let changed = false;
+
+  classes.forEach(cls => {
+    if (!Array.isArray(cls.students)) return;
+    const usedNums = cls.students
+      .map(s => (typeof s === 'object' ? parseInt(s.number, 10) : NaN))
+      .filter(n => Number.isFinite(n) && n > 0);
+    let maxNum = usedNums.length > 0 ? Math.max(...usedNums) : 0;
+
+    cls.students.forEach(s => {
+      if (typeof s !== 'object') return;
+      const num = parseInt(s.number, 10);
+      if (!Number.isFinite(num) || num <= 0) {
+        maxNum++;
+        s.number = maxNum;
+        changed = true;
+      }
+    });
+  });
+
+  if (changed) {
+    saveClasses(classes);
+    console.log('[Store] 학생 번호 보정 마이그레이션 완료');
+  }
 }
 
 /**

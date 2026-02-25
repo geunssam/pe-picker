@@ -39,7 +39,7 @@ export function renderSettingsStudentList() {
     const genderClass =
       gender === 'male' ? ' gender-male' : gender === 'female' ? ' gender-female' : '';
     const displayNumber = Number.isFinite(number) && number > 0 ? `${number}. ` : '';
-    const displayName = name ? UI.escapeHtml(name) : displayNumber ? '' : '?';
+    const displayName = name.trim() ? UI.escapeHtml(name) : displayNumber ? '' : '?';
     return `<div class="tag-student-card${genderClass}">
       <span>${displayNumber}${displayName}</span>
     </div>`;

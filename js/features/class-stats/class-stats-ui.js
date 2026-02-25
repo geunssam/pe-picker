@@ -119,34 +119,10 @@ function switchTab(tab) {
   }
 }
 
-// === 이름 없는 학생 복구 (배지 로그에서 이름 가져오기) ===
-function recoverStudentNames(cls) {
-  if (!cls?.students?.length) return false;
-  let recovered = false;
-
-  cls.students.forEach(s => {
-    if (s.name && s.name.trim()) return; // 이름 있으면 패스
-    // 배지 로그에서 이름 복구 시도
-    const logs = Store.getBadgeLogsByStudent(cls.id, s.id);
-    const logName = logs.find(l => l.studentName)?.studentName;
-    if (logName) {
-      s.name = logName;
-      recovered = true;
-    }
-  });
-
-  if (recovered) {
-    // 복구된 이름을 영구 저장
-    Store.updateClass(cls.id, cls.name, cls.students, cls.teamNames, cls.teams, cls.teamCount);
-  }
-  return recovered;
-}
-
 // === 개인 배지 탭 ===
 function renderPersonalView() {
   const cls = Store.getSelectedClass();
   if (!cls) return;
-  recoverStudentNames(cls);
   renderTimeline(cls.id);
   renderStudentCards();
 }
