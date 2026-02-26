@@ -7,14 +7,10 @@
 .app-container {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
   padding: var(--space-lg);
   padding-top: calc(56px + var(--safe-top) + var(--space-lg));
-  padding-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
   position: relative;
-  display: flex;
-  flex-direction: column;
 }
 
 .startup-splash {
@@ -127,6 +123,59 @@
   margin: 0;
 }
 
+/* 중앙: 날짜/시간 (모바일 전용) */
+.navbar-clock {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+}
+
+.navbar-clock-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+.navbar-clock-time {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 모바일 퀵 네비 (술래뽑기/모둠뽑기 아이콘) */
+.navbar-quick-nav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.navbar-quick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.navbar-quick-btn.active {
+  color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.1);
+}
+
+.navbar-quick-btn:active {
+  transform: scale(0.9);
+}
+
 /* 중앙: 탭 메뉴 */
 .navbar-tabs {
   flex: 1;
@@ -217,7 +266,6 @@
 .page-view.active {
   display: block;
   opacity: 1;
-  flex: 1;
 }
 
 /* === Section === */
@@ -2302,6 +2350,20 @@
   stroke: #10b981;
 }
 
+/* 네비 버튼 활성 상태 */
+.toolbar-nav-btn.active {
+  background: rgba(124, 158, 245, 0.12);
+  color: var(--color-primary);
+}
+
+.toolbar-nav-btn.active .toolbar-icon svg {
+  stroke: var(--color-primary);
+}
+
+.toolbar-btn--settings .toolbar-icon svg {
+  stroke: #6b7280;
+}
+
 .right-toolbar.collapsed .toolbar-account-items .toolbar-btn {
   justify-content: center;
   padding: 10px;
@@ -2836,7 +2898,7 @@
   right: calc(64px + var(--space-md));
   top: 50%;
   transform: translateY(-50%) scale(0.95);
-  width: 280px;
+  width: 300px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -2939,6 +3001,18 @@
   color: var(--text-tertiary);
   margin-bottom: var(--space-xs);
   display: block;
+}
+
+/* 타이머 패널 내 스텝퍼 축소 */
+.timer-panel .number-stepper .stepper-btn {
+  width: 34px;
+  height: 34px;
+  font-size: var(--font-size-sm);
+}
+
+.timer-panel .number-stepper input {
+  width: 44px;
+  font-size: var(--font-size-sm);
 }
 
 /* 시작 버튼 */
@@ -3102,17 +3176,38 @@
   }
 
   .navbar-hamburger {
-    display: flex;
+    display: none !important;
   }
 
   .navbar-right {
     position: relative;
   }
 
-  .navbar-class-info,
-  .navbar-profile-name,
-  .navbar-profile {
+  .navbar-clock {
+    display: flex;
+  }
+
+  .navbar-quick-nav {
     display: none !important;
+  }
+
+  .navbar-class-info {
+    display: inline-block !important;
+    font-size: 12px;
+    padding: 3px 8px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .navbar-profile-name {
+    display: none !important;
+  }
+
+  .navbar-profile {
+    display: block !important;
+    width: 28px;
+    height: 28px;
   }
 }
 

@@ -34,6 +34,33 @@ const DEFAULT_INNER_ROUTE = 'dashboard';
 
 let currentRoute = null;
 let isBootstrapped = false;
+let clockInterval = null;
+
+function startNavbarClock() {
+  const dateEl = document.getElementById('navbar-clock-date');
+  const timeEl = document.getElementById('navbar-clock-time');
+  if (!dateEl || !timeEl) return;
+
+  const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+  function update() {
+    const now = new Date();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    const w = WEEKDAYS[now.getDay()];
+    dateEl.textContent = `${m}월 ${d}일 (${w})`;
+
+    const h = now.getHours();
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const period = h < 12 ? '오전' : '오후';
+    const h12 = h % 12 || 12;
+    timeEl.textContent = `${period} ${h12}:${min}`;
+  }
+
+  update();
+  if (clockInterval) clearInterval(clockInterval);
+  clockInterval = setInterval(update, 10000);
+}
 
 function init() {
   mountTemplates();
@@ -188,6 +215,7 @@ async function bootstrapAfterAuth() {
   Whistle.init();
   QuickTimer.init();
   Toolbar.init();
+  startNavbarClock();
 
   if (!hasClassData) {
     activateRoute('wizard');
@@ -294,7 +322,7 @@ function activateRoute(route) {
     btn.classList.toggle('active', btn.dataset.route === route);
   });
 
-  // 드로어 네비 활성 탭 동기화
+  // 드로어/툴바 네비 활성 탭 동기화
   Toolbar.syncActiveTab(route);
 
   if (route === 'dashboard') {

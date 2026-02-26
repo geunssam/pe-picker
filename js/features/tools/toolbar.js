@@ -110,9 +110,16 @@ function hide() {
 
 // === 네비 활성 탭 동기화 ===
 function syncActiveTab(route) {
+  // 좌측 드로어
   if (drawer) {
     drawer.querySelectorAll('.mobile-nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.route === route);
+    });
+  }
+  // 우측 툴바 네비 버튼
+  if (toolbar) {
+    toolbar.querySelectorAll('.toolbar-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.route === route);
     });
   }
 }
@@ -160,6 +167,14 @@ function init() {
       QuickTimer.togglePanel();
     });
   }
+
+  // === 우측 툴바 네비 버튼들 (홈, 술래뽑기, 모둠뽑기, 학급 통계) ===
+  toolbar.querySelectorAll('.toolbar-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const route = btn.dataset.route;
+      if (route) window.App.navigateTo(route);
+    });
+  });
 
   // === 우측 툴바 계정 버튼 ===
   const toolbarClassBtn = document.getElementById('toolbar-class-btn');
@@ -211,6 +226,14 @@ function init() {
   document.getElementById('thermo-modal-overlay')?.addEventListener('click', e => {
     if (e.target.id === 'thermo-modal-overlay') UI.hideModal('thermo-modal-overlay');
   });
+
+  // === 우측 툴바 설정 버튼 ===
+  const toolbarSettingsBtn = document.getElementById('toolbar-settings-btn');
+  if (toolbarSettingsBtn) {
+    toolbarSettingsBtn.addEventListener('click', () => {
+      window.App.navigateTo('settings');
+    });
+  }
 
   // === 드로어 ===
   if (hamburger) {
