@@ -97,6 +97,36 @@ function mergeStudentsWithSubcollection(docStudents, subStudents) {
   });
 }
 
+/**
+ * 번호+이름이 같은 중복 학생 제거 (배지/XP가 많은 쪽 보존)
+ */
+function deduplicateStudents(students) {
+  if (!Array.isArray(students)) return students;
+  const seen = new Map();
+  const result = [];
+
+  for (const s of students) {
+    const name = (s.name || '').trim();
+    if (!name) continue;
+
+    const key = `${s.number}|${name}`;
+    if (seen.has(key)) {
+      const existing = seen.get(key);
+      const existingBadges = Array.isArray(existing.badges) ? existing.badges.length : 0;
+      const currentBadges = Array.isArray(s.badges) ? s.badges.length : 0;
+      if (currentBadges > existingBadges || (s.xp || 0) > (existing.xp || 0)) {
+        const idx = result.indexOf(existing);
+        if (idx !== -1) result[idx] = s;
+        seen.set(key, s);
+      }
+    } else {
+      seen.set(key, s);
+      result.push(s);
+    }
+  }
+  return result;
+}
+
 function normalizeClassFromSnapshot(classId, data = {}, subStudents = null) {
   const docStudents = Array.isArray(data.students)
     ? data.students.map((student, idx) => normalizeStudent(student, idx + 1))
@@ -225,6 +255,8 @@ async function hydrateClassesFromFirestore() {
           }
         }
 
+        // 번호+이름 기준 중복 제거
+        cls.students = deduplicateStudents(cls.students);
         return cls;
       })
     )
@@ -372,6 +404,8 @@ function startRealtimeClassSync() {
             }
           }
 
+          // 번호+이름 기준 중복 제거
+          cls.students = deduplicateStudents(cls.students);
           return cls;
         })
       )

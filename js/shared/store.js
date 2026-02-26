@@ -394,6 +394,9 @@ function migrateFromLegacy() {
 
   // 유령 학생(name이 빈 문자열) 제거 마이그레이션
   migrateRemoveGhostStudents();
+
+  // 번호 중복 학생 제거 마이그레이션 (일괄등록 id 유실 버그 대응)
+  migrateDeduplicateStudents();
 }
 
 /**
@@ -477,6 +480,56 @@ function migrateRemoveGhostStudents() {
   if (changed) {
     saveClasses(classes);
     console.log('[Store] 유령 학생 마이그레이션 완료');
+  }
+}
+
+/**
+ * 번호 중복 학생 제거 마이그레이션
+ * 일괄등록 시 id가 유실되어 같은 번호의 학생이 2명씩 생긴 경우 정리
+ * 동일 번호+이름이면 중복으로 판단, 배지/XP가 더 많은 쪽을 보존
+ */
+function migrateDeduplicateStudents() {
+  const classes = getClasses();
+  let changed = false;
+
+  classes.forEach(cls => {
+    if (!Array.isArray(cls.students)) return;
+
+    const seen = new Map(); // key: "number|name" → best student
+    const deduped = [];
+
+    for (const s of cls.students) {
+      const name = (s.name || '').trim();
+      if (!name) continue;
+
+      const key = `${s.number}|${name}`;
+      if (seen.has(key)) {
+        // 중복 발견 — 배지/XP가 더 많은 쪽 보존
+        const existing = seen.get(key);
+        const existingBadges = Array.isArray(existing.badges) ? existing.badges.length : 0;
+        const currentBadges = Array.isArray(s.badges) ? s.badges.length : 0;
+
+        if (currentBadges > existingBadges || (s.xp || 0) > (existing.xp || 0)) {
+          // 현재 학생이 더 많은 데이터 보유 → 교체
+          const idx = deduped.indexOf(existing);
+          if (idx !== -1) deduped[idx] = s;
+          seen.set(key, s);
+        }
+        changed = true;
+      } else {
+        seen.set(key, s);
+        deduped.push(s);
+      }
+    }
+
+    if (deduped.length !== cls.students.length) {
+      cls.students = deduped;
+    }
+  });
+
+  if (changed) {
+    saveClasses(classes);
+    console.log('[Store] 중복 학생 마이그레이션 완료');
   }
 }
 

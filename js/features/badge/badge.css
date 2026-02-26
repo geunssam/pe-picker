@@ -92,11 +92,12 @@
 .badge-mode-tab {
   flex: 1;
   padding: var(--space-sm) var(--space-md);
-  border: 2px solid var(--border-light);
+  border: 2px solid rgba(124, 158, 245, 0.35);
   border-radius: var(--radius-md);
-  background: var(--bg-white);
+  background: rgba(124, 158, 245, 0.04);
   font-size: var(--font-size-sm);
   font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: center;
@@ -163,9 +164,9 @@
 
 .badge-student-chip {
   padding: var(--space-xs) var(--space-sm);
-  border: 1.5px solid var(--border-light);
+  border: 2px solid rgba(124, 158, 245, 0.45);
   border-radius: var(--radius-full);
-  background: var(--bg-white);
+  background: rgba(124, 158, 245, 0.05);
   font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;

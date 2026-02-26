@@ -35,6 +35,9 @@
   --gradient-danger: linear-gradient(135deg, #f57c7c, #fa7ca0);
   --gradient-bg: linear-gradient(180deg, #fff9f0 0%, #f0e6ff 100%);
 
+  /* === Border === */
+  --border-light: rgba(124, 158, 245, 0.2);
+
   /* === Glass === */
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-heavy: rgba(255, 255, 255, 0.8);

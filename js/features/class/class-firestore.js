@@ -103,8 +103,19 @@ export async function syncStudentsToFirestore(classId, students) {
   if (!db || !userId || !classId) return;
 
   try {
+    // 현재 Firestore에 있는 학생 문서 ID 조회
+    const studentsRef = collection(db, 'users', userId, 'classes', classId, 'students');
+    const existingSnap = await withTimeout(
+      getDocs(studentsRef),
+      FIRESTORE_TIMEOUT_MS,
+      '기존 학생 문서 조회'
+    );
+    const existingIds = new Set(existingSnap.docs.map(d => d.id));
+    const newIds = new Set(students.filter(s => s.id).map(s => s.id));
+
     const batch = writeBatch(db);
 
+    // 새 학생 데이터 쓰기
     for (const student of students) {
       if (!student.id) continue;
       const studentRef = doc(db, 'users', userId, 'classes', classId, 'students', student.id);
@@ -119,6 +130,14 @@ export async function syncStudentsToFirestore(classId, students) {
       };
       // badges, xp는 이미 문서에 있으면 merge로 보존
       batch.set(studentRef, studentData, { merge: true });
+    }
+
+    // Firestore에만 남아있는 고아 문서 삭제
+    for (const oldId of existingIds) {
+      if (!newIds.has(oldId)) {
+        const oldRef = doc(db, 'users', userId, 'classes', classId, 'students', oldId);
+        batch.delete(oldRef);
+      }
     }
 
     await withTimeout(batch.commit(), FIRESTORE_TIMEOUT_MS, '학생 서브컬렉션 동기화');

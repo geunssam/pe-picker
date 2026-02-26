@@ -15,12 +15,12 @@ export function buildBulkModalRowsFromStudents() {
     // 학생 없으면 20행 빈 카드
     const rows = [];
     for (let i = 0; i < 20; i++) {
-      rows.push({ number: i + 1, name: '', gender: '' });
+      rows.push({ number: i + 1, name: '', gender: '', id: '' });
     }
     return rows;
   }
 
-  // 기존 학생의 최대 번호까지 행 생성 (갭 포함)
+  // 기존 학생의 최대 번호까지 행 생성 (갭 포함, id 보존)
   const maxNumber = Math.max(...sortedStudents.map(s => s.number));
   const studentByNumber = new Map(sortedStudents.map(s => [s.number, s]));
 
@@ -31,6 +31,7 @@ export function buildBulkModalRowsFromStudents() {
       number: num,
       name: student?.name || '',
       gender: sanitizeGender(student?.gender),
+      id: student?.id || '',
     });
   }
   return rows;
@@ -101,9 +102,11 @@ export function applyBulkRegistrationModal() {
     const femaleBtn = cardEl.querySelector('.class-bulk-gender-btn[data-gender="female"]');
     if (maleBtn?.classList.contains('active-male')) gender = 'male';
     else if (femaleBtn?.classList.contains('active-female')) gender = 'female';
-    // 행의 표시 번호(원본 번호) 유지
-    const rowNumber = state.bulkModalRows[idx]?.number || idx + 1;
-    return { number: rowNumber, name, gender: sanitizeGender(gender) };
+    // 행의 표시 번호(원본 번호)와 기존 id 유지
+    const bulkRow = state.bulkModalRows[idx];
+    const rowNumber = bulkRow?.number || idx + 1;
+    const rowId = bulkRow?.id || '';
+    return { number: rowNumber, name, gender: sanitizeGender(gender), id: rowId };
   });
 
   const count = applyImportedStudents(rows);
