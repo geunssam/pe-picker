@@ -175,9 +175,18 @@ async function hydrateClassesFromFirestore() {
 
   if (snap.docs.length > 0) {
     // 1단계: 학급 문서만 먼저 로드 → UI 즉시 렌더링
+    // Firestore 클래스 문서에는 students가 없으므로 로컬 학생 데이터 보존
+    const localClasses = Store.getClasses();
+    const localStudentsMap = new Map(localClasses.map(c => [c.id, c.students]));
+
     const classesWithoutSub = snap.docs.map(docItem => {
       const data = docItem.data() || {};
-      return normalizeClassFromSnapshot(docItem.id, data, null);
+      const cls = normalizeClassFromSnapshot(docItem.id, data, null);
+      const localStudents = localStudentsMap.get(docItem.id);
+      if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
+        cls.students = localStudents;
+      }
+      return cls;
     });
 
     Store.saveClasses(classesWithoutSub);
@@ -185,11 +194,38 @@ async function hydrateClassesFromFirestore() {
     notifyStoreUpdated();
 
     // 2단계: 백그라운드에서 학생 서브컬렉션(badges/xp) 로드 → 업데이트
+    // 서브컬렉션에 이름 없는 학생은 로컬에서 복구
     Promise.all(
       snap.docs.map(async docItem => {
         const data = docItem.data() || {};
         const subStudents = await hydrateStudentsFromFirestore(docItem.id);
-        return normalizeClassFromSnapshot(docItem.id, data, subStudents);
+        const cls = normalizeClassFromSnapshot(docItem.id, data, subStudents);
+
+        const localStudents = localStudentsMap.get(docItem.id);
+        if (localStudents && localStudents.length > 0) {
+          const localMap = new Map(localStudents.map(s => [s.id, s]));
+          cls.students = cls.students.map(s => {
+            if ((!s.name || !s.name.trim()) && localMap.has(s.id)) {
+              const local = localMap.get(s.id);
+              return {
+                ...s,
+                name: local.name || '',
+                number: local.number || s.number,
+                gender: local.gender || s.gender,
+              };
+            }
+            return s;
+          });
+          // 로컬에만 있는 학생(서브컬렉션 미동기화) 추가
+          const subIds = new Set(cls.students.map(s => s.id));
+          for (const local of localStudents) {
+            if (local.name && local.name.trim() && !subIds.has(local.id)) {
+              cls.students.push(local);
+            }
+          }
+        }
+
+        return cls;
       })
     )
       .then(fullClasses => {
@@ -286,20 +322,57 @@ function startRealtimeClassSync() {
     classesRef,
     snapshot => {
       // 1단계: 학급 문서만 먼저 반영 → UI 즉시 업데이트
+      // Firestore 클래스 문서에는 students가 없으므로(sanitizeClassData가 제외)
+      // 로컬 학생 데이터를 보존하여 레이스 컨디션 방지
+      const localClasses = Store.getClasses();
+      const localStudentsMap = new Map(localClasses.map(c => [c.id, c.students]));
+
       const classesWithoutSub = snapshot.docs.map(docItem => {
         const data = docItem.data() || {};
-        return normalizeClassFromSnapshot(docItem.id, data, null);
+        const cls = normalizeClassFromSnapshot(docItem.id, data, null);
+        const localStudents = localStudentsMap.get(docItem.id);
+        if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
+          cls.students = localStudents;
+        }
+        return cls;
       });
       Store.saveClasses(classesWithoutSub);
       hydrateThermostatFromClasses(classesWithoutSub);
       notifyStoreUpdated();
 
       // 2단계: 백그라운드에서 학생 서브컬렉션 로드
+      // 서브컬렉션에 이름 없는 학생은 로컬에서 복구
       Promise.all(
         snapshot.docs.map(async docItem => {
           const data = docItem.data() || {};
           const subStudents = await hydrateStudentsFromFirestore(docItem.id);
-          return normalizeClassFromSnapshot(docItem.id, data, subStudents);
+          const cls = normalizeClassFromSnapshot(docItem.id, data, subStudents);
+
+          const localStudents = localStudentsMap.get(docItem.id);
+          if (localStudents && localStudents.length > 0) {
+            const localMap = new Map(localStudents.map(s => [s.id, s]));
+            cls.students = cls.students.map(s => {
+              if ((!s.name || !s.name.trim()) && localMap.has(s.id)) {
+                const local = localMap.get(s.id);
+                return {
+                  ...s,
+                  name: local.name || '',
+                  number: local.number || s.number,
+                  gender: local.gender || s.gender,
+                };
+              }
+              return s;
+            });
+            // 로컬에만 있는 학생(서브컬렉션 미동기화) 추가
+            const subIds = new Set(cls.students.map(s => s.id));
+            for (const local of localStudents) {
+              if (local.name && local.name.trim() && !subIds.has(local.id)) {
+                cls.students.push(local);
+              }
+            }
+          }
+
+          return cls;
         })
       )
         .then(fullClasses => {
@@ -434,15 +507,24 @@ export async function syncBadgeLogEntries(logEntries) {
       const existingBadges = Array.isArray(existing.badges) ? existing.badges : [];
       const existingXp = parseInt(existing.xp, 10) || 0;
 
+      const payload = {
+        badges: [...existingBadges, ...group.badges],
+        xp: existingXp + group.xpDelta,
+      };
+
+      // 학생 문서가 없으면 기본 정보도 함께 쓰기 (name-less 문서 생성 방지)
+      if (!snap.exists()) {
+        const cls = Store.getClassById(group.classId);
+        const student = cls?.students?.find(s => s.id === group.studentId);
+        if (student) {
+          payload.name = student.name || '';
+          payload.number = parseInt(student.number, 10) || 0;
+          payload.gender = student.gender || '';
+        }
+      }
+
       await withTimeout(
-        setDoc(
-          ref,
-          {
-            badges: [...existingBadges, ...group.badges],
-            xp: existingXp + group.xpDelta,
-          },
-          { merge: true }
-        ),
+        setDoc(ref, payload, { merge: true }),
         SYNC_TIMEOUT_MS,
         'student badge update'
       );
