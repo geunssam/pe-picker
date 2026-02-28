@@ -61,6 +61,17 @@ function setupStep2() {
       goToStep(3);
     }
   });
+
+  // 이벤트 위임: 학년 버튼 클릭을 컨테이너에서 처리
+  const gradeContainer = document.getElementById('wizard-grade-options');
+  if (gradeContainer) {
+    gradeContainer.addEventListener('click', e => {
+      const btn = e.target.closest('.wizard-option-btn');
+      if (!btn) return;
+      const grade = parseInt(btn.dataset.grade);
+      toggleGrade(grade, btn);
+    });
+  }
 }
 
 function renderGradeOptions() {
@@ -76,14 +87,7 @@ function renderGradeOptions() {
     `
     )
     .join('');
-
-  const gradeButtons = container.querySelectorAll('.wizard-option-btn');
-  gradeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const grade = parseInt(btn.dataset.grade);
-      toggleGrade(grade, btn);
-    });
-  });
+  // 이벤트 리스너는 setupStep2()에서 컨테이너 위임으로 처리
 }
 
 function toggleGrade(grade, btn) {
@@ -107,6 +111,18 @@ function toggleGrade(grade, btn) {
 function setupStep3() {
   document.getElementById('wizard-step3-back').addEventListener('click', () => goToStep(2));
   document.getElementById('wizard-step3-next').addEventListener('click', () => goToStep(4));
+
+  // 이벤트 위임: 카운터 버튼 클릭을 컨테이너에서 처리
+  const countContainer = document.getElementById('wizard-class-count-list');
+  if (countContainer) {
+    countContainer.addEventListener('click', e => {
+      const btn = e.target.closest('.wizard-counter-btn');
+      if (!btn) return;
+      const grade = parseInt(btn.dataset.grade);
+      const action = btn.dataset.action;
+      adjustClassCount(grade, action === 'increase' ? 1 : -1);
+    });
+  }
 }
 
 function renderClassCountList() {
@@ -142,15 +158,7 @@ function renderClassCountList() {
     `
     )
     .join('');
-
-  // 이벤트 바인딩
-  container.querySelectorAll('.wizard-counter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const grade = parseInt(btn.dataset.grade);
-      const action = btn.dataset.action;
-      adjustClassCount(grade, action === 'increase' ? 1 : -1);
-    });
-  });
+  // 이벤트 리스너는 setupStep3()에서 컨테이너 위임으로 처리
 }
 
 function adjustClassCount(grade, delta) {
@@ -177,8 +185,6 @@ function setupStep4() {
 
 // ===== 완료 처리 =====
 async function handleComplete() {
-  console.log('handleComplete 시작');
-
   // 로딩 표시
   const loadingEl = document.getElementById('wizard-loading');
   const completeBtn = document.getElementById('wizard-step4-complete');
@@ -210,8 +216,6 @@ async function handleComplete() {
       createdClasses.push({ classId: newClass.id, className, grade });
     }
   });
-
-  console.log(`localStorage에 ${createdClasses.length}개 학급 저장 완료`);
 
   // Firestore 동기화
   if (AuthManager.isAuthenticated()) {
@@ -246,7 +250,9 @@ function goToStep(step) {
   currentStep = step;
   document.getElementById('wizard-current-step').textContent = step;
   const progressFill = document.getElementById('wizard-progress-fill');
-  progressFill.style.width = `${(step / 4) * 100}%`; // 4단계
+  if (progressFill) {
+    progressFill.style.width = `${(step / 4) * 100}%`; // 4단계
+  }
 }
 
 export const WizardManager = { init };

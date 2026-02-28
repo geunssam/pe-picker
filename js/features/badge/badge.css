@@ -27,13 +27,13 @@
   display: inline-flex;
   align-items: center;
   margin-right: 2px;
-  color: #f59e0b;
+  color: var(--team-3);
 }
 
 .leader-mark .icon,
 .leader-mark svg {
-  fill: #f59e0b;
-  stroke: #f59e0b;
+  fill: var(--team-3);
+  stroke: var(--team-3);
 }
 
 /* 순위 메달 CSS (🥇🥈🥉 대체) */
@@ -46,11 +46,11 @@
   border-radius: 50%;
   font-size: 12px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-white);
 }
 
 .rank-medal--gold {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, #fbbf24, var(--team-3));
   box-shadow: 0 1px 3px rgba(245, 158, 11, 0.4);
 }
 
@@ -60,7 +60,7 @@
 }
 
 .rank-medal--bronze {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, var(--team-3), #d97706);
   box-shadow: 0 1px 3px rgba(217, 119, 6, 0.4);
 }
 

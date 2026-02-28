@@ -1,12 +1,84 @@
-<!-- 번호순 일괄 등록 모달 (학생 명렬표) -->
+<!-- 일괄 등록 모달 (학생 명렬표) -->
 <div id="class-bulk-modal" class="modal-overlay">
   <div class="modal class-bulk-modal">
     <div class="modal-header">
-      <div class="modal-title">번호순 일괄 등록</div>
+      <div class="modal-title">일괄 등록</div>
       <button class="modal-close" id="class-bulk-modal-close">✕</button>
     </div>
     <div class="modal-body">
-      <div class="class-bulk-modal-toolbar">
+      <!-- 모드 선택 세그먼트 -->
+      <div class="bulk-mode-selector">
+        <button type="button" class="bulk-mode-btn active" data-mode="sequential">
+          번호순 등록
+        </button>
+        <button type="button" class="bulk-mode-btn" data-mode="gender-range">성별번호 등록</button>
+      </div>
+
+      <!-- 성별번호 범위 입력 (gender-range 모드) -->
+      <div id="bulk-gender-range-section" class="bulk-gender-range-section" style="display: none">
+        <div class="bulk-gender-row">
+          <div class="bulk-gender-label bulk-gender-label--male">남학생</div>
+          <div class="bulk-gender-inputs">
+            <div class="bulk-gender-field">
+              <label class="bulk-gender-field-label">시작</label>
+              <input
+                class="input"
+                type="number"
+                id="bulk-gender-male-start"
+                value="1"
+                min="1"
+                max="99"
+              />
+            </div>
+            <span class="bulk-gender-separator">~</span>
+            <div class="bulk-gender-field">
+              <label class="bulk-gender-field-label">끝</label>
+              <input
+                class="input"
+                type="number"
+                id="bulk-gender-male-end"
+                value="20"
+                min="1"
+                max="99"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="bulk-gender-row">
+          <div class="bulk-gender-label bulk-gender-label--female">여학생</div>
+          <div class="bulk-gender-inputs">
+            <div class="bulk-gender-field">
+              <label class="bulk-gender-field-label">시작</label>
+              <input
+                class="input"
+                type="number"
+                id="bulk-gender-female-start"
+                value="21"
+                min="1"
+                max="99"
+              />
+            </div>
+            <span class="bulk-gender-separator">~</span>
+            <div class="bulk-gender-field">
+              <label class="bulk-gender-field-label">끝</label>
+              <input
+                class="input"
+                type="number"
+                id="bulk-gender-female-end"
+                value="30"
+                min="1"
+                max="99"
+              />
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="bulk-gender-generate">
+          명렬표 생성
+        </button>
+      </div>
+
+      <!-- 번호순 등록 toolbar (sequential 모드) -->
+      <div class="class-bulk-modal-toolbar" id="bulk-sequential-toolbar">
         <button class="btn btn-sm btn-secondary" id="class-bulk-row-add" type="button">
           + 학생 추가
         </button>
@@ -14,6 +86,7 @@
           − 마지막 학생 삭제
         </button>
       </div>
+
       <div id="class-bulk-card-list" class="class-bulk-card-list">
         <!-- JS에서 동적 생성: roster-input-card 형태 -->
       </div>

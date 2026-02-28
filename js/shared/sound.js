@@ -37,7 +37,7 @@ function playTone(frequencies, durations, volume = 0.3) {
     osc.start(now);
     osc.stop(time);
   } catch (e) {
-    console.log('Sound 재생 실패:', e);
+    console.warn('Sound 재생 실패:', e);
   }
 }
 

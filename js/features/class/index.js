@@ -27,6 +27,7 @@ import {
   removeBulkModalRow,
   handleBulkModalInput,
   handleBulkModalClick,
+  generateGenderRangeRows,
 } from './csv-import.js';
 import {
   openRosterModal,
@@ -101,11 +102,15 @@ function init() {
   const bulkRowAddBtn = document.getElementById('class-bulk-row-add');
   const bulkRowRemoveBtn = document.getElementById('class-bulk-row-remove');
 
+  const bulkGenderGenerateBtn = document.getElementById('bulk-gender-generate');
+
   if (bulkModalCloseBtn) bulkModalCloseBtn.addEventListener('click', closeBulkRegistrationModal);
   if (bulkModalCancelBtn) bulkModalCancelBtn.addEventListener('click', closeBulkRegistrationModal);
   if (bulkModalApplyBtn) bulkModalApplyBtn.addEventListener('click', applyBulkRegistrationModal);
   if (bulkRowAddBtn) bulkRowAddBtn.addEventListener('click', addBulkModalRow);
   if (bulkRowRemoveBtn) bulkRowRemoveBtn.addEventListener('click', removeBulkModalRow);
+  if (bulkGenderGenerateBtn)
+    bulkGenderGenerateBtn.addEventListener('click', generateGenderRangeRows);
 
   const bulkModalEl = document.getElementById('class-bulk-modal');
   if (bulkModalEl) {

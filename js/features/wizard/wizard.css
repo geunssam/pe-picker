@@ -478,19 +478,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-fullscreen);
 }
 
 .wizard-loading-content {
   text-align: center;
-  color: white;
+  color: var(--text-white);
 }
 
 .wizard-loading-spinner {
   width: 48px;
   height: 48px;
   border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border-top-color: var(--text-white);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto var(--space-md);

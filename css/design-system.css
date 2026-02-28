@@ -80,7 +80,9 @@
   --transition-slow: 350ms ease;
 
   /* === Z-index === */
+  --z-toolbar: 90;
   --z-dock: 100;
+  --z-panel: 160;
   --z-modal-overlay: 200;
   --z-modal: 210;
   --z-toast: 300;
@@ -95,6 +97,62 @@
   --team-6: #ec4899;
   --team-7: #06b6d4;
   --team-8: #84cc16;
+
+  /* === Feature-Specific Colors === */
+  --color-badge-gold: #f4c542;
+  --color-badge-guide-bg: #fdf6e3;
+
+  /* Whistle / Danger-Action Colors */
+  --color-whistle-main: #e53935;
+  --color-whistle-light: #ff8a65;
+  --color-whistle-dark: #c62828;
+
+  /* Roster Button Pastel Colors */
+  --color-roster-template-bg: #d4edda;
+  --color-roster-template-text: #2d6a4f;
+  --color-roster-csv-bg: #e8daef;
+  --color-roster-csv-text: #6c3483;
+  --color-roster-cancel-bg: #fce4ec;
+  --color-roster-cancel-text: #c0392b;
+  --color-roster-save-bg: #d6eaf8;
+  --color-roster-save-text: #2471a3;
+
+  /* Confirm / Alert Button Colors */
+  --color-confirm-bg: #f3f4f6;
+  --color-confirm-bg-hover: #e5e7eb;
+  --color-alert-gradient: linear-gradient(135deg, #bae6fd, #7dd3fc);
+  --color-alert-gradient-hover: linear-gradient(135deg, #7dd3fc, #38bdf8);
+  --color-confirm-danger-gradient: linear-gradient(135deg, #fecaca, #f87171);
+  --color-confirm-danger-gradient-hover: linear-gradient(135deg, #f87171, #ef4444);
+
+  /* Thermometer Colors (unique to class-stats) */
+  --color-thermo-milestone-bg: #ffd6dd;
+  --color-thermo-milestone-text: #8b4050;
+  --color-thermo-achieved-bg: #c8f7dc;
+  --color-thermo-achieved-text: #2d6b3f;
+  --color-thermo-tube-border: #b8dce8;
+  --color-thermo-bulb-bg: #ffeebb;
+  --color-thermo-bar-bg: #f3f4f6;
+
+  /* Gender Colors */
+  --color-gender-male: rgba(100, 149, 237, 0.5);
+  --color-gender-male-bg: rgba(100, 149, 237, 0.08);
+  --color-gender-male-active-bg: rgba(100, 149, 237, 0.18);
+  --color-gender-male-text: #4a7fd0;
+  --color-gender-female: rgba(255, 105, 180, 0.5);
+  --color-gender-female-bg: rgba(255, 105, 180, 0.08);
+  --color-gender-female-active-bg: rgba(255, 105, 180, 0.18);
+  --color-gender-female-text: #d0548e;
+
+  /* Toolbar Icon Colors */
+  --color-toolbar-text: #374151;
+  --color-toolbar-muted: #6b7280;
+  --color-toolbar-timer: #60a5fa;
+  --color-nav-item-text: #4b5563;
+
+  /* Sky Button */
+  --color-sky: #5bb8f5;
+  --color-sky-hover: #42a8ee;
 
   /* === Safe Area (iOS) === */
   --safe-top: env(safe-area-inset-top, 0px);

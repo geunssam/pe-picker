@@ -201,7 +201,6 @@ function migrateTeamCount() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] teamCount 마이그레이션 완료');
   }
 }
 
@@ -232,7 +231,6 @@ function migrateGroupsToTeams() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] groups→teams 마이그레이션 완료');
   }
 
   // 설정: defaultGroupNames→defaultTeamNames
@@ -241,7 +239,6 @@ function migrateGroupsToTeams() {
     settings.defaultTeamNames = settings.defaultGroupNames;
     delete settings.defaultGroupNames;
     saveSettings(settings);
-    console.log('[Store] defaultGroupNames→defaultTeamNames 마이그레이션 완료');
   }
 
   // localStorage 키: pet_current_groups → pet_current_teams
@@ -249,7 +246,6 @@ function migrateGroupsToTeams() {
   if (oldTeams && !get('pet_current_teams')) {
     set('pet_current_teams', oldTeams);
     localStorage.removeItem('pet_current_groups');
-    console.log('[Store] pet_current_groups→pet_current_teams 마이그레이션 완료');
   }
 }
 
@@ -303,7 +299,6 @@ function migrateStudentData() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] 학생 데이터 마이그레이션 완료');
   }
 }
 
@@ -342,7 +337,6 @@ function migrateClassIds() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] classId 마이그레이션 완료');
   }
 }
 
@@ -354,7 +348,6 @@ function migrateFromLegacy() {
   const legacyClasses = get('cgm_classes');
   if (legacyClasses && !get(KEYS.CLASSES)) {
     set(KEYS.CLASSES, legacyClasses);
-    console.log('[Store] cgm_classes 마이그레이션 완료');
   }
 
   const legacyGroups = get('cgm_current_groups');
@@ -371,7 +364,6 @@ function migrateFromLegacy() {
   const legacyTag = get('tagGameData');
   if (legacyTag && !get(KEYS.TAG_GAME)) {
     set(KEYS.TAG_GAME, legacyTag);
-    console.log('[Store] tagGameData 마이그레이션 완료');
   }
 
   // groups→teams 마이그레이션
@@ -423,7 +415,6 @@ function migrateRecoverStudentNames() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] 학생 이름 복구 마이그레이션 완료');
   }
 }
 
@@ -455,7 +446,6 @@ function migrateFixStudentNumbers() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] 학생 번호 보정 마이그레이션 완료');
   }
 }
 
@@ -479,7 +469,6 @@ function migrateRemoveGhostStudents() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] 유령 학생 마이그레이션 완료');
   }
 }
 
@@ -529,7 +518,6 @@ function migrateDeduplicateStudents() {
 
   if (changed) {
     saveClasses(classes);
-    console.log('[Store] 중복 학생 마이그레이션 완료');
   }
 }
 

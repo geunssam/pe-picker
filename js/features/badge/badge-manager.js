@@ -291,12 +291,13 @@ function confirmAward() {
   );
   const count = result.count;
 
-  console.log('[BadgeManager] 배지 부여:', count, '건, newEntries:', result.newEntries?.length);
-
-  // Firestore 동기화 (fire-and-forget)
-  FirestoreSync.syncBadgeLogEntries(result.newEntries).catch(err =>
-    console.error('[BadgeManager] Firestore 동기화 실패:', err)
-  );
+  // Firestore 동기화 (실패 시 사용자 알림 — 로컬 저장은 이미 완료)
+  FirestoreSync.syncBadgeLogEntries(result.newEntries).catch(() => {
+    UI.showToast(
+      '배지가 로컬에 저장되었지만 클라우드 동기화에 실패했습니다. 인터넷 연결을 확인해주세요.',
+      'warning'
+    );
+  });
 
   // 배지 이름 목록
   const badgeNames = badgeTypes.map(k => BADGE_TYPES[k].name).join(', ');

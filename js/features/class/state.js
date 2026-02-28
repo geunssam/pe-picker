@@ -9,6 +9,7 @@ export const state = {
   rosterCallback: null,
   rosterStudents: [],
   bulkModalRows: [],
+  bulkModalMode: 'sequential', // 'sequential' | 'gender-range'
   // Team 모달
   teamCallback: null,
   teamStudents: [],

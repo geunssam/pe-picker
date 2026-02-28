@@ -32,7 +32,7 @@ function getById(id) {
  * @param {number} [teamCount=6] - 모둠 수
  * @returns {Object} 생성된 학급 객체
  */
-function create(name, students, teamNames = null, teams = null, teamCount = 6) {
+function create(name, students = [], teamNames = null, teams = null, teamCount = 6) {
   const classes = getAll();
   const defaultNames = SettingsRepo.getDefaultTeamNames();
 

@@ -1,6 +1,6 @@
 import { AuthManager } from './auth-manager.js';
 import { isFirebaseConfigReady } from '../../infra/firebase-config.js';
-import { syncTeacherProfileToFirestore } from '../../infra/firestore-sync.js';
+import { FirestoreSync } from '../../infra/firestore-sync.js';
 import './login.css';
 
 function setLoading(loading) {
@@ -87,7 +87,7 @@ function bindLogin() {
       const profileData = { teacherName };
       if (user?.email) profileData.email = user.email;
       if (user?.photoURL) profileData.photoURL = user.photoURL;
-      await syncTeacherProfileToFirestore(profileData);
+      await FirestoreSync.syncTeacherProfileToFirestore(profileData);
 
       renderProfile();
       goToNextStep();

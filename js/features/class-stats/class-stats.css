@@ -38,7 +38,7 @@
 .badge-header-btn--primary {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-white);
 }
 
 .badge-header-btn--primary:active {
@@ -96,7 +96,7 @@
 
 .badge-sort-btn.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-white);
   border-color: var(--color-primary);
 }
 
@@ -164,7 +164,7 @@
 .badge-student-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
@@ -644,11 +644,11 @@
 }
 
 .badge-period-diff--up {
-  color: #10b981;
+  color: var(--team-2);
 }
 
 .badge-period-diff--down {
-  color: #ef4444;
+  color: var(--team-4);
 }
 
 .badge-period-diff--same {
@@ -711,7 +711,7 @@
 .badge-date-range-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
@@ -819,7 +819,7 @@
   background: var(--color-primary);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #fff;
+  color: var(--text-white);
   cursor: pointer;
 }
 
@@ -898,7 +898,7 @@
 .badge-detail-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
@@ -1027,11 +1027,11 @@
   display: flex;
   flex-direction: column;
   padding: 4px 10px;
-  background: #ffd6dd;
+  background: var(--color-thermo-milestone-bg);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #8b4050;
+  color: var(--color-thermo-milestone-text);
   line-height: 1.3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   pointer-events: auto;
@@ -1052,7 +1052,7 @@
   top: 50%;
   transform: translateY(-50%);
   border: 5px solid transparent;
-  border-left-color: #ffd6dd;
+  border-left-color: var(--color-thermo-milestone-bg);
 }
 
 /* 오른쪽 마일스톤 — 화살표 왼쪽 */
@@ -1068,21 +1068,21 @@
   top: 50%;
   transform: translateY(-50%);
   border: 5px solid transparent;
-  border-right-color: #ffd6dd;
+  border-right-color: var(--color-thermo-milestone-bg);
 }
 
 /* 달성한 마일스톤 */
 .thermo-ms-tag.achieved {
-  background: #c8f7dc;
-  color: #2d6b3f;
+  background: var(--color-thermo-achieved-bg);
+  color: var(--color-thermo-achieved-text);
 }
 
 .thermo-ms-tag.achieved.ms-left::after {
-  border-left-color: #c8f7dc;
+  border-left-color: var(--color-thermo-achieved-bg);
 }
 
 .thermo-ms-tag.achieved.ms-right::after {
-  border-right-color: #c8f7dc;
+  border-right-color: var(--color-thermo-achieved-bg);
 }
 
 .thermo-ms-reward {
@@ -1111,7 +1111,7 @@
   border-radius: 24px 24px 0 0;
   position: relative;
   overflow: hidden;
-  border: 3px solid #b8dce8;
+  border: 3px solid var(--color-thermo-tube-border);
   background: #f8f3e8;
 }
 
@@ -1168,8 +1168,8 @@
   width: 68px;
   height: 68px;
   border-radius: 50%;
-  border: 3px solid #b8dce8;
-  background: #ffeebb;
+  border: 3px solid var(--color-thermo-tube-border);
+  background: var(--color-thermo-bulb-bg);
   position: relative;
   margin-top: -8px;
   z-index: 2;
@@ -1180,7 +1180,12 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at center, #ff8080 0%, #ffb080 60%, #ffeebb 100%);
+  background: radial-gradient(
+    circle at center,
+    #ff8080 0%,
+    #ffb080 60%,
+    var(--color-thermo-bulb-bg) 100%
+  );
   opacity: 0.6;
 }
 
@@ -1203,14 +1208,14 @@
 .thermo-eye {
   width: 5px;
   height: 6px;
-  background: #333;
+  background: var(--text-primary);
   border-radius: 50%;
 }
 
 .thermo-mouth {
   width: 12px;
   height: 6px;
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid var(--text-primary);
   border-radius: 0 0 50% 50%;
 }
 
@@ -1245,7 +1250,7 @@
 .thermo-progress-bar {
   position: relative;
   height: 32px;
-  background: #f3f4f6;
+  background: var(--color-thermo-bar-bg);
   border-radius: var(--radius-full);
   margin-top: var(--space-sm);
   overflow: hidden;
@@ -1449,7 +1454,7 @@
 .badge-guide-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: var(--z-modal);
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
@@ -1464,7 +1469,7 @@
 
 .badge-guide-card {
   position: relative;
-  background: #fdf6e3;
+  background: var(--color-badge-guide-bg);
   border-radius: var(--radius-xl, 20px);
   padding: var(--space-xl) var(--space-lg);
   max-width: 520px;
@@ -1484,7 +1489,7 @@
   text-align: center;
   font-size: var(--font-size-xl, 20px);
   font-weight: 700;
-  color: #c0392b;
+  color: var(--color-roster-cancel-text);
   margin-bottom: var(--space-xs);
 }
 
@@ -1559,8 +1564,8 @@
 
 .badge-guide-count-tag {
   display: inline-block;
-  background: #f4c542;
-  color: #fff;
+  background: var(--color-badge-gold);
+  color: var(--text-white);
   font-size: var(--font-size-sm);
   font-weight: 700;
   padding: var(--space-xs) var(--space-md);

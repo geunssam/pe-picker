@@ -481,7 +481,7 @@ async function syncBadgesToStudentDocs(classes) {
 
       if (count > 0) {
         await withTimeout(batch.commit(), SYNC_TIMEOUT_MS, 'badge batch sync');
-        console.log('[FirestoreSync] 배지 동기화:', cls.id, count, '명');
+        // 배지 동기화 성공 — 실패 시만 console.error로 기록
       }
     } catch (error) {
       console.error('[FirestoreSync] 배지 동기화 실패:', cls.id, error);
@@ -563,7 +563,7 @@ export async function syncBadgeLogEntries(logEntries) {
         'student badge update'
       );
     }
-    console.log('[FirestoreSync] 배지 엔트리 동기화 성공:', logEntries.length, '건');
+    // 배지 엔트리 동기화 성공 — 실패 시만 console.error로 기록
   } catch (error) {
     console.error('[FirestoreSync] 배지 엔트리 동기화 실패:', error);
   }
@@ -596,7 +596,7 @@ export async function init() {
   // 사용자 전환 감지 — 저장된 UID와 다르면 (또는 없으면) 무조건 초기화
   const storedUid = localStorage.getItem(USER_ID_KEY);
   if (storedUid !== uid) {
-    console.log('[FirestoreSync] 사용자 변경 감지 — localStorage 초기화');
+    console.warn('[FirestoreSync] 사용자 변경 감지 — localStorage 초기화');
     Store.clearAllData();
   }
   localStorage.setItem(USER_ID_KEY, uid);

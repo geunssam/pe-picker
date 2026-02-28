@@ -247,7 +247,7 @@
 
 .navbar-tab.active {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--text-white);
 }
 
 .nav-icon {
@@ -320,7 +320,7 @@
 
 .class-info-icon--student {
   background: rgba(167, 139, 250, 0.15);
-  color: #a78bfa;
+  color: var(--team-5);
 }
 
 .class-info-icon--team {
@@ -541,23 +541,23 @@
 }
 
 .roster-btn-template {
-  background: #d4edda;
-  color: #2d6a4f;
+  background: var(--color-roster-template-bg);
+  color: var(--color-roster-template-text);
 }
 
 .roster-btn-csv {
-  background: #e8daef;
-  color: #6c3483;
+  background: var(--color-roster-csv-bg);
+  color: var(--color-roster-csv-text);
 }
 
 .roster-btn-cancel {
-  background: #fce4ec;
-  color: #c0392b;
+  background: var(--color-roster-cancel-bg);
+  color: var(--color-roster-cancel-text);
 }
 
 .roster-btn-save {
-  background: #d6eaf8;
-  color: #2471a3;
+  background: var(--color-roster-save-bg);
+  color: var(--color-roster-save-text);
 }
 
 /* === Toast === */
@@ -1086,6 +1086,108 @@
   box-shadow: 0 0 0 3px rgba(124, 158, 245, 0.14);
 }
 
+/* === 일괄등록 모드 선택 세그먼트 === */
+.bulk-mode-selector {
+  display: flex;
+  background: rgba(124, 158, 245, 0.08);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: var(--space-md);
+  gap: 3px;
+}
+
+.bulk-mode-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bulk-mode-btn.active {
+  background: var(--bg-white);
+  color: var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* === 성별번호 범위 입력 === */
+.bulk-gender-range-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(124, 158, 245, 0.04);
+  border: 1px solid rgba(124, 158, 245, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.bulk-gender-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.bulk-gender-label {
+  min-width: 52px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.bulk-gender-label--male {
+  color: var(--color-primary);
+  background: rgba(124, 158, 245, 0.12);
+}
+
+.bulk-gender-label--female {
+  color: var(--color-danger);
+  background: rgba(245, 124, 140, 0.12);
+}
+
+.bulk-gender-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.bulk-gender-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bulk-gender-field-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.bulk-gender-field .input {
+  padding: 6px 8px;
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.bulk-gender-separator {
+  font-size: var(--font-size-base);
+  color: var(--text-tertiary);
+  margin-top: 14px;
+}
+
+.bulk-gender-range-section > .btn {
+  align-self: flex-end;
+}
+
 .class-team-assign-board {
   /* 시트 테이블 래퍼 */
 }
@@ -1230,13 +1332,13 @@
 }
 
 .roster-gender-toggle button.active-male {
-  background: rgba(100, 149, 237, 0.18);
-  color: #4a7fd0;
+  background: var(--color-gender-male-active-bg);
+  color: var(--color-gender-male-text);
 }
 
 .roster-gender-toggle button.active-female {
-  background: rgba(255, 105, 180, 0.18);
-  color: #d0548e;
+  background: var(--color-gender-female-active-bg);
+  color: var(--color-gender-female-text);
 }
 
 .roster-remove-btn {
@@ -1327,20 +1429,20 @@
 }
 
 .roster-add-gender .roster-gender-btn.active-male {
-  background: rgba(100, 149, 237, 0.18);
-  color: #4a7fd0;
+  background: var(--color-gender-male-active-bg);
+  color: var(--color-gender-male-text);
 }
 
 .roster-add-gender .roster-gender-btn.active-female {
-  background: rgba(255, 105, 180, 0.18);
-  color: #d0548e;
+  background: var(--color-gender-female-active-bg);
+  color: var(--color-gender-female-text);
 }
 
 .roster-add-btn {
   flex-shrink: 0;
   border: none;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-white);
   font-size: 14px;
   font-weight: 700;
   font-family: var(--font-family);
@@ -1353,7 +1455,7 @@
 }
 
 .roster-add-btn:hover {
-  background: var(--color-primary-hover, #5a7de8);
+  background: var(--color-primary-dark);
 }
 
 .roster-add-btn:active {
@@ -1922,13 +2024,13 @@
 }
 
 .btn-sky {
-  background: #5bb8f5;
-  color: white;
+  background: var(--color-sky);
+  color: var(--text-white);
   border: none;
 }
 
 .btn-sky:hover {
-  background: #42a8ee;
+  background: var(--color-sky-hover);
 }
 
 .settings-btn-row {
@@ -2078,7 +2180,7 @@
 .btn-alert-confirm {
   width: 100%;
   padding: var(--space-lg) var(--space-2xl);
-  background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+  background: var(--color-alert-gradient);
   color: var(--text-primary);
   border: none;
   border-radius: var(--radius-full);
@@ -2090,7 +2192,7 @@
 }
 
 .btn-alert-confirm:hover {
-  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+  background: var(--color-alert-gradient-hover);
   box-shadow: 0 6px 24px rgba(125, 211, 252, 0.5);
   transform: translateY(-1px);
 }
@@ -2102,7 +2204,7 @@
 
 /* Confirm Dialog */
 #ui-confirm-modal {
-  z-index: 9999;
+  z-index: var(--z-fullscreen);
 }
 
 .confirm-btn-row {
@@ -2126,33 +2228,33 @@
 }
 
 .btn-confirm-cancel {
-  background: #f3f4f6;
+  background: var(--color-confirm-bg);
   color: var(--text-secondary);
 }
 
 .btn-confirm-cancel:hover {
-  background: #e5e7eb;
+  background: var(--color-confirm-bg-hover);
 }
 
 .btn-confirm-ok {
-  background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+  background: var(--color-alert-gradient);
   color: var(--text-primary);
   box-shadow: 0 4px 16px rgba(125, 211, 252, 0.3);
 }
 
 .btn-confirm-ok:hover {
-  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+  background: var(--color-alert-gradient-hover);
   transform: translateY(-1px);
 }
 
 .btn-confirm-danger {
-  background: linear-gradient(135deg, #fecaca, #f87171);
-  color: white;
+  background: var(--color-confirm-danger-gradient);
+  color: var(--text-white);
   box-shadow: 0 4px 16px rgba(248, 113, 113, 0.3);
 }
 
 .btn-confirm-danger:hover {
-  background: linear-gradient(135deg, #f87171, #ef4444);
+  background: var(--color-confirm-danger-gradient-hover);
 }
 
 /* ============================================
@@ -2177,7 +2279,7 @@
     inset 0 -1px 2px rgba(0, 0, 0, 0.02);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 16px 12px;
-  z-index: 90;
+  z-index: var(--z-toolbar);
   overflow: hidden;
 }
 
@@ -2258,7 +2360,7 @@
 .right-toolbar.minimized .toolbar-toggle .toggle-icon svg {
   width: 12px;
   height: 12px;
-  stroke: #9ca3af;
+  stroke: var(--text-tertiary);
   stroke-width: 2.5;
 }
 
@@ -2281,7 +2383,7 @@
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-toolbar-text);
   transition: all 0.2s;
   border: none;
   background: transparent;
@@ -2305,19 +2407,19 @@
 }
 
 .toolbar-btn--whistle .toolbar-icon {
-  color: #f87171;
+  color: var(--color-danger);
 }
 
 .toolbar-btn--whistle .toolbar-icon svg {
-  stroke: #f87171;
+  stroke: var(--color-danger);
 }
 
 .toolbar-btn--timer .toolbar-icon {
-  color: #60a5fa;
+  color: var(--color-toolbar-timer);
 }
 
 .toolbar-btn--timer .toolbar-icon svg {
-  stroke: #60a5fa;
+  stroke: var(--color-toolbar-timer);
 }
 
 /* 구분선 */
@@ -2335,19 +2437,19 @@
 }
 
 .toolbar-btn--class .toolbar-icon svg {
-  stroke: #6b7280;
+  stroke: var(--color-toolbar-muted);
 }
 
 .toolbar-btn--logout .toolbar-icon svg {
-  stroke: #ef4444;
+  stroke: var(--team-4);
 }
 
 .toolbar-btn--badge .toolbar-icon svg {
-  stroke: #f59e0b;
+  stroke: var(--team-3);
 }
 
 .toolbar-btn--thermo .toolbar-icon svg {
-  stroke: #10b981;
+  stroke: var(--team-2);
 }
 
 /* 네비 버튼 활성 상태 */
@@ -2361,7 +2463,7 @@
 }
 
 .toolbar-btn--settings .toolbar-icon svg {
-  stroke: #6b7280;
+  stroke: var(--color-toolbar-muted);
 }
 
 .right-toolbar.collapsed .toolbar-account-items .toolbar-btn {
@@ -2429,10 +2531,10 @@
   left: 0;
   width: 280px;
   bottom: 0;
-  background: white;
+  background: var(--bg-white);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
-  z-index: 95;
+  z-index: calc(var(--z-toolbar) + 5);
   padding: 24px;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -2448,7 +2550,7 @@
   inset: 0;
   top: 56px;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 94;
+  z-index: calc(var(--z-toolbar) + 4);
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s;
@@ -2473,7 +2575,7 @@
   border-radius: 12px;
   font-weight: 600;
   font-size: 15px;
-  color: #4b5563;
+  color: var(--color-nav-item-text);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2488,7 +2590,7 @@
 
 .mobile-nav-item.active {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--text-white);
 }
 
 .mobile-nav-icon {
@@ -2507,7 +2609,7 @@
 }
 
 .mobile-nav-item.active .mobile-nav-icon svg {
-  stroke: white;
+  stroke: var(--text-white);
 }
 
 /* 드로어 하단 프로필 카드 */
@@ -2528,7 +2630,7 @@
   object-fit: cover;
   border: 2px solid rgba(124, 158, 245, 0.2);
   flex-shrink: 0;
-  background: #e5e7eb;
+  background: var(--color-confirm-bg-hover);
 }
 
 .drawer-profile-info {
@@ -2586,7 +2688,7 @@
 .mobile-drawer-tools {
   padding-top: 16px;
   margin-top: auto;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--color-confirm-bg);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -2600,7 +2702,7 @@
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-toolbar-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2610,7 +2712,7 @@
 }
 
 .mobile-tool-btn:hover {
-  background: #f3f4f6;
+  background: var(--color-confirm-bg);
 }
 
 .mobile-tool-icon {
@@ -2642,7 +2744,7 @@
   border-radius: var(--radius-xl);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   padding: var(--space-lg);
-  z-index: 160;
+  z-index: var(--z-panel);
   opacity: 0;
   visibility: hidden;
   transition:
@@ -2703,10 +2805,10 @@
 .whistle-mode-btn {
   flex: 1;
   padding: 6px 4px;
-  border: 2px solid #dde;
+  border: 2px solid var(--border-light);
   border-radius: 20px;
-  background: #fff;
-  color: #999;
+  background: var(--bg-white);
+  color: var(--text-tertiary);
   font-family: var(--font-family);
   font-weight: 600;
   font-size: 11px;
@@ -2718,8 +2820,8 @@
 }
 
 .whistle-mode-btn--active {
-  border-color: #e53935;
-  color: #e53935;
+  border-color: var(--color-whistle-main);
+  color: var(--color-whistle-main);
   background: rgba(229, 57, 53, 0.08);
   box-shadow: 0 2px 8px rgba(229, 57, 53, 0.15);
 }
@@ -2739,9 +2841,9 @@
   border: none;
   cursor: pointer;
   position: relative;
-  background: linear-gradient(145deg, #ff8a65, #e53935);
+  background: linear-gradient(145deg, var(--color-whistle-light), var(--color-whistle-main));
   box-shadow:
-    0 6px 0 #c62828,
+    0 6px 0 var(--color-whistle-dark),
     0 10px 24px rgba(229, 57, 53, 0.3),
     inset 0 -3px 10px rgba(0, 0, 0, 0.15),
     inset 0 3px 10px rgba(255, 255, 255, 0.2);
@@ -2762,11 +2864,11 @@
 .whistle-main-btn--pressed {
   transform: translateY(4px);
   box-shadow:
-    0 2px 0 #c62828,
+    0 2px 0 var(--color-whistle-dark),
     0 3px 10px rgba(229, 57, 53, 0.3),
     inset 0 -2px 6px rgba(0, 0, 0, 0.15),
     inset 0 3px 10px rgba(255, 255, 255, 0.2);
-  background: linear-gradient(145deg, #ef5350, #c62828);
+  background: linear-gradient(145deg, #ef5350, var(--color-whistle-dark));
 }
 
 .whistle-main-btn__icon {
@@ -2842,7 +2944,7 @@
   -webkit-appearance: none;
   flex: 1;
   height: 6px;
-  background: linear-gradient(to right, #e53935, #ff8a65);
+  background: linear-gradient(to right, var(--color-whistle-main), var(--color-whistle-light));
   border-radius: 3px;
   outline: none;
   touch-action: none;
@@ -2852,8 +2954,8 @@
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background: #fff;
-  border: 2px solid #e53935;
+  background: var(--bg-white);
+  border: 2px solid var(--color-whistle-main);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
@@ -2862,8 +2964,8 @@
 .whistle-vol-slider::-moz-range-thumb {
   width: 22px;
   height: 22px;
-  background: #fff;
-  border: 2px solid #e53935;
+  background: var(--bg-white);
+  border: 2px solid var(--color-whistle-main);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
@@ -2873,7 +2975,7 @@
   font-family: var(--font-family);
   font-weight: 700;
   font-size: 12px;
-  color: #e53935;
+  color: var(--color-whistle-main);
   min-width: 36px;
   text-align: center;
   flex-shrink: 0;
@@ -2905,7 +3007,7 @@
   border-radius: var(--radius-xl);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   padding: var(--space-lg);
-  z-index: 160;
+  z-index: var(--z-panel);
   opacity: 0;
   visibility: hidden;
   transition:
@@ -3070,7 +3172,7 @@
   cursor: pointer;
   position: relative;
   background: #f87171;
-  color: white;
+  color: var(--text-white);
   box-shadow:
     0 3px 0 #dc2626,
     0 6px 16px rgba(248, 113, 113, 0.35);

@@ -26,7 +26,7 @@ export function get(key) {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
-    console.error(`BaseRepo.get(${key}) 오류:`, e);
+    console.warn(`[BaseRepo] JSON 파싱 실패 (${key}):`, e.message);
     return null;
   }
 }
