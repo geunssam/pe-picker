@@ -25,7 +25,7 @@ let gameSettings = {
   itCount: 1,
   angelCount: 0,
   timerSeconds: 30,
-  excludePrevious: false,
+  excludePrevious: true,
 };
 let gameState = 'ready'; // ready, picking, picked, timer
 

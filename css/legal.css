@@ -104,6 +104,14 @@
   font-weight: 600;
 }
 
+.legal-content code {
+  background: rgba(124, 158, 245, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
 .legal-footer {
   text-align: center;
   margin-top: 48px;

@@ -13,7 +13,7 @@ import {
   setDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const CONSENT_VERSION = '1.0';
+const CONSENT_VERSION = '1.1';
 const LOCAL_KEY = 'pet_consent';
 const SYNC_TIMEOUT_MS = 8000;
 
