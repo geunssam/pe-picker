@@ -2,18 +2,14 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>PEPick! - 초등 체육 수업 도우미</title>
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+      name="description"
+      content="술래뽑기, 모둠뽑기, 배지 시스템까지. 체육 수업에 필요한 모든 것, PEPick!"
     />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#FFF9F0" />
-    <title>PEPick!</title>
     <link rel="icon" type="image/png" href="assets/logo.png" />
-    <link rel="apple-touch-icon" href="assets/logo.png" />
-    <link rel="manifest" href="/manifest.json" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -28,53 +24,569 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/design-system.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/landing.css" />
   </head>
 
-  <body>
-    <!-- 초간단 시작 스플래시 (JS 로드 전에 보여야 하므로 HTML에 유지) -->
-    <div id="startup-splash" class="startup-splash" aria-label="PEPick 시작">
-      <div class="startup-splash__inner">
-        <img src="assets/logo.png" alt="PEPick Logo" class="startup-splash__logo" />
-        <h1 class="startup-splash__title">PEPick!</h1>
-        <p class="startup-splash__subtitle">체육 수업 랜덤 활동 도우미</p>
+  <body class="landing-body">
+    <!-- ═══════════ 고정 네비바 ═══════════ -->
+    <nav class="landing-nav" id="landing-nav">
+      <div class="landing-nav__inner">
+        <a href="#hero" class="landing-nav__logo">
+          <img src="assets/logo.png" alt="PEPick" width="32" height="32" />
+          <span>PEPick!</span>
+        </a>
+
+        <div class="landing-nav__links" id="nav-links">
+          <a href="#tag-game" class="landing-nav__link" data-section="tag-game">술래뽑기</a>
+          <a href="#group" class="landing-nav__link" data-section="group">모둠뽑기</a>
+          <a href="#badge" class="landing-nav__link" data-section="badge">배지</a>
+          <a href="#manage" class="landing-nav__link" data-section="manage">학급관리</a>
+        </div>
+
+        <!-- 모바일 햄버거 -->
+        <button class="landing-nav__hamburger" id="hamburger-btn" aria-label="메뉴 열기">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
       </div>
-    </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- Picking Overlay -->
-    <div id="picking-overlay" class="picking-overlay">
-      <div class="picking-emoji" id="picking-emoji">
-        <svg
-          class="icon"
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-          <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
-          <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none" />
-          <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none" />
-          <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none" />
-          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-        </svg>
+      <!-- 모바일 드로워 -->
+      <div class="landing-nav__drawer" id="nav-drawer">
+        <a href="#tag-game" class="landing-nav__drawer-link" data-section="tag-game">술래뽑기</a>
+        <a href="#group" class="landing-nav__drawer-link" data-section="group">모둠뽑기</a>
+        <a href="#badge" class="landing-nav__drawer-link" data-section="badge">배지</a>
+        <a href="#manage" class="landing-nav__drawer-link" data-section="manage">학급관리</a>
+        <a href="/login.html" class="landing-nav__drawer-link">시작하기</a>
       </div>
-      <div class="picking-text" id="picking-text">뽑는 중...</div>
-    </div>
+    </nav>
 
-    <!-- App Container (template-loader.js가 페이지/모달/네비바/휘슬을 삽입) -->
-    <div class="app-container"></div>
+    <!-- ═══════════ 섹션 1: 히어로 ═══════════ -->
+    <section class="landing-section landing-hero" id="hero">
+      <div class="landing-container landing-hero__inner">
+        <div class="landing-hero__text reveal">
+          <span class="landing-tag landing-tag--primary">체육 수업 도우미</span>
+          <h1 class="landing-hero__title">체육 수업의<br />모든 순간을<br />스마트하게</h1>
+          <p class="landing-hero__desc">
+            술래뽑기, 모둠뽑기, 배지 시스템까지.<br />
+            선생님의 체육 수업을 위한 올인원 도구, PEPick!
+          </p>
+          <div class="landing-hero__actions">
+            <a href="/login.html" class="btn btn-primary btn-lg">무료로 시작하기</a>
+            <a href="#tag-game" class="btn btn-secondary btn-lg">기능 살펴보기</a>
+          </div>
+        </div>
+        <div class="landing-hero__mockup reveal reveal--delay-1">
+          <div class="phone-mockup">
+            <div class="phone-mockup__frame">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <div class="phone-mockup__placeholder" data-label="메인 화면">
+                  <img
+                    src="assets/logo.png"
+                    alt="PEPick"
+                    class="phone-mockup__logo"
+                    width="80"
+                    height="80"
+                  />
+                  <span>PEPick!</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- Scripts -->
-    <script type="module" src="./js/app.js"></script>
-    <script type="module" src="./js/shared/sw-boot.js"></script>
+    <!-- ═══════════ 섹션 2: 술래뽑기 ═══════════ -->
+    <section class="landing-section landing-section--white" id="tag-game">
+      <div class="landing-container landing-feature">
+        <div class="landing-feature__text reveal">
+          <span class="landing-tag landing-tag--blue">술래뽑기</span>
+          <h2 class="landing-feature__title">공정하고 재미있는<br />술래 선정</h2>
+          <p class="landing-feature__desc">
+            학생 이름을 넣고 버튼 한 번이면 끝.<br />
+            애니메이션과 함께 긴장감 넘치는 뽑기 경험을 선사합니다.
+          </p>
+          <ul class="landing-feature__list">
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--blue">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+              </div>
+              <div>
+                <strong>인원수 자유 설정</strong>
+                <span>1명부터 원하는 만큼 술래 수 지정</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--blue">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="17" y1="8" x2="23" y2="14" />
+                  <line x1="23" y1="8" x2="17" y2="14" />
+                </svg>
+              </div>
+              <div>
+                <strong>결석 학생 제외</strong>
+                <span>오늘 결석한 학생을 빼고 뽑기 가능</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--blue">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                  />
+                </svg>
+              </div>
+              <div>
+                <strong>뽑기 애니메이션</strong>
+                <span>긴장감 넘치는 셔플 애니메이션 연출</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="landing-feature__mockup reveal reveal--delay-1">
+          <div class="phone-mockup">
+            <div class="phone-mockup__frame">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <div
+                  class="phone-mockup__placeholder phone-mockup__placeholder--blue"
+                  data-label="술래뽑기"
+                >
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#3b82f6"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <span>술래뽑기</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 섹션 3: 모둠뽑기 (반전 레이아웃) ═══════════ -->
+    <section class="landing-section landing-section--gray" id="group">
+      <div class="landing-container landing-feature landing-feature--reverse">
+        <div class="landing-feature__text reveal">
+          <span class="landing-tag landing-tag--green">모둠뽑기</span>
+          <h2 class="landing-feature__title">균형 잡힌 모둠을<br />한 번에</h2>
+          <p class="landing-feature__desc">
+            원하는 모둠 수만 정하면 자동으로 배분.<br />
+            고정 모둠, 모둠 순서 셔플까지 한 번에 해결합니다.
+          </p>
+          <ul class="landing-feature__list">
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--green">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+              </div>
+              <div>
+                <strong>자동 모둠 편성</strong>
+                <span>원하는 모둠 수만 정하면 자동 배분</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--green">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 2v4" />
+                  <path d="M12 18v4" />
+                  <path d="M4.93 4.93l2.83 2.83" />
+                  <path d="M16.24 16.24l2.83 2.83" />
+                  <path d="M2 12h4" />
+                  <path d="M18 12h4" />
+                  <path d="M4.93 19.07l2.83-2.83" />
+                  <path d="M16.24 7.76l2.83-2.83" />
+                </svg>
+              </div>
+              <div>
+                <strong>고정 모둠 지원</strong>
+                <span>기존 모둠을 유지하며 순서만 셔플 가능</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--green">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="16 3 21 3 21 8" />
+                  <line x1="4" y1="20" x2="21" y2="3" />
+                  <polyline points="21 16 21 21 16 21" />
+                  <line x1="15" y1="15" x2="21" y2="21" />
+                  <line x1="4" y1="4" x2="9" y2="9" />
+                </svg>
+              </div>
+              <div>
+                <strong>인원 과부족 자동 조정</strong>
+                <span>남는 학생은 자동 분배, 부족하면 조정 안내</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="landing-feature__mockup reveal reveal--delay-1">
+          <div class="phone-mockup">
+            <div class="phone-mockup__frame">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <div
+                  class="phone-mockup__placeholder phone-mockup__placeholder--green"
+                  data-label="모둠뽑기"
+                >
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#10b981"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  <span>모둠뽑기</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 섹션 4: 배지 시스템 ═══════════ -->
+    <section class="landing-section landing-section--white" id="badge">
+      <div class="landing-container landing-feature">
+        <div class="landing-feature__text reveal">
+          <span class="landing-tag landing-tag--orange">배지 시스템</span>
+          <h2 class="landing-feature__title">성장을 기록하는<br />특별한 배지</h2>
+          <p class="landing-feature__desc">
+            학생들의 노력과 성취에 배지를 수여하세요.<br />
+            작은 인정이 큰 동기부여가 됩니다.
+          </p>
+          <ul class="landing-feature__list">
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--orange">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="8" r="7" />
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                </svg>
+              </div>
+              <div>
+                <strong>다양한 배지 종류</strong>
+                <span>노력, 협동, 리더십 등 맞춤형 배지 생성</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--orange">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <div>
+                <strong>일괄 수여</strong>
+                <span>한 번에 여러 학생에게 배지 수여 가능</span>
+              </div>
+            </li>
+            <li class="landing-feature__item">
+              <div class="landing-feature__icon landing-feature__icon--orange">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+              </div>
+              <div>
+                <strong>컬렉션 보기</strong>
+                <span>학생별 배지 컬렉션을 한눈에 확인</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="landing-feature__mockup reveal reveal--delay-1">
+          <div class="phone-mockup">
+            <div class="phone-mockup__frame">
+              <div class="phone-mockup__notch"></div>
+              <div class="phone-mockup__screen">
+                <div
+                  class="phone-mockup__placeholder phone-mockup__placeholder--orange"
+                  data-label="배지 시스템"
+                >
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#f59e0b"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="8" r="7" />
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                  </svg>
+                  <span>배지 시스템</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 섹션 5: 학급관리 + PWA ═══════════ -->
+    <section class="landing-section landing-section--gray" id="manage">
+      <div class="landing-container landing-grid-section">
+        <div class="landing-grid-section__header reveal">
+          <span class="landing-tag landing-tag--purple">학급관리 & 더보기</span>
+          <h2 class="landing-feature__title">수업 준비부터 관리까지<br />한곳에서</h2>
+          <p class="landing-feature__desc">
+            학급 정보 관리, 오프라인 사용, 앱 설치까지.<br />
+            선생님의 수업 환경에 맞춘 편의 기능을 제공합니다.
+          </p>
+        </div>
+        <div class="landing-grid reveal reveal--delay-1">
+          <div class="landing-grid__card">
+            <div class="landing-grid__icon landing-grid__icon--blue">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <h3>학급 관리</h3>
+            <p>여러 학급의 학생 명단을 체계적으로 관리하세요</p>
+          </div>
+          <div class="landing-grid__card">
+            <div class="landing-grid__icon landing-grid__icon--green">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <h3>오프라인 지원</h3>
+            <p>인터넷 없이도 체육관에서 사용 가능합니다</p>
+          </div>
+          <div class="landing-grid__card">
+            <div class="landing-grid__icon landing-grid__icon--orange">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+            </div>
+            <h3>앱처럼 설치</h3>
+            <p>PWA로 홈 화면에 추가하면 앱처럼 사용 가능</p>
+          </div>
+          <div class="landing-grid__card">
+            <div class="landing-grid__icon landing-grid__icon--purple">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <h3>CSV 가져오기</h3>
+            <p>엑셀 명단을 CSV로 저장해서 한 번에 업로드</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ 섹션 6: 감성 CTA ═══════════ -->
+    <section class="landing-section landing-cta-section">
+      <div class="landing-container landing-cta__inner reveal">
+        <h2 class="landing-cta__title">체육 수업이<br />더 즐거워지는 순간</h2>
+        <p class="landing-cta__desc">
+          아이들의 웃음소리가 가득한 체육 시간,<br />
+          선생님은 수업에만 집중하세요.
+        </p>
+        <a href="/login.html" class="btn btn-lg landing-cta__btn">지금 시작하기</a>
+      </div>
+    </section>
+
+    <!-- ═══════════ 푸터 ═══════════ -->
+    <footer class="landing-footer">
+      <div class="landing-container landing-footer__inner">
+        <div class="landing-footer__col">
+          <div class="landing-footer__brand">
+            <img src="assets/logo.png" alt="PEPick" width="28" height="28" />
+            <span>PEPick!</span>
+          </div>
+          <p class="landing-footer__tagline">초등 체육 수업 도우미</p>
+        </div>
+        <div class="landing-footer__col">
+          <h4>기능</h4>
+          <a href="#tag-game">술래뽑기</a>
+          <a href="#group">모둠뽑기</a>
+          <a href="#badge">배지 시스템</a>
+          <a href="#manage">학급관리</a>
+        </div>
+        <div class="landing-footer__col">
+          <h4>법적 고지</h4>
+          <a href="/privacy.html">개인정보 처리방침</a>
+          <a href="/terms.html">이용약관</a>
+        </div>
+      </div>
+      <div class="landing-container landing-footer__bottom">
+        <p>&copy; 2026 PEPick! All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="./js/landing/landing-main.js"></script>
   </body>
 </html>

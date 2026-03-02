@@ -38,9 +38,9 @@ self.addEventListener('fetch', (event) => {
         const cached = await caches.match(request);
         if (cached) return cached;
 
-        // Navigation fallback to cached index.html (app shell)
+        // Navigation fallback to cached app.html (app shell)
         if (request.mode === 'navigate') {
-          const fallback = await caches.match('./index.html');
+          const fallback = await caches.match('./app.html');
           if (fallback) return fallback;
         }
 

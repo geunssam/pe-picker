@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FFF9F0" />
+    <title>PEPick!</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/GmarketSans/GmarketSans.css"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/design-system.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+  </head>
+
+  <body>
+    <!-- 초간단 시작 스플래시 (JS 로드 전에 보여야 하므로 HTML에 유지) -->
+    <div id="startup-splash" class="startup-splash" aria-label="PEPick 시작">
+      <div class="startup-splash__inner">
+        <img src="assets/logo.png" alt="PEPick Logo" class="startup-splash__logo" />
+        <h1 class="startup-splash__title">PEPick!</h1>
+        <p class="startup-splash__subtitle">체육 수업 랜덤 활동 도우미</p>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Picking Overlay -->
+    <div id="picking-overlay" class="picking-overlay">
+      <div class="picking-emoji" id="picking-emoji">
+        <svg
+          class="icon"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+          <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+        </svg>
+      </div>
+      <div class="picking-text" id="picking-text">뽑는 중...</div>
+    </div>
+
+    <!-- App Container (template-loader.js가 페이지/모달/네비바/휘슬을 삽입) -->
+    <div class="app-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/shared/sw-boot.js"></script>
+  </body>
+</html>

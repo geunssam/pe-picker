@@ -234,7 +234,7 @@ async function handleComplete() {
   setTimeout(() => {
     loadingEl.style.display = 'none';
     // 클래스 선택 화면으로 이동
-    window.location.href = 'index.html#class-selector';
+    window.location.href = 'app.html#class-selector';
   }, 800);
 }
 

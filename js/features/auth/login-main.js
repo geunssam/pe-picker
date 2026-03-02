@@ -39,8 +39,8 @@ function renderProfile() {
 }
 
 function goToNextStep() {
-  // 항상 index.html로 이동 — app.js가 Firestore 동기화 후 wizard 여부를 판단
-  window.location.href = './index.html';
+  // 항상 app.html로 이동 — app.js가 Firestore 동기화 후 wizard 여부를 판단
+  window.location.href = './app.html';
 }
 
 function clearLocalUserData() {
