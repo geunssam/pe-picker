@@ -560,120 +560,149 @@ function onTeamDropZoneDrop(event) {
 }
 
 // ========== 터치 드래그 상태 ==========
-let touchDragGhost = null;
-let touchDragStarted = false;
+const TOUCH_DRAG_THRESHOLD = 10; // 이 픽셀 이상 이동해야 드래그 시작
+const touchState = {
+  startX: 0,
+  startY: 0,
+  card: null,
+  studentId: null,
+  isDragging: false, // threshold 넘어서 실제 드래그 중인지
+  ghost: null,
+  suppressClick: false, // 드래그 직후 click 이벤트 무시용
+};
 
-function removeTouchDragGhost() {
-  if (touchDragGhost) {
-    touchDragGhost.remove();
-    touchDragGhost = null;
+function cleanupTouchDrag() {
+  if (touchState.ghost) {
+    touchState.ghost.remove();
+    touchState.ghost = null;
   }
-  touchDragStarted = false;
+  if (touchState.card) {
+    touchState.card.classList.remove('is-dragging');
+  }
+  clearTeamDropHighlights();
+  touchState.card = null;
+  touchState.studentId = null;
+  touchState.isDragging = false;
 }
 
-function createTouchDragGhost(card) {
-  removeTouchDragGhost();
-  const ghost = card.cloneNode(true);
-  ghost.classList.add('touch-drag-ghost');
-  const rect = card.getBoundingClientRect();
-  ghost.style.width = rect.width + 'px';
-  ghost.style.left = rect.left + 'px';
-  ghost.style.top = rect.top + 'px';
-  document.body.appendChild(ghost);
-  touchDragGhost = ghost;
-}
-
-function onTeamCardTouchStart(e) {
-  const card = e.currentTarget;
+function onTeamTouchStart(e) {
+  // draggable 카드에서만 반응
+  const card = e.target.closest('.tag-student-card[draggable]');
+  if (!card) return;
   const studentId = card.dataset.studentId;
   if (!studentId) return;
 
-  state.teamDraggedId = studentId;
-  touchDragStarted = true;
-  card.classList.add('is-dragging');
-  createTouchDragGhost(card);
+  const touch = e.touches[0];
+  touchState.startX = touch.clientX;
+  touchState.startY = touch.clientY;
+  touchState.card = card;
+  touchState.studentId = studentId;
+  touchState.isDragging = false;
+  // suppressClick은 여기서 리셋하지 않음 (이전 드래그의 click 방지 유지)
 }
 
-function onTeamCardTouchMove(e) {
-  if (!touchDragStarted || !state.teamDraggedId) return;
-  e.preventDefault();
-
+function onTeamTouchMove(e) {
+  if (!touchState.card) return;
   const touch = e.touches[0];
-  if (touchDragGhost) {
-    touchDragGhost.style.left = touch.clientX - touchDragGhost.offsetWidth / 2 + 'px';
-    touchDragGhost.style.top = touch.clientY - touchDragGhost.offsetHeight / 2 + 'px';
+
+  if (!touchState.isDragging) {
+    // threshold 미달이면 아무것도 안 함 (스크롤 허용)
+    const dx = Math.abs(touch.clientX - touchState.startX);
+    const dy = Math.abs(touch.clientY - touchState.startY);
+    if (dx < TOUCH_DRAG_THRESHOLD && dy < TOUCH_DRAG_THRESHOLD) return;
+
+    // threshold 초과 → 드래그 시작
+    touchState.isDragging = true;
+    touchState.suppressClick = true;
+    state.teamDraggedId = touchState.studentId;
+    touchState.card.classList.add('is-dragging');
+
+    // 고스트 생성
+    const ghost = touchState.card.cloneNode(true);
+    ghost.classList.add('touch-drag-ghost');
+    const rect = touchState.card.getBoundingClientRect();
+    ghost.style.width = rect.width + 'px';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.top = rect.top + 'px';
+    document.body.appendChild(ghost);
+    touchState.ghost = ghost;
   }
 
-  // 현재 터치 위치의 drop zone 하이라이트
+  // 드래그 중이면 스크롤 방지 + 고스트 이동
+  e.preventDefault();
+
+  if (touchState.ghost) {
+    const gw = touchState.ghost.offsetWidth / 2;
+    const gh = touchState.ghost.offsetHeight / 2;
+    touchState.ghost.style.left = touch.clientX - gw + 'px';
+    touchState.ghost.style.top = touch.clientY - gh + 'px';
+  }
+
+  // 드롭 대상 하이라이트 (ghost는 pointer-events:none이라 elementFromPoint에 안 잡힘)
   clearTeamDropHighlights();
   const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
   if (elemBelow) {
-    const dropZone =
-      elemBelow.closest('.tm-drop-zone') || elemBelow.closest('.team-unassigned-pool');
-    if (dropZone) {
-      dropZone.classList.add('tm-drop-over');
-    }
+    const zone = elemBelow.closest('.tm-drop-zone') || elemBelow.closest('.team-unassigned-pool');
+    if (zone) zone.classList.add('tm-drop-over');
   }
 }
 
-function onTeamCardTouchEnd(e) {
-  if (!touchDragStarted || !state.teamDraggedId) {
-    removeTouchDragGhost();
+function onTeamTouchEnd(e) {
+  if (!touchState.card) return;
+
+  // threshold를 넘지 못했으면 그냥 탭 → click 핸들러에 맡김
+  if (!touchState.isDragging) {
+    touchState.card = null;
+    touchState.studentId = null;
     return;
   }
 
+  // 드래그 완료 → 드롭 처리
   const touch = e.changedTouches[0];
-  removeTouchDragGhost();
-  clearTeamDropHighlights();
+  const droppedId = touchState.studentId;
 
-  // 원래 카드의 is-dragging 해제
-  const modal = document.getElementById('class-team-modal');
-  if (modal) {
-    modal.querySelectorAll('.tag-student-card.is-dragging').forEach(c => {
-      c.classList.remove('is-dragging');
-    });
-  }
+  // 고스트 제거 후 드롭 대상 탐색
+  cleanupTouchDrag();
 
-  // 드롭 대상 찾기
   const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (elemBelow) {
+  if (elemBelow && droppedId) {
     const dropZone = elemBelow.closest('.tm-drop-zone');
     const poolZone = elemBelow.closest('.team-unassigned-pool');
 
     if (dropZone) {
       const zoneType = dropZone.dataset.zoneType;
-      const groupIndex = parseInt(dropZone.dataset.groupIndex, 10);
-      const rowIndex = parseInt(dropZone.dataset.rowIndex, 10);
+      const gi = parseInt(dropZone.dataset.groupIndex, 10);
+      const ri = parseInt(dropZone.dataset.rowIndex, 10);
       moveStudentToTeamZone(
-        state.teamDraggedId,
+        droppedId,
         zoneType,
-        Number.isFinite(groupIndex) ? groupIndex : null,
-        Number.isFinite(rowIndex) ? rowIndex : null
+        Number.isFinite(gi) ? gi : null,
+        Number.isFinite(ri) ? ri : null
       );
     } else if (poolZone) {
-      moveStudentToTeamZone(state.teamDraggedId, 'unassigned', null, null);
+      moveStudentToTeamZone(droppedId, 'unassigned', null, null);
     }
   }
 
   state.teamDraggedId = null;
-  touchDragStarted = false;
   renderTeamUnassignedPool();
   renderTeamColumns();
   bindTeamDragAndDrop();
+
+  // 300ms 후 suppressClick 해제 (드래그 직후 ghost click 방지)
+  setTimeout(() => {
+    touchState.suppressClick = false;
+  }, 300);
 }
 
 function bindTeamDragAndDrop() {
   const modal = document.getElementById('class-team-modal');
   if (!modal) return;
 
+  // --- HTML5 드래그 (데스크톱) ---
   modal.querySelectorAll('.tag-student-card[draggable]').forEach(card => {
-    // HTML5 드래그 (데스크톱)
     card.addEventListener('dragstart', onTeamCardDragStart);
     card.addEventListener('dragend', onTeamCardDragEnd);
-    // 터치 드래그 (iPad/모바일)
-    card.addEventListener('touchstart', onTeamCardTouchStart, { passive: true });
-    card.addEventListener('touchmove', onTeamCardTouchMove, { passive: false });
-    card.addEventListener('touchend', onTeamCardTouchEnd);
   });
 
   modal.querySelectorAll('.tm-drop-zone, .team-unassigned-pool').forEach(zone => {
@@ -681,6 +710,15 @@ function bindTeamDragAndDrop() {
     zone.addEventListener('dragleave', onTeamDropZoneDragLeave);
     zone.addEventListener('drop', onTeamDropZoneDrop);
   });
+
+  // --- 터치 드래그 (iPad/모바일) — 모달 레벨 이벤트 위임 ---
+  // 매번 카드에 붙이면 리렌더 시 누적되므로, 모달에 한 번만 등록
+  if (!modal._touchBound) {
+    modal.addEventListener('touchstart', onTeamTouchStart, { passive: true });
+    modal.addEventListener('touchmove', onTeamTouchMove, { passive: false });
+    modal.addEventListener('touchend', onTeamTouchEnd);
+    modal._touchBound = true;
+  }
 
   // 셀 제거(✕) 버튼 핸들러
   modal.querySelectorAll('.team-cell-remove').forEach(btn => {
@@ -718,6 +756,8 @@ function bindTeamDragAndDrop() {
     poolEl.querySelectorAll('.tag-student-card').forEach(card => {
       card.addEventListener('click', async e => {
         e.stopPropagation();
+        // 터치 드래그 직후면 click 무시
+        if (touchState.suppressClick) return;
         if (state.teamActiveGroup == null) return;
         const studentId = card.dataset.studentId;
         if (!studentId) return;
@@ -754,6 +794,8 @@ function bindTeamDragAndDrop() {
     boardEl.querySelectorAll('.tag-student-card').forEach(card => {
       card.addEventListener('click', e => {
         e.stopPropagation();
+        // 터치 드래그 직후면 click 무시
+        if (touchState.suppressClick) return;
         const studentId = card.dataset.studentId;
         if (!studentId) return;
         moveStudentToTeamZone(studentId, 'unassigned', null, null);
