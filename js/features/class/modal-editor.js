@@ -467,19 +467,28 @@ export function renderTeamColumns() {
 
 export function renderTeamEditor() {
   renderTeamNameInputs();
-  renderTeamUnassignedPool();
-  renderTeamColumns();
-  bindTeamDragAndDrop();
+  refreshTeamBoard();
 }
 
 // ========== Team 드래그앤드롭 ==========
 
+// 현재 하이라이트된 드롭존 캐시 (매 프레임 querySelectorAll 방지)
+let highlightedZone = null;
+
 function clearTeamDropHighlights() {
-  document
-    .querySelectorAll(
-      '#class-team-modal .tm-drop-zone.tm-drop-over, #class-team-modal .team-unassigned-pool.tm-drop-over'
-    )
-    .forEach(zone => zone.classList.remove('tm-drop-over'));
+  if (highlightedZone) {
+    highlightedZone.classList.remove('tm-drop-over');
+    highlightedZone = null;
+  }
+}
+
+function highlightDropZone(zone) {
+  if (zone === highlightedZone) return;
+  clearTeamDropHighlights();
+  if (zone) {
+    zone.classList.add('tm-drop-over');
+    highlightedZone = zone;
+  }
 }
 
 function onTeamCardDragStart(event) {
@@ -509,17 +518,13 @@ function moveStudentToTeamZone(studentId, zoneType, groupIndex, rowIndex) {
   ) {
     const team = state.teamTeams[groupIndex];
     if (Number.isInteger(rowIndex) && rowIndex >= 0) {
-      // 배열 확장 (빈 자리를 null로 채움)
       while (team.length <= rowIndex) team.push(null);
-      // 기존 학생이 있으면 미배정으로 이동
       const existing = team[rowIndex];
       if (existing && existing !== studentId) {
         state.teamUnassigned.push(existing);
       }
-      // 정확한 좌표에 배치
       team[rowIndex] = studentId;
     } else {
-      // rowIndex 없으면 첫 번째 빈 슬롯 또는 끝에 추가
       const emptyIdx = team.indexOf(null);
       if (emptyIdx >= 0) {
         team[emptyIdx] = studentId;
@@ -533,42 +538,60 @@ function moveStudentToTeamZone(studentId, zoneType, groupIndex, rowIndex) {
   sanitizeTeamZones();
 }
 
-function onTeamDropZoneDragOver(event) {
-  event.preventDefault();
-  event.currentTarget.classList.add('tm-drop-over');
+/** 드롭 대상 element를 분석하여 학생을 해당 zone으로 이동 */
+function dropOnElement(element, studentId) {
+  if (!element || !studentId) return;
+  const dropZone = element.closest('.tm-drop-zone');
+  const poolZone = element.closest('.team-unassigned-pool');
+  if (dropZone) {
+    const gi = parseInt(dropZone.dataset.groupIndex, 10);
+    const ri = parseInt(dropZone.dataset.rowIndex, 10);
+    moveStudentToTeamZone(
+      studentId,
+      dropZone.dataset.zoneType,
+      Number.isFinite(gi) ? gi : null,
+      Number.isFinite(ri) ? ri : null
+    );
+  } else if (poolZone) {
+    moveStudentToTeamZone(studentId, 'unassigned', null, null);
+  }
 }
 
-function onTeamDropZoneDragLeave(event) {
-  event.currentTarget.classList.remove('tm-drop-over');
-}
-
-function onTeamDropZoneDrop(event) {
-  event.preventDefault();
-  const zone = event.currentTarget;
-  const zoneType = zone.dataset.zoneType;
-  const groupIndexRaw = parseInt(zone.dataset.groupIndex, 10);
-  const groupIndex = Number.isFinite(groupIndexRaw) ? groupIndexRaw : null;
-  const rowIndexRaw = parseInt(zone.dataset.rowIndex, 10);
-  const rowIndex = Number.isFinite(rowIndexRaw) ? rowIndexRaw : null;
-  const droppedId = state.teamDraggedId || event.dataTransfer?.getData('text/plain');
-  moveStudentToTeamZone(droppedId, zoneType, groupIndex, rowIndex);
-  state.teamDraggedId = null;
-  clearTeamDropHighlights();
+/** 미배정 풀 + 모둠표 + 이벤트 바인딩 일괄 갱신 */
+function refreshTeamBoard() {
   renderTeamUnassignedPool();
   renderTeamColumns();
   bindTeamDragAndDrop();
 }
 
+function onTeamDropZoneDragOver(event) {
+  event.preventDefault();
+  highlightDropZone(event.currentTarget);
+}
+
+function onTeamDropZoneDragLeave(event) {
+  if (highlightedZone === event.currentTarget) clearTeamDropHighlights();
+}
+
+function onTeamDropZoneDrop(event) {
+  event.preventDefault();
+  const droppedId = state.teamDraggedId || event.dataTransfer?.getData('text/plain');
+  dropOnElement(event.currentTarget, droppedId);
+  state.teamDraggedId = null;
+  clearTeamDropHighlights();
+  refreshTeamBoard();
+}
+
 // ========== 터치 드래그 상태 ==========
-const TOUCH_DRAG_THRESHOLD = 10; // 이 픽셀 이상 이동해야 드래그 시작
+const TOUCH_DRAG_THRESHOLD = 10;
 const touchState = {
   startX: 0,
   startY: 0,
   card: null,
   studentId: null,
-  isDragging: false, // threshold 넘어서 실제 드래그 중인지
+  isDragging: false,
   ghost: null,
-  suppressClick: false, // 드래그 직후 click 이벤트 무시용
+  suppressClick: false,
 };
 
 function cleanupTouchDrag() {
@@ -586,7 +609,6 @@ function cleanupTouchDrag() {
 }
 
 function onTeamTouchStart(e) {
-  // draggable 카드에서만 반응
   const card = e.target.closest('.tag-student-card[draggable]');
   if (!card) return;
   const studentId = card.dataset.studentId;
@@ -598,7 +620,7 @@ function onTeamTouchStart(e) {
   touchState.card = card;
   touchState.studentId = studentId;
   touchState.isDragging = false;
-  // suppressClick은 여기서 리셋하지 않음 (이전 드래그의 click 방지 유지)
+  touchState.suppressClick = false;
 }
 
 function onTeamTouchMove(e) {
@@ -606,18 +628,14 @@ function onTeamTouchMove(e) {
   const touch = e.touches[0];
 
   if (!touchState.isDragging) {
-    // threshold 미달이면 아무것도 안 함 (스크롤 허용)
     const dx = Math.abs(touch.clientX - touchState.startX);
     const dy = Math.abs(touch.clientY - touchState.startY);
     if (dx < TOUCH_DRAG_THRESHOLD && dy < TOUCH_DRAG_THRESHOLD) return;
 
-    // threshold 초과 → 드래그 시작
     touchState.isDragging = true;
     touchState.suppressClick = true;
-    state.teamDraggedId = touchState.studentId;
     touchState.card.classList.add('is-dragging');
 
-    // 고스트 생성
     const ghost = touchState.card.cloneNode(true);
     ghost.classList.add('touch-drag-ghost');
     const rect = touchState.card.getBoundingClientRect();
@@ -628,7 +646,6 @@ function onTeamTouchMove(e) {
     touchState.ghost = ghost;
   }
 
-  // 드래그 중이면 스크롤 방지 + 고스트 이동
   e.preventDefault();
 
   if (touchState.ghost) {
@@ -638,68 +655,45 @@ function onTeamTouchMove(e) {
     touchState.ghost.style.top = touch.clientY - gh + 'px';
   }
 
-  // 드롭 대상 하이라이트 (ghost는 pointer-events:none이라 elementFromPoint에 안 잡힘)
-  clearTeamDropHighlights();
   const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (elemBelow) {
-    const zone = elemBelow.closest('.tm-drop-zone') || elemBelow.closest('.team-unassigned-pool');
-    if (zone) zone.classList.add('tm-drop-over');
-  }
+  const zone = elemBelow
+    ? elemBelow.closest('.tm-drop-zone') || elemBelow.closest('.team-unassigned-pool')
+    : null;
+  highlightDropZone(zone);
 }
 
 function onTeamTouchEnd(e) {
   if (!touchState.card) return;
 
-  // threshold를 넘지 못했으면 그냥 탭 → click 핸들러에 맡김
   if (!touchState.isDragging) {
     touchState.card = null;
     touchState.studentId = null;
     return;
   }
 
-  // 드래그 완료 → 드롭 처리
   const touch = e.changedTouches[0];
   const droppedId = touchState.studentId;
-
-  // 고스트 제거 후 드롭 대상 탐색
   cleanupTouchDrag();
 
   const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (elemBelow && droppedId) {
-    const dropZone = elemBelow.closest('.tm-drop-zone');
-    const poolZone = elemBelow.closest('.team-unassigned-pool');
-
-    if (dropZone) {
-      const zoneType = dropZone.dataset.zoneType;
-      const gi = parseInt(dropZone.dataset.groupIndex, 10);
-      const ri = parseInt(dropZone.dataset.rowIndex, 10);
-      moveStudentToTeamZone(
-        droppedId,
-        zoneType,
-        Number.isFinite(gi) ? gi : null,
-        Number.isFinite(ri) ? ri : null
-      );
-    } else if (poolZone) {
-      moveStudentToTeamZone(droppedId, 'unassigned', null, null);
-    }
-  }
+  dropOnElement(elemBelow, droppedId);
 
   state.teamDraggedId = null;
-  renderTeamUnassignedPool();
-  renderTeamColumns();
-  bindTeamDragAndDrop();
+  refreshTeamBoard();
+}
 
-  // 300ms 후 suppressClick 해제 (드래그 직후 ghost click 방지)
-  setTimeout(() => {
-    touchState.suppressClick = false;
-  }, 300);
+function onTeamTouchCancel() {
+  if (!touchState.card) return;
+  cleanupTouchDrag();
+  touchState.suppressClick = false;
+  state.teamDraggedId = null;
 }
 
 function bindTeamDragAndDrop() {
   const modal = document.getElementById('class-team-modal');
   if (!modal) return;
 
-  // --- HTML5 드래그 (데스크톱) ---
+  // HTML5 드래그 (데스크톱) — 카드/zone은 innerHTML로 재생성되므로 누적 없음
   modal.querySelectorAll('.tag-student-card[draggable]').forEach(card => {
     card.addEventListener('dragstart', onTeamCardDragStart);
     card.addEventListener('dragend', onTeamCardDragEnd);
@@ -711,12 +705,12 @@ function bindTeamDragAndDrop() {
     zone.addEventListener('drop', onTeamDropZoneDrop);
   });
 
-  // --- 터치 드래그 (iPad/모바일) — 모달 레벨 이벤트 위임 ---
-  // 매번 카드에 붙이면 리렌더 시 누적되므로, 모달에 한 번만 등록
+  // 터치 드래그 (iPad/모바일) — 모달 레벨 이벤트 위임, 한 번만 등록
   if (!modal._touchBound) {
     modal.addEventListener('touchstart', onTeamTouchStart, { passive: true });
     modal.addEventListener('touchmove', onTeamTouchMove, { passive: false });
     modal.addEventListener('touchend', onTeamTouchEnd);
+    modal.addEventListener('touchcancel', onTeamTouchCancel);
     modal._touchBound = true;
   }
 
@@ -727,9 +721,7 @@ function bindTeamDragAndDrop() {
       const studentId = btn.dataset.studentId;
       if (studentId) {
         moveStudentToTeamZone(studentId, 'unassigned', null, null);
-        renderTeamUnassignedPool();
-        renderTeamColumns();
-        bindTeamDragAndDrop();
+        refreshTeamBoard();
       }
     });
   });
@@ -740,7 +732,6 @@ function bindTeamDragAndDrop() {
       const idx = parseInt(th.dataset.groupIndex, 10);
       if (!Number.isFinite(idx)) return;
       state.teamActiveGroup = state.teamActiveGroup === idx ? null : idx;
-      // 헤더 하이라이트만 갱신 (전체 재렌더 불필요)
       modal.querySelectorAll('.tm-group-header').forEach(h => {
         h.classList.toggle(
           'tm-active-group',
@@ -756,13 +747,11 @@ function bindTeamDragAndDrop() {
     poolEl.querySelectorAll('.tag-student-card').forEach(card => {
       card.addEventListener('click', async e => {
         e.stopPropagation();
-        // 터치 드래그 직후면 click 무시
         if (touchState.suppressClick) return;
         if (state.teamActiveGroup == null) return;
         const studentId = card.dataset.studentId;
         if (!studentId) return;
 
-        // 모둠당 인원 초과 체크
         const rowsInput = document.getElementById('team-modal-rows');
         const maxRows = rowsInput ? Math.max(1, parseInt(rowsInput.value, 10) || 4) : 4;
         const team = state.teamTeams[state.teamActiveGroup];
@@ -781,9 +770,7 @@ function bindTeamDragAndDrop() {
         }
 
         moveStudentToTeamZone(studentId, 'group', state.teamActiveGroup, null);
-        renderTeamUnassignedPool();
-        renderTeamColumns();
-        bindTeamDragAndDrop();
+        refreshTeamBoard();
       });
     });
   }
@@ -794,14 +781,11 @@ function bindTeamDragAndDrop() {
     boardEl.querySelectorAll('.tag-student-card').forEach(card => {
       card.addEventListener('click', e => {
         e.stopPropagation();
-        // 터치 드래그 직후면 click 무시
         if (touchState.suppressClick) return;
         const studentId = card.dataset.studentId;
         if (!studentId) return;
         moveStudentToTeamZone(studentId, 'unassigned', null, null);
-        renderTeamUnassignedPool();
-        renderTeamColumns();
-        bindTeamDragAndDrop();
+        refreshTeamBoard();
       });
     });
   }
