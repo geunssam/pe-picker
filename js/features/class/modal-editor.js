@@ -559,13 +559,121 @@ function onTeamDropZoneDrop(event) {
   bindTeamDragAndDrop();
 }
 
+// ========== 터치 드래그 상태 ==========
+let touchDragGhost = null;
+let touchDragStarted = false;
+
+function removeTouchDragGhost() {
+  if (touchDragGhost) {
+    touchDragGhost.remove();
+    touchDragGhost = null;
+  }
+  touchDragStarted = false;
+}
+
+function createTouchDragGhost(card) {
+  removeTouchDragGhost();
+  const ghost = card.cloneNode(true);
+  ghost.classList.add('touch-drag-ghost');
+  const rect = card.getBoundingClientRect();
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left = rect.left + 'px';
+  ghost.style.top = rect.top + 'px';
+  document.body.appendChild(ghost);
+  touchDragGhost = ghost;
+}
+
+function onTeamCardTouchStart(e) {
+  const card = e.currentTarget;
+  const studentId = card.dataset.studentId;
+  if (!studentId) return;
+
+  state.teamDraggedId = studentId;
+  touchDragStarted = true;
+  card.classList.add('is-dragging');
+  createTouchDragGhost(card);
+}
+
+function onTeamCardTouchMove(e) {
+  if (!touchDragStarted || !state.teamDraggedId) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+  if (touchDragGhost) {
+    touchDragGhost.style.left = touch.clientX - touchDragGhost.offsetWidth / 2 + 'px';
+    touchDragGhost.style.top = touch.clientY - touchDragGhost.offsetHeight / 2 + 'px';
+  }
+
+  // 현재 터치 위치의 drop zone 하이라이트
+  clearTeamDropHighlights();
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (elemBelow) {
+    const dropZone =
+      elemBelow.closest('.tm-drop-zone') || elemBelow.closest('.team-unassigned-pool');
+    if (dropZone) {
+      dropZone.classList.add('tm-drop-over');
+    }
+  }
+}
+
+function onTeamCardTouchEnd(e) {
+  if (!touchDragStarted || !state.teamDraggedId) {
+    removeTouchDragGhost();
+    return;
+  }
+
+  const touch = e.changedTouches[0];
+  removeTouchDragGhost();
+  clearTeamDropHighlights();
+
+  // 원래 카드의 is-dragging 해제
+  const modal = document.getElementById('class-team-modal');
+  if (modal) {
+    modal.querySelectorAll('.tag-student-card.is-dragging').forEach(c => {
+      c.classList.remove('is-dragging');
+    });
+  }
+
+  // 드롭 대상 찾기
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (elemBelow) {
+    const dropZone = elemBelow.closest('.tm-drop-zone');
+    const poolZone = elemBelow.closest('.team-unassigned-pool');
+
+    if (dropZone) {
+      const zoneType = dropZone.dataset.zoneType;
+      const groupIndex = parseInt(dropZone.dataset.groupIndex, 10);
+      const rowIndex = parseInt(dropZone.dataset.rowIndex, 10);
+      moveStudentToTeamZone(
+        state.teamDraggedId,
+        zoneType,
+        Number.isFinite(groupIndex) ? groupIndex : null,
+        Number.isFinite(rowIndex) ? rowIndex : null
+      );
+    } else if (poolZone) {
+      moveStudentToTeamZone(state.teamDraggedId, 'unassigned', null, null);
+    }
+  }
+
+  state.teamDraggedId = null;
+  touchDragStarted = false;
+  renderTeamUnassignedPool();
+  renderTeamColumns();
+  bindTeamDragAndDrop();
+}
+
 function bindTeamDragAndDrop() {
   const modal = document.getElementById('class-team-modal');
   if (!modal) return;
 
   modal.querySelectorAll('.tag-student-card[draggable]').forEach(card => {
+    // HTML5 드래그 (데스크톱)
     card.addEventListener('dragstart', onTeamCardDragStart);
     card.addEventListener('dragend', onTeamCardDragEnd);
+    // 터치 드래그 (iPad/모바일)
+    card.addEventListener('touchstart', onTeamCardTouchStart, { passive: true });
+    card.addEventListener('touchmove', onTeamCardTouchMove, { passive: false });
+    card.addEventListener('touchend', onTeamCardTouchEnd);
   });
 
   modal.querySelectorAll('.tm-drop-zone, .team-unassigned-pool').forEach(zone => {

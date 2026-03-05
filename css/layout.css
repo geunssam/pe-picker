@@ -109,7 +109,7 @@
 .navbar-left {
   display: flex;
   align-items: center;
-  flex: 1;
+  flex: 0 0 auto;
   justify-content: flex-start;
 }
 
@@ -180,6 +180,7 @@
 .navbar-tabs {
   flex: 1;
   justify-content: center;
+  overflow: visible;
 }
 
 /* 우측: 학급정보 + 버튼들 */
@@ -187,7 +188,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  flex: 1;
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
@@ -1815,6 +1816,25 @@
 .tm-drop-zone .tag-student-card.is-dragging,
 .team-unassigned-pool .tag-student-card.is-dragging {
   opacity: 0.45;
+}
+
+/* 터치 드래그: draggable 카드에 touch-action 비활성화 */
+#class-team-modal .tag-student-card[draggable] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 터치 드래그 고스트 (터치 중 따라다니는 복제 카드) */
+.touch-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  transition: none;
 }
 
 .timetable-scroll {
