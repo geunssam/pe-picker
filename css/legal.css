@@ -112,6 +112,51 @@
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
 }
 
+/* ── 목차 (TOC) ── */
+.legal-toc {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0 32px;
+}
+
+.legal-toc-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--text-primary, #2d2a24);
+}
+
+.legal-toc-list {
+  padding-left: 20px;
+  margin: 0;
+  columns: 1;
+}
+
+.legal-toc-list li {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 2px;
+}
+
+.legal-toc-list a {
+  color: var(--text-secondary, #5a564f);
+  text-decoration: none;
+}
+
+.legal-toc-list a:hover {
+  color: var(--text-primary, #2d2a24);
+  text-decoration: underline;
+}
+
+@media (min-width: 520px) {
+  .legal-toc-list {
+    columns: 2;
+    column-gap: 24px;
+  }
+}
+
 .legal-footer {
   text-align: center;
   margin-top: 48px;

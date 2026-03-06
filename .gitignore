@@ -9,3 +9,5 @@ dist/
 docs/.pdca-*
 docs/.bkit-*
 .claude/
+video/node_modules/
+video/out/
