@@ -323,6 +323,39 @@ function clearBadgeLogs(classId) {
   }
 }
 
+/**
+ * 현재 학생 이름으로 배지 로그의 studentName을 동기화
+ * @param {string} classId
+ * @param {Array<{id: string, name: string}>} students
+ */
+function syncStudentNames(classId, students = []) {
+  if (!classId || !Array.isArray(students) || students.length === 0) return;
+
+  const nameById = new Map(
+    students
+      .filter(student => student?.id)
+      .map(student => [student.id, (student.name || '').trim()])
+      .filter(([, name]) => name)
+  );
+
+  if (nameById.size === 0) return;
+
+  let changed = false;
+  const nextLogs = getBadgeLogs().map(log => {
+    if (log.classId !== classId) return log;
+
+    const nextName = nameById.get(log.studentId);
+    if (!nextName || log.studentName === nextName) return log;
+
+    changed = true;
+    return { ...log, studentName: nextName };
+  });
+
+  if (changed) {
+    saveBadgeLogs(nextLogs);
+  }
+}
+
 // === 온도계 설정 ===
 
 /**
@@ -372,6 +405,7 @@ export const BadgeRepo = {
   getSemesterBadgeCounts,
   getCustomRangeBadgeCounts,
   clearBadgeLogs,
+  syncStudentNames,
   getAllThermostatSettings,
   getThermostatSettings,
   saveThermostatSettings,

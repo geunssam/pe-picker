@@ -140,6 +140,10 @@ function clearBadgeLogs(classId) {
   return BadgeRepo.clearBadgeLogs(classId);
 }
 
+function syncBadgeStudentNames(classId, students) {
+  return BadgeRepo.syncStudentNames(classId, students);
+}
+
 function getThermostatSettings(classId) {
   return BadgeRepo.getThermostatSettings(classId);
 }
@@ -564,6 +568,7 @@ export const Store = {
   getSemesterBadgeCounts,
   getCustomRangeBadgeCounts,
   clearBadgeLogs,
+  syncBadgeStudentNames,
   getThermostatSettings,
   saveThermostatSettings,
   // 교사 프로필

@@ -17,6 +17,86 @@ import { closeBulkRegistrationModal } from './csv-import.js';
 import { syncClassToFirestore } from './class-firestore.js';
 import { AuthManager } from '../auth/auth-manager.js';
 
+function buildEmptyTeams(teamCount) {
+  return Array.from({ length: Math.max(0, teamCount) }, () => []);
+}
+
+function trimTrailingEmptySlots(team = []) {
+  const nextTeam = [...team];
+  while (nextTeam.length > 0 && !nextTeam[nextTeam.length - 1]) {
+    nextTeam.pop();
+  }
+  return nextTeam;
+}
+
+function matchTeamMemberToStudent(member, students, usedIds) {
+  const memberLabel = typeof member === 'string' ? member.trim() : '';
+  if (!memberLabel) return null;
+
+  return (
+    students.find(
+      student =>
+        !usedIds.has(student.id) &&
+        ((student.name && student.name === memberLabel) ||
+          String(student.number) === memberLabel ||
+          getStudentLabel(student) === memberLabel)
+    ) || null
+  );
+}
+
+function rebuildRosterTeams(existing, students) {
+  const teamCount = existing?.teamCount || existing?.teams?.length || 6;
+  const teamNames = Array.isArray(existing?.teamNames) ? existing.teamNames : [];
+  const nextTeams = buildEmptyTeams(teamCount);
+
+  if (!existing || students.length === 0) {
+    return { teamCount, teamNames, teams: nextTeams };
+  }
+
+  const updatedById = new Map(students.map(student => [student.id, student]));
+  const existingStudents = Array.isArray(existing.students)
+    ? existing.students.filter(student => student && typeof student === 'object')
+    : [];
+  const usedIds = new Set();
+
+  for (let teamIdx = 0; teamIdx < teamCount; teamIdx++) {
+    const sourceTeam = Array.isArray(existing.teams?.[teamIdx]) ? existing.teams[teamIdx] : [];
+    if (sourceTeam.length === 0) continue;
+
+    const rebuiltTeam = sourceTeam.map(member => {
+      if (!member) return null;
+
+      const matched = matchTeamMemberToStudent(member, existingStudents, usedIds);
+      if (!matched) return null;
+
+      usedIds.add(matched.id);
+      const updated = updatedById.get(matched.id);
+      return updated ? getStudentLabel(updated) : null;
+    });
+
+    nextTeams[teamIdx] = trimTrailingEmptySlots(rebuiltTeam);
+  }
+
+  const teamIndexByName = new Map();
+  for (let i = 0; i < teamCount; i++) {
+    const teamName = (teamNames[i] || `${i + 1}모둠`).trim();
+    teamIndexByName.set(teamName, i);
+  }
+
+  students.forEach(student => {
+    if (usedIds.has(student.id)) return;
+
+    const teamName = (student.team || '').trim();
+    const teamIndex = teamIndexByName.get(teamName);
+    if (!Number.isInteger(teamIndex)) return;
+
+    nextTeams[teamIndex].push(getStudentLabel(student));
+    usedIds.add(student.id);
+  });
+
+  return { teamCount, teamNames, teams: nextTeams };
+}
+
 // ========== Roster 모달 ==========
 
 export function openRosterModal(classId, callback) {
@@ -53,6 +133,7 @@ export function closeRosterModal() {
   UI.hideModal('class-roster-modal');
 
   state.editingClassId = null;
+  state.rosterEditingStudentId = null;
   closeBulkRegistrationModal();
 
   const csvFile = document.getElementById('class-csv-file');
@@ -103,6 +184,17 @@ export async function saveRoster() {
     .filter(s => s.name.length > 0)
     .sort(sortStudentsByNumber);
 
+  const seenNumbers = new Set();
+  for (const student of sorted) {
+    if (student.number > 0 && seenNumbers.has(student.number)) {
+      UI.showToast(`${student.number}번이 중복되었습니다`, 'error');
+      return;
+    }
+    if (student.number > 0) {
+      seenNumbers.add(student.number);
+    }
+  }
+
   // number가 0(무효)인 학생은 최대 번호 + 1로 보정
   let maxNum = sorted.reduce((m, s) => Math.max(m, s.number), 0);
   const validStudents = sorted.map(s => ({
@@ -126,14 +218,18 @@ export async function saveRoster() {
     if (state.editingClassId) {
       // 기존 학급 수정 — team 데이터 보존
       const existing = Store.getClassById(state.editingClassId);
+      const { teamNames, teams, teamCount } = rebuildRosterTeams(existing, validStudents);
       targetClass = Store.updateClass(
         state.editingClassId,
         className,
         validStudents,
-        existing?.teamNames || [],
-        existing?.teams || [],
-        existing?.teamCount || 6
+        teamNames,
+        teams,
+        teamCount
       );
+      if (targetClass) {
+        Store.syncBadgeStudentNames(targetClass.id, targetClass.students);
+      }
       UI.showToast(`${className} 수정 완료`, 'success');
     } else {
       // 새 학급 추가 — team 기본값
@@ -292,4 +388,47 @@ export async function saveTeams() {
     UI.showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
     if (saveBtn) saveBtn.disabled = false;
   }
+}
+
+export async function resetStudentsForClass(classId) {
+  const cls = Store.getClassById(classId);
+  if (!cls) {
+    UI.showToast('학급을 찾을 수 없습니다', 'error');
+    return false;
+  }
+
+  if (!Array.isArray(cls.students) || cls.students.length === 0) {
+    UI.showToast('초기화할 학생이 없습니다', 'info');
+    return false;
+  }
+
+  const confirmed = await UI.showConfirm(
+    '학생 목록을 초기화할까요?\n학생, 모둠 배정, 배지 기록이 함께 삭제됩니다.',
+    { confirmText: '초기화', danger: true }
+  );
+  if (!confirmed) return false;
+
+  const teamCount = cls.teamCount || cls.teams?.length || 6;
+  const targetClass = Store.updateClass(
+    classId,
+    cls.name,
+    [],
+    cls.teamNames || [],
+    buildEmptyTeams(teamCount),
+    teamCount
+  );
+
+  Store.clearBadgeLogs(classId);
+  Store.clearCurrentTeams();
+  Store.clearTagGameData();
+
+  if (targetClass) {
+    syncClassToFirestore(targetClass).catch(error => {
+      console.warn('[ClassModal] Firestore sync skipped:', error);
+    });
+  }
+
+  window.dispatchEvent(new CustomEvent('badge-updated'));
+  UI.showToast('학생 초기화 완료', 'success');
+  return true;
 }

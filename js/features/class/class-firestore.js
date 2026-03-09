@@ -81,7 +81,7 @@ export async function syncClassToFirestore(classData) {
   const ref = doc(db, 'users', userId, 'classes', classData.id);
   try {
     // 학생 서브컬렉션을 먼저 동기화 (onSnapshot 트리거 전에 최신 데이터 확보)
-    if (Array.isArray(classData.students) && classData.students.length > 0) {
+    if (Array.isArray(classData.students)) {
       await syncStudentsToFirestore(classData.id, classData.students);
     }
     await withTimeout(setDoc(ref, payload, { merge: true }), FIRESTORE_TIMEOUT_MS, '클래스 동기화');

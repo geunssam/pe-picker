@@ -39,6 +39,7 @@ export function getRosterStudentById(studentId) {
 
 export function initializeRosterState(cls) {
   state.rosterStudents = [];
+  state.rosterEditingStudentId = null;
 
   if (!cls) return;
 
@@ -67,42 +68,124 @@ export function normalizeRosterNumbers() {
   state.rosterStudents = [...state.rosterStudents].sort(sortStudentsByNumber);
 }
 
-export function addStudentRow() {
-  // 현재 빈 입력 카드에서 값 읽기
-  const nameInput = document.querySelector('#roster-student-list .roster-add-name');
-  const genderBtns = document.querySelectorAll('#roster-student-list .roster-gender-btn');
-  const name = nameInput?.value?.trim() || '';
+function getNextRosterNumber() {
+  const named = state.rosterStudents.filter(student => student.name.trim());
+  return named.length > 0 ? Math.max(...named.map(student => student.number)) + 1 : 1;
+}
 
-  if (!name) {
-    nameInput?.focus();
-    return;
-  }
-
-  let gender = '';
-  genderBtns.forEach(btn => {
-    if (btn.classList.contains('active-male')) gender = 'male';
-    if (btn.classList.contains('active-female')) gender = 'female';
-  });
-
-  const named = state.rosterStudents.filter(s => s.name.trim());
-  const maxNumber = named.length > 0 ? Math.max(...named.map(s => s.number)) : 0;
-  const student = createModalStudent({ name, number: maxNumber + 1, gender }, maxNumber + 1);
-  state.rosterStudents.push(student);
-  normalizeRosterNumbers();
-  renderRosterEditor();
-
-  // 새 빈 카드에 포커스
+function focusRosterNameInput() {
   setTimeout(() => {
     const input = document.querySelector('#roster-student-list .roster-add-name');
     if (input) {
-      input.value = '';
       input.focus();
+      input.select?.();
     }
   }, 0);
 }
 
+function getRosterFormValues() {
+  const formEl = document.querySelector('#roster-student-list .roster-add-card');
+  if (!formEl) return null;
+
+  const numberInput = formEl.querySelector('.roster-form-number');
+  const nameInput = formEl.querySelector('.roster-add-name');
+  const activeGenderBtn = formEl.querySelector(
+    '.roster-gender-btn.active-male, .roster-gender-btn.active-female'
+  );
+
+  return {
+    number: parseInt(numberInput?.value, 10) || 0,
+    name: nameInput?.value?.trim() || '',
+    gender: activeGenderBtn?.dataset.gender || '',
+  };
+}
+
+function validateRosterForm(values, excludeStudentId = null) {
+  if (!values?.name) {
+    focusRosterNameInput();
+    return false;
+  }
+
+  if (!Number.isFinite(values.number) || values.number < 1) {
+    UI.showToast('번호는 1 이상으로 입력해주세요', 'error');
+    document.querySelector('#roster-student-list .roster-form-number')?.focus();
+    return false;
+  }
+
+  const duplicated = state.rosterStudents.find(
+    student => student.id !== excludeStudentId && parseInt(student.number, 10) === values.number
+  );
+  if (duplicated) {
+    UI.showToast(`${values.number}번은 이미 등록되어 있습니다`, 'error');
+    document.querySelector('#roster-student-list .roster-form-number')?.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function cancelRosterEditing() {
+  state.rosterEditingStudentId = null;
+  renderRosterEditor();
+  focusRosterNameInput();
+}
+
+function startRosterEditing(studentId) {
+  if (!getRosterStudentById(studentId)) return;
+  state.rosterEditingStudentId = studentId;
+  renderRosterEditor();
+  focusRosterNameInput();
+}
+
+export function addStudentRow() {
+  const values = getRosterFormValues();
+  if (!validateRosterForm(values)) return;
+
+  const student = createModalStudent(
+    {
+      name: values.name,
+      number: values.number,
+      gender: values.gender,
+    },
+    values.number
+  );
+
+  state.rosterStudents.push(student);
+  state.rosterEditingStudentId = null;
+  normalizeRosterNumbers();
+  renderRosterEditor();
+  focusRosterNameInput();
+}
+
+function updateStudentRow(studentId) {
+  const target = getRosterStudentById(studentId);
+  if (!target) return;
+
+  const values = getRosterFormValues();
+  if (!validateRosterForm(values, studentId)) return;
+
+  state.rosterStudents = state.rosterStudents.map(student =>
+    student.id === studentId
+      ? {
+          ...student,
+          name: values.name,
+          number: values.number,
+          gender: values.gender,
+        }
+      : student
+  );
+
+  state.rosterEditingStudentId = null;
+  normalizeRosterNumbers();
+  renderRosterEditor();
+  focusRosterNameInput();
+}
+
 export function removeStudentRow(studentId) {
   state.rosterStudents = state.rosterStudents.filter(s => s.id !== studentId);
+  if (state.rosterEditingStudentId === studentId) {
+    state.rosterEditingStudentId = null;
+  }
   normalizeRosterNumbers();
   renderRosterEditor();
 }
@@ -121,7 +204,8 @@ function renderRegisteredPills() {
     .map(s => {
       const genderClass =
         s.gender === 'male' ? ' gender-male' : s.gender === 'female' ? ' gender-female' : '';
-      return `<div class="tag-student-card${genderClass}" data-student-id="${UI.escapeHtml(s.id)}">
+      const editingClass = state.rosterEditingStudentId === s.id ? ' is-editing' : '';
+      return `<div class="tag-student-card${genderClass}${editingClass}" data-student-id="${UI.escapeHtml(s.id)}">
           <span>${s.number}. ${UI.escapeHtml(s.name)}</span>
           <button type="button" class="roster-pill-remove" data-student-id="${UI.escapeHtml(s.id)}">✕</button>
         </div>`;
@@ -133,18 +217,36 @@ function renderEmptyInputCard() {
   const listEl = document.getElementById('roster-student-list');
   if (!listEl) return;
 
-  const named = state.rosterStudents.filter(s => s.name.trim());
-  const nextNumber = named.length > 0 ? Math.max(...named.map(s => s.number)) + 1 : 1;
-  listEl.innerHTML = `<div class="roster-add-card" data-student-id="new">
-      <span class="roster-add-number">${nextNumber}</span>
+  const editingStudent = state.rosterEditingStudentId
+    ? getRosterStudentById(state.rosterEditingStudentId)
+    : null;
+  const isEditing = Boolean(editingStudent);
+  const student = editingStudent || { number: getNextRosterNumber(), name: '', gender: '' };
+  const maleActive = student.gender === 'male' ? ' active-male' : '';
+  const femaleActive = student.gender === 'female' ? ' active-female' : '';
+  const submitLabel = isEditing ? '수정' : '+ 추가';
+  const cancelButton = isEditing
+    ? '<button type="button" class="btn roster-add-cancel">취소</button>'
+    : '';
+  const helperText = isEditing
+    ? '학생 정보를 수정한 뒤 저장하세요'
+    : '등록된 학생 카드를 누르면 번호, 이름, 성별을 수정할 수 있습니다';
+
+  listEl.innerHTML = `<div class="roster-add-card${isEditing ? ' is-editing' : ''}" data-student-id="${UI.escapeHtml(isEditing ? student.id : 'new')}">
+      <input type="number" class="roster-form-number input" min="1" max="999"
+             value="${student.number || getNextRosterNumber()}" aria-label="학생 번호">
       <input type="text" class="roster-add-name" maxlength="20"
-             value="" placeholder="이름">
+             value="${UI.escapeHtml(student.name || '')}" placeholder="이름">
       <div class="roster-add-gender">
-        <button type="button" class="roster-gender-btn" data-gender="male">남</button>
-        <button type="button" class="roster-gender-btn" data-gender="female">여</button>
+        <button type="button" class="roster-gender-btn${maleActive}" data-gender="male">남</button>
+        <button type="button" class="roster-gender-btn${femaleActive}" data-gender="female">여</button>
       </div>
-      <button type="button" class="roster-add-btn" id="roster-add-row">+ 추가</button>
-    </div>`;
+      <div class="roster-form-actions">
+        ${cancelButton}
+        <button type="button" class="roster-add-btn" id="roster-add-row">${submitLabel}</button>
+      </div>
+    </div>
+    <div class="roster-form-hint">${helperText}</div>`;
 }
 
 export function renderRosterInputList() {
@@ -167,10 +269,20 @@ export function handleRosterInput(_event) {
 export function handleRosterKeydown(event) {
   if (event.key === 'Enter') {
     const target = event.target;
-    if (target.classList.contains('roster-add-name')) {
+    if (
+      target.classList.contains('roster-add-name') ||
+      target.classList.contains('roster-form-number')
+    ) {
       event.preventDefault();
-      addStudentRow();
+      if (state.rosterEditingStudentId) updateStudentRow(state.rosterEditingStudentId);
+      else addStudentRow();
     }
+    return;
+  }
+
+  if (event.key === 'Escape' && state.rosterEditingStudentId) {
+    event.preventDefault();
+    cancelRosterEditing();
   }
 }
 
@@ -180,7 +292,14 @@ export function handleRosterClick(event) {
   // 추가 버튼
   const addBtn = target.closest('.roster-add-btn');
   if (addBtn) {
-    addStudentRow();
+    if (state.rosterEditingStudentId) updateStudentRow(state.rosterEditingStudentId);
+    else addStudentRow();
+    return;
+  }
+
+  const cancelBtn = target.closest('.roster-add-cancel');
+  if (cancelBtn) {
+    cancelRosterEditing();
     return;
   }
 
@@ -189,6 +308,13 @@ export function handleRosterClick(event) {
   if (pillRemove) {
     const studentId = pillRemove.dataset.studentId;
     if (studentId) removeStudentRow(studentId);
+    return;
+  }
+
+  const registeredCard = target.closest('#roster-registered-pills .tag-student-card');
+  if (registeredCard) {
+    const studentId = registeredCard.dataset.studentId;
+    if (studentId) startRosterEditing(studentId);
     return;
   }
 
@@ -233,7 +359,9 @@ export function applyImportedStudents(importedRows) {
   }
 
   state.rosterStudents = nextStudents;
+  state.rosterEditingStudentId = null;
   renderRosterEditor();
+  focusRosterNameInput();
 
   return nextStudents.length;
 }

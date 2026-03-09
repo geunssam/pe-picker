@@ -8,6 +8,7 @@ export const state = {
   // Roster 모달
   rosterCallback: null,
   rosterStudents: [],
+  rosterEditingStudentId: null,
   bulkModalRows: [],
   bulkModalMode: 'sequential', // 'sequential' | 'gender-range'
   // Team 모달

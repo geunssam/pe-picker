@@ -29,13 +29,22 @@
         </svg>
         학생 설정</span
       >
-      <button
-        class="btn btn-primary btn-sm"
-        id="settings-add-class"
-        style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
-      >
-        편집
-      </button>
+      <div style="display: flex; gap: var(--space-xs)">
+        <button
+          class="btn btn-danger btn-sm"
+          id="settings-reset-students"
+          style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
+        >
+          학생 초기화
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          id="settings-add-class"
+          style="font-size: var(--font-size-sm); padding: var(--space-xs) var(--space-md)"
+        >
+          편집
+        </button>
+      </div>
     </div>
     <div class="glass-card" style="padding: var(--space-lg)">
       <div id="settings-class-list" class="settings-class-list"></div>

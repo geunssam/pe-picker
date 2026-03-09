@@ -1367,13 +1367,20 @@
 .roster-add-card {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   border: 2px dashed rgba(124, 158, 245, 0.35);
   border-radius: var(--radius-lg);
   background: rgba(124, 158, 245, 0.04);
   padding: 10px 14px;
-  height: 52px;
+  min-height: 52px;
   margin-top: var(--space-sm);
+}
+
+.roster-add-card.is-editing {
+  border-style: solid;
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.06);
 }
 
 .roster-add-number {
@@ -1385,9 +1392,29 @@
   text-align: center;
 }
 
+.roster-form-number {
+  width: 68px;
+  flex-shrink: 0;
+  border: none;
+  border-bottom: 2px solid rgba(124, 158, 245, 0.25);
+  border-radius: 0;
+  padding: 4px 2px;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: transparent;
+  outline: none;
+  text-align: center;
+}
+
+.roster-form-number:focus {
+  border-bottom-color: var(--color-primary);
+}
+
 .roster-add-name {
   flex: 1;
-  min-width: 0;
+  min-width: 120px;
   border: none;
   border-bottom: 2px solid rgba(124, 158, 245, 0.25);
   border-radius: 0;
@@ -1455,12 +1482,40 @@
   white-space: nowrap;
 }
 
+.roster-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.roster-add-cancel {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  padding: 0 12px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
 .roster-add-btn:hover {
   background: var(--color-primary-dark);
 }
 
 .roster-add-btn:active {
   transform: scale(0.97);
+}
+
+.roster-form-hint {
+  margin-top: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
 }
 
 /* Roster 알약 미리보기 */
@@ -1513,12 +1568,26 @@
   font-weight: 500;
   padding: 2px 8px;
   border-radius: var(--radius-md);
-  cursor: default;
+  cursor: pointer;
   position: relative;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .roster-registered-pills .tag-student-card span {
   font-size: 11px;
+}
+
+.roster-registered-pills .tag-student-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.roster-registered-pills .tag-student-card.is-editing {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
 .roster-registered-pills .roster-pill-remove {
@@ -2104,6 +2173,20 @@
 
   .roster-input-list {
     grid-template-columns: 1fr;
+  }
+
+  .roster-add-card {
+    padding: 10px;
+  }
+
+  .roster-form-number {
+    width: 56px;
+  }
+
+  .roster-form-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
   }
 
   .settings-student-grid {
