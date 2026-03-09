@@ -187,16 +187,23 @@ export function applyReconciliation() {
   const { matched, added, missing, classId } = pendingReconciliation;
 
   // matched → 기존 ID + CSV 번호/성별 + 기존 확장 필드 유지
-  const finalRows = matched.map(m => ({
-    id: m.student.id,
-    name: m.csvRow.name,
-    number: m.csvRow.number,
-    gender: sanitizeGender(m.csvRow.gender) || m.student.gender,
-    team: m.student.team || '',
-    sportsAbility: m.student.sportsAbility || '',
-    tags: m.student.tags || [],
-    note: m.student.note || '',
-  }));
+  const finalRows = matched.map(m => {
+    // 전출 학생이 매칭되면 → transferredStudents에서 제거 (복귀)
+    if (m.student._transferred && classId) {
+      Store.removeTransferredStudent(classId, m.student.id);
+      console.debug('[Transfer] CSV 매칭으로 복귀:', m.student.name);
+    }
+    return {
+      id: m.student.id,
+      name: m.csvRow.name,
+      number: m.csvRow.number,
+      gender: sanitizeGender(m.csvRow.gender) || m.student.gender,
+      team: m.student.team || '',
+      sportsAbility: m.student.sportsAbility || '',
+      tags: m.student.tags || [],
+      note: m.student.note || '',
+    };
+  });
 
   // added → ID 없이 전달 (createModalStudent이 새 ID 생성)
   for (const row of added) {
@@ -207,15 +214,26 @@ export function applyReconciliation() {
     });
   }
 
-  // missing 중 "배지 삭제" 선택된 학생 처리
+  // missing 학생 처리: 배지 유지 → 전출, 배지 삭제 → 로그 삭제
   const modal = document.getElementById('csv-reconcile-modal');
   if (modal && classId) {
     const deleteIds = [];
     modal.querySelectorAll('.reconcile-missing-row').forEach(rowEl => {
       const toggleBtn = rowEl.querySelector('.reconcile-badge-toggle');
+      const sid = rowEl.dataset.studentId;
+      if (!sid) return;
+
       if (toggleBtn && toggleBtn.dataset.keep === 'false') {
-        const sid = rowEl.dataset.studentId;
-        if (sid) deleteIds.push(sid);
+        deleteIds.push(sid);
+      } else {
+        // 배지 유지 → 전출 처리
+        const student = missing.find(s => s.id === sid);
+        if (student) {
+          Store.addTransferredStudent(classId, {
+            ...student,
+            transferredAt: new Date().toISOString(),
+          });
+        }
       }
     });
     if (deleteIds.length > 0) {
@@ -654,9 +672,17 @@ export function handleCSVImport(event) {
 
     // 기존 학생이 있으면 매칭 모달 표시
     const existing = state.rosterStudents || [];
-    if (existing.length > 0) {
-      const result = reconcileCSV(rows, existing);
-      const classId = state.editingClassId || '';
+    const classId = state.editingClassId || '';
+
+    // 전출 학생도 매칭 풀에 포함 (배지 ID 재연결용)
+    const transferred = classId ? Store.getTransferredStudents(classId) : [];
+    const transferredPool = transferred.map(s => ({ ...s, _transferred: true }));
+    const fullPool = [...existing, ...transferredPool];
+
+    if (fullPool.length > 0) {
+      const result = reconcileCSV(rows, fullPool);
+      // missing에서 전출 학생은 제외 (이미 전출 처리됨)
+      result.missing = result.missing.filter(s => !s._transferred);
       showReconcileModal(result, classId);
       return;
     }

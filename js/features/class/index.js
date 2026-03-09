@@ -47,7 +47,6 @@ import {
   openTeamModal,
   closeTeamModal,
   saveTeams,
-  resetStudentsForClass,
 } from './class-modal.js';
 import { renderLandingClassList, deleteClass, refreshAllSelects } from './landing-page.js';
 import {
@@ -241,7 +240,6 @@ function init() {
 
   // === 설정 페이지 편집 버튼 → roster 모달 ===
   const editBtn = document.getElementById('settings-add-class');
-  const resetStudentsBtn = document.getElementById('settings-reset-students');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
       const cls = Store.getSelectedClass();
@@ -253,18 +251,6 @@ function init() {
         const updatedCls = Store.getSelectedClass();
         if (nameEl && updatedCls) nameEl.textContent = updatedCls.name;
       });
-    });
-  }
-
-  if (resetStudentsBtn) {
-    resetStudentsBtn.addEventListener('click', async () => {
-      const cls = Store.getSelectedClass();
-      if (!cls) return;
-
-      const reset = await resetStudentsForClass(cls.id);
-      if (!reset) return;
-
-      onSettingsPageEnter();
     });
   }
 

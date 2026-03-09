@@ -145,8 +145,19 @@ function renderStudentCards() {
       const levelInfo = getLevelInfo(xp);
       const counts = Store.getStudentBadgeCounts(cls.id, s.id);
       const badgeTotal = Object.values(counts).reduce((a, b) => a + b, 0);
-      return { ...s, xp, levelInfo, badgeTotal };
+      return { ...s, xp, levelInfo, badgeTotal, transferred: false };
     });
+
+  // 전출 학생 추가
+  const transferred = Store.getTransferredStudents(cls.id);
+  for (const s of transferred) {
+    if (!s.name || !s.name.trim()) continue;
+    const xp = Store.getStudentXp(cls.id, s.id);
+    const levelInfo = getLevelInfo(xp);
+    const counts = Store.getStudentBadgeCounts(cls.id, s.id);
+    const badgeTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+    named.push({ ...s, xp, levelInfo, badgeTotal, transferred: true });
+  }
 
   // 정렬
   if (studentSort === 'badge') {
@@ -163,13 +174,17 @@ function renderStudentCards() {
 
   // 카드 렌더
   const cardsHtml = named
-    .map(
-      s => `<button class="badge-stu-card" data-student-id="${s.id}">
-        <span class="badge-stu-name">${UI.escapeHtml(s.name)}</span>
+    .map(s => {
+      const transferredClass = s.transferred ? ' transferred' : '';
+      const transferredTag = s.transferred
+        ? '<span class="badge-stu-transferred">전출</span> '
+        : '';
+      return `<button class="badge-stu-card${transferredClass}" data-student-id="${s.id}">
+        <span class="badge-stu-name">${transferredTag}${UI.escapeHtml(s.name)}</span>
         <span class="badge-stu-level">Lv.${s.levelInfo.level}</span>
         <span class="badge-stu-count">${s.badgeTotal}개</span>
-      </button>`
-    )
+      </button>`;
+    })
     .join('');
 
   grid.innerHTML = sortHtml + `<div class="badge-stu-cards-inner">${cardsHtml}</div>`;
@@ -195,11 +210,19 @@ function openStudentModal(studentId) {
   const cls = Store.getSelectedClass();
   if (!cls) return;
 
-  const student = cls.students?.find(s => s.id === studentId);
+  let student = cls.students?.find(s => s.id === studentId);
+  let isTransferred = false;
+
+  // 현재 학생에서 못 찾으면 전출 학생에서 검색
+  if (!student) {
+    const transferred = Store.getTransferredStudents(cls.id);
+    student = transferred.find(s => s.id === studentId);
+    isTransferred = true;
+  }
   if (!student) return;
 
   currentModalStudentId = studentId;
-  renderStudentModalContent(cls, student);
+  renderStudentModalContent(cls, student, isTransferred);
 
   // 모달 열기
   const modal = document.getElementById('badge-student-modal');
@@ -209,15 +232,18 @@ function openStudentModal(studentId) {
   }
 }
 
-function renderStudentModalContent(cls, student) {
+function renderStudentModalContent(cls, student, isTransferred = false) {
   const studentId = student.id;
   const xp = Store.getStudentXp(cls.id, studentId);
   const levelInfo = getLevelInfo(xp);
   const badgeCounts = Store.getStudentBadgeCounts(cls.id, studentId);
 
-  // 이름 (빈 경우 번호 폴백)
+  // 이름 (빈 경우 번호 폴백) + 전출 표시
   const nameEl = document.getElementById('badge-student-modal-name');
-  if (nameEl) nameEl.textContent = student.name || `${student.number || '?'}번`;
+  if (nameEl) {
+    const baseName = student.name || `${student.number || '?'}번`;
+    nameEl.textContent = isTransferred ? `${baseName} (전출)` : baseName;
+  }
 
   // 레벨 + XP
   const levelText = document.getElementById('badge-modal-level-text');

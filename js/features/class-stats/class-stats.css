@@ -152,6 +152,21 @@
   color: var(--text-tertiary);
 }
 
+.badge-stu-card.transferred {
+  background: var(--bg-secondary, #f5f5f5);
+  border-color: var(--border-light);
+  opacity: 1;
+}
+
+.badge-stu-transferred {
+  font-size: 10px;
+  color: #8a6d00;
+  background: #f5c542;
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-right: 2px;
+}
+
 .badge-empty-msg {
   grid-column: 1 / -1;
   text-align: center;

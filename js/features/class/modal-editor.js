@@ -155,6 +155,7 @@ export function getRosterStudentById(studentId) {
 export function initializeRosterState(cls) {
   state.rosterStudents = [];
   state.rosterEditingStudentId = null;
+  state.pendingTransfers = [];
 
   if (!cls) return;
 
@@ -297,6 +298,27 @@ function updateStudentRow(studentId) {
 }
 
 export function removeStudentRow(studentId) {
+  const student = state.rosterStudents.find(s => s.id === studentId);
+
+  // 배지가 있는 학생 → 전출 대기열에 추가
+  if (student && state.editingClassId) {
+    const badges = Store.getBadgeLogsByStudent(state.editingClassId, studentId);
+    console.debug(
+      '[Transfer] removeStudentRow:',
+      student.name,
+      `classId=${state.editingClassId}`,
+      `studentId=${studentId}`,
+      `badges=${badges.length}`
+    );
+    if (badges.length > 0) {
+      state.pendingTransfers.push({ ...student });
+      UI.showToast(`배지 ${badges.length}개 — ${student.name} 저장 시 전출 처리됩니다`, 'warning', {
+        center: true,
+        duration: 4000,
+      });
+    }
+  }
+
   state.rosterStudents = state.rosterStudents.filter(s => s.id !== studentId);
   if (state.rosterEditingStudentId === studentId) {
     state.rosterEditingStudentId = null;

@@ -230,6 +230,23 @@ export async function saveRoster() {
       if (targetClass) {
         Store.syncBadgeStudentNames(targetClass.id, targetClass.students);
       }
+
+      // 전출 대기 학생 처리
+      if (state.pendingTransfers.length > 0) {
+        console.debug(
+          '[Transfer] saveRoster: pendingTransfers =',
+          state.pendingTransfers.map(s => s.name)
+        );
+        for (const student of state.pendingTransfers) {
+          Store.addTransferredStudent(state.editingClassId, {
+            ...student,
+            transferredAt: new Date().toISOString(),
+          });
+          console.debug('[Transfer] added:', student.name, '→ transferredStudents');
+        }
+        state.pendingTransfers = [];
+      }
+
       UI.showToast(`${className} 수정 완료`, 'success');
     } else {
       // 새 학급 추가 — team 기본값
@@ -238,7 +255,9 @@ export async function saveRoster() {
     }
 
     if (targetClass) {
-      syncClassToFirestore(targetClass).catch(err => {
+      // 전출 처리 후 최신 데이터로 Firestore 동기화
+      const freshClass = Store.getClassById(targetClass.id) || targetClass;
+      syncClassToFirestore(freshClass).catch(err => {
         console.warn('[ClassModal] Firestore sync skipped:', err);
       });
     }
@@ -402,11 +421,21 @@ export async function resetStudentsForClass(classId) {
     return false;
   }
 
-  const confirmed = await UI.showConfirm(
-    '학생 목록을 초기화할까요?\n학생, 모둠 배정, 배지 기록이 함께 삭제됩니다.',
-    { confirmText: '초기화', danger: true }
-  );
-  if (!confirmed) return false;
+  const choice = await UI.showSelect('학생 초기화 범위를 선택하세요', [
+    {
+      key: 'roster',
+      label: '명단만 초기화',
+      description: '배지 기록은 유지됩니다',
+    },
+    {
+      key: 'all',
+      label: '전체 초기화',
+      description: '학생, 배지, 모둠, 술래뽑기 기록 모두 삭제',
+      danger: true,
+    },
+  ]);
+
+  if (!choice) return false;
 
   const teamCount = cls.teamCount || cls.teams?.length || 6;
   const targetClass = Store.updateClass(
@@ -418,9 +447,12 @@ export async function resetStudentsForClass(classId) {
     teamCount
   );
 
-  Store.clearBadgeLogs(classId);
   Store.clearCurrentTeams();
   Store.clearTagGameData();
+
+  if (choice === 'all') {
+    Store.clearBadgeLogs(classId);
+  }
 
   if (targetClass) {
     syncClassToFirestore(targetClass).catch(error => {
@@ -429,6 +461,8 @@ export async function resetStudentsForClass(classId) {
   }
 
   window.dispatchEvent(new CustomEvent('badge-updated'));
-  UI.showToast('학생 초기화 완료', 'success');
+
+  const msg = choice === 'all' ? '전체 초기화 완료' : '학생 명단 초기화 완료 (배지 기록 유지)';
+  UI.showToast(msg, 'success');
   return true;
 }

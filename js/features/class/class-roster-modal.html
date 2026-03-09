@@ -33,6 +33,22 @@
           </div>
         </div>
         <input type="file" id="class-csv-file" accept=".csv,.txt" style="display: none" />
+        <div
+          class="roster-tip"
+          style="
+            font-size: var(--font-size-xs);
+            color: var(--text-tertiary);
+            line-height: 1.4;
+            padding: var(--space-xs) var(--space-sm);
+            background: rgba(124, 158, 245, 0.06);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-sm);
+            word-break: keep-all;
+          "
+        >
+          명단 변경(전학/전입/번호 변경)은<br />CSV 재업로드를 이용하세요. 이름이 같은 학생의 배지가
+          자동으로 유지됩니다.
+        </div>
         <div id="roster-registered-pills" class="roster-registered-pills">
           <!-- JS에서 동적 생성: 등록된 학생 알약 카드 -->
         </div>

@@ -144,6 +144,19 @@ function removeBadgeLogsForStudents(classId, studentIds) {
   return BadgeRepo.removeBadgeLogsForStudents(classId, studentIds);
 }
 
+// === 전출 학생 (ClassRepo) ===
+function addTransferredStudent(classId, student) {
+  return ClassRepo.addTransferredStudent(classId, student);
+}
+
+function removeTransferredStudent(classId, studentId) {
+  return ClassRepo.removeTransferredStudent(classId, studentId);
+}
+
+function getTransferredStudents(classId) {
+  return ClassRepo.getTransferredStudents(classId);
+}
+
 function syncBadgeStudentNames(classId, students) {
   return BadgeRepo.syncStudentNames(classId, students);
 }
@@ -556,6 +569,10 @@ export const Store = {
   saveSettings,
   getDefaultTeamNames,
   saveDefaultTeamNames,
+  // 전출 학생
+  addTransferredStudent,
+  removeTransferredStudent,
+  getTransferredStudents,
   // 배지
   addBadgeRecords,
   getBadgeLogsByClass,

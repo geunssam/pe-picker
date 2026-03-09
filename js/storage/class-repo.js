@@ -41,6 +41,7 @@ function create(name, students = [], teamNames = null, teams = null, teamCount =
     id: generateId(),
     name,
     students,
+    transferredStudents: [],
     teamNames: teamNames || defaultNames.slice(0, teamCount),
     teams: teams || [],
     teamCount,
@@ -118,6 +119,47 @@ function getSelected() {
   return id ? getById(id) : null;
 }
 
+/**
+ * 전출 학생 추가
+ * @param {string} classId - 학급 ID
+ * @param {Object} student - 전출 학생 객체 (transferredAt 포함)
+ */
+function addTransferredStudent(classId, student) {
+  const classes = getAll();
+  const cls = classes.find(c => c.id === classId);
+  if (!cls) return;
+
+  if (!Array.isArray(cls.transferredStudents)) {
+    cls.transferredStudents = [];
+  }
+  cls.transferredStudents.push(student);
+  set(KEYS.CLASSES, classes);
+}
+
+/**
+ * 전출 학생 영구 삭제
+ * @param {string} classId - 학급 ID
+ * @param {string} studentId - 학생 ID
+ */
+function removeTransferredStudent(classId, studentId) {
+  const classes = getAll();
+  const cls = classes.find(c => c.id === classId);
+  if (!cls || !Array.isArray(cls.transferredStudents)) return;
+
+  cls.transferredStudents = cls.transferredStudents.filter(s => s.id !== studentId);
+  set(KEYS.CLASSES, classes);
+}
+
+/**
+ * 전출 학생 조회
+ * @param {string} classId - 학급 ID
+ * @returns {Array} 전출 학생 배열
+ */
+function getTransferredStudents(classId) {
+  const cls = getById(classId);
+  return Array.isArray(cls?.transferredStudents) ? cls.transferredStudents : [];
+}
+
 export const ClassRepo = {
   getAll,
   getById,
@@ -128,4 +170,7 @@ export const ClassRepo = {
   setSelectedId,
   clearSelected,
   getSelected,
+  addTransferredStudent,
+  removeTransferredStudent,
+  getTransferredStudents,
 };

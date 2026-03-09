@@ -6,18 +6,39 @@
 import { Sound } from './sound.js';
 
 // === Toast ===
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
+function showToast(message, type = 'info', options = {}) {
+  const { duration = 3000, center = false } = options;
+
+  let container;
+  if (center) {
+    container = document.getElementById('toast-center-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-center-container';
+      container.className = 'toast-center-container';
+      document.body.appendChild(container);
+    }
+  } else {
+    container = document.getElementById('toast-container');
+  }
   if (!container) return;
 
   const toast = document.createElement('div');
-  toast.className = `toast ${type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : ''}`;
+  const typeClass =
+    type === 'success'
+      ? 'toast-success'
+      : type === 'error'
+        ? 'toast-error'
+        : type === 'warning'
+          ? 'toast-warning'
+          : '';
+  toast.className = `toast ${typeClass}`;
   toast.textContent = message;
   container.appendChild(toast);
 
   setTimeout(() => {
     if (toast.parentNode) toast.remove();
-  }, 3000);
+  }, duration);
 }
 
 // === Modal Helpers ===
@@ -218,6 +239,56 @@ function showConfirm(message, { confirmText = '확인', cancelText = '취소', d
   });
 }
 
+// === Select Dialog (다중 선택지) ===
+function showSelect(message, options, { cancelText = '취소' } = {}) {
+  return new Promise(resolve => {
+    document.getElementById('ui-select-modal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'ui-select-modal';
+    modal.className = 'modal-overlay';
+
+    const optionsHtml = options
+      .map(
+        opt => `
+      <button class="btn-select-option${opt.danger ? ' btn-select-danger' : ''}" data-key="${escapeHtml(opt.key)}">
+        <span class="btn-select-label">${escapeHtml(opt.label)}</span>
+        ${opt.description ? `<span class="btn-select-desc">${escapeHtml(opt.description)}</span>` : ''}
+      </button>`
+      )
+      .join('');
+
+    modal.innerHTML = `
+      <div class="modal-alert">
+        <div class="modal-alert-body">
+          <div class="modal-alert-message">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
+          <div class="select-btn-group">${optionsHtml}</div>
+          <button class="btn-select-cancel">${escapeHtml(cancelText)}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('show'));
+
+    const close = key => {
+      modal.classList.remove('show');
+      setTimeout(() => modal.remove(), 200);
+      resolve(key);
+    };
+
+    modal.querySelectorAll('.btn-select-option').forEach(btn => {
+      btn.addEventListener('click', () => close(btn.dataset.key));
+    });
+
+    modal.querySelector('.btn-select-cancel').addEventListener('click', () => close(null));
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) close(null);
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', init);
 
 export const UI = {
@@ -232,4 +303,5 @@ export const UI = {
   initSteppers,
   escapeHtml,
   showConfirm,
+  showSelect,
 };

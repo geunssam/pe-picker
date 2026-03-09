@@ -146,10 +146,15 @@ function normalizeClassFromSnapshot(classId, data = {}, subStudents = null) {
   const teamCountRaw = parseInt(data.teamCount ?? data.groupCount, 10);
   const teamCount = Number.isFinite(teamCountRaw) ? teamCountRaw : Math.max(6, teams.length);
 
+  const transferredStudents = Array.isArray(data.transferredStudents)
+    ? data.transferredStudents
+    : [];
+
   return {
     id: classId,
     name: data.name || '학급',
     students: safeStudents,
+    transferredStudents,
     teamNames: teamNames.length
       ? teamNames
       : Array.from({ length: teamCount }, (_, i) => `${i + 1}모둠`),
@@ -208,6 +213,7 @@ async function hydrateClassesFromFirestore() {
     // Firestore 클래스 문서에는 students가 없으므로 로컬 학생 데이터 보존
     const localClasses = Store.getClasses();
     const localStudentsMap = new Map(localClasses.map(c => [c.id, c.students]));
+    const localTransferredMap = new Map(localClasses.map(c => [c.id, c.transferredStudents]));
 
     const classesWithoutSub = snap.docs.map(docItem => {
       const data = docItem.data() || {};
@@ -215,6 +221,11 @@ async function hydrateClassesFromFirestore() {
       const localStudents = localStudentsMap.get(docItem.id);
       if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
         cls.students = localStudents;
+      }
+      // 로컬 transferredStudents 보존
+      const localTransferred = localTransferredMap.get(docItem.id);
+      if (cls.transferredStudents.length === 0 && localTransferred?.length > 0) {
+        cls.transferredStudents = localTransferred;
       }
       return cls;
     });
@@ -253,6 +264,12 @@ async function hydrateClassesFromFirestore() {
               cls.students.push(local);
             }
           }
+        }
+
+        // 로컬 transferredStudents 보존
+        const localTransferred = localTransferredMap.get(docItem.id);
+        if (cls.transferredStudents.length === 0 && localTransferred?.length > 0) {
+          cls.transferredStudents = localTransferred;
         }
 
         // 번호+이름 기준 중복 제거
@@ -358,6 +375,7 @@ function startRealtimeClassSync() {
       // 로컬 학생 데이터를 보존하여 레이스 컨디션 방지
       const localClasses = Store.getClasses();
       const localStudentsMap = new Map(localClasses.map(c => [c.id, c.students]));
+      const localTransferredMap = new Map(localClasses.map(c => [c.id, c.transferredStudents]));
 
       const classesWithoutSub = snapshot.docs.map(docItem => {
         const data = docItem.data() || {};
@@ -365,6 +383,11 @@ function startRealtimeClassSync() {
         const localStudents = localStudentsMap.get(docItem.id);
         if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
           cls.students = localStudents;
+        }
+        // 로컬 transferredStudents 보존
+        const localTransferred = localTransferredMap.get(docItem.id);
+        if (cls.transferredStudents.length === 0 && localTransferred?.length > 0) {
+          cls.transferredStudents = localTransferred;
         }
         return cls;
       });
@@ -402,6 +425,12 @@ function startRealtimeClassSync() {
                 cls.students.push(local);
               }
             }
+          }
+
+          // 로컬 transferredStudents 보존
+          const localTransferred = localTransferredMap.get(docItem.id);
+          if (cls.transferredStudents.length === 0 && localTransferred?.length > 0) {
+            cls.transferredStudents = localTransferred;
           }
 
           // 번호+이름 기준 중복 제거

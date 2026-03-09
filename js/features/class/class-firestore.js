@@ -38,6 +38,7 @@ function sanitizeClassData(classData) {
     year,
     grade,
     students = [],
+    transferredStudents = [],
   } = classData;
 
   const safeTeamNames = Array.isArray(teamNames) ? teamNames : [];
@@ -48,12 +49,15 @@ function sanitizeClassData(classData) {
   // thermostat 필드는 classData에 있으면 포함
   const thermostat = classData.thermostat || null;
 
+  const safeTransferred = Array.isArray(transferredStudents) ? transferredStudents : [];
+
   const result = {
     name,
     teamNames: safeTeamNames,
     teams: encodedTeams,
     teamCount: parseInt(teamCount, 10) || safeTeams.length || 6,
     studentCount: Array.isArray(students) ? students.length : 0,
+    transferredStudents: safeTransferred,
     year: parseInt(year, 10) || new Date().getFullYear(),
     grade: grade || '',
     createdAt: createdAt || new Date().toISOString(),
