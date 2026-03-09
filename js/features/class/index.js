@@ -36,6 +36,9 @@ import {
   handleBulkModalInput,
   handleBulkModalClick,
   generateGenderRangeRows,
+  applyReconciliation,
+  closeReconcileModal,
+  handleReconcileModalClick,
 } from './csv-import.js';
 import {
   openRosterModal,
@@ -133,6 +136,20 @@ function init() {
   if (bulkModalEl) {
     bulkModalEl.addEventListener('input', handleBulkModalInput);
     bulkModalEl.addEventListener('click', handleBulkModalClick);
+  }
+
+  // === CSV 매칭 모달 바인딩 ===
+  const reconcileCloseBtn = document.getElementById('csv-reconcile-modal-close');
+  const reconcileCancelBtn = document.getElementById('csv-reconcile-modal-cancel');
+  const reconcileApplyBtn = document.getElementById('csv-reconcile-modal-apply');
+
+  if (reconcileCloseBtn) reconcileCloseBtn.addEventListener('click', closeReconcileModal);
+  if (reconcileCancelBtn) reconcileCancelBtn.addEventListener('click', closeReconcileModal);
+  if (reconcileApplyBtn) reconcileApplyBtn.addEventListener('click', applyReconciliation);
+
+  const reconcileModalEl = document.getElementById('csv-reconcile-modal');
+  if (reconcileModalEl) {
+    reconcileModalEl.addEventListener('click', handleReconcileModalClick);
   }
 
   // === 설정 페이지 바인딩 ===

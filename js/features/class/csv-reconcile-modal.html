@@ -1,0 +1,45 @@
+<!-- CSV 매칭 결과 확인 모달 -->
+<div id="csv-reconcile-modal" class="modal-overlay">
+  <div class="modal csv-reconcile-modal">
+    <div class="modal-header">
+      <div class="modal-title">CSV 매칭 결과</div>
+      <button class="modal-close" id="csv-reconcile-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 요약 태그 -->
+      <div class="reconcile-summary"></div>
+
+      <!-- 경고 (동명이인 등) -->
+      <div class="reconcile-warnings" style="display: none"></div>
+
+      <!-- 유지 학생 아코디언 -->
+      <div class="reconcile-section">
+        <button type="button" class="reconcile-accordion-btn">
+          <span class="reconcile-accordion-icon"></span>
+          유지 학생 목록
+        </button>
+        <div class="reconcile-accordion-content reconcile-kept-list"></div>
+      </div>
+
+      <!-- 신규 학생 아코디언 -->
+      <div class="reconcile-section">
+        <button type="button" class="reconcile-accordion-btn">
+          <span class="reconcile-accordion-icon"></span>
+          신규 학생 목록
+        </button>
+        <div class="reconcile-accordion-content reconcile-new-list"></div>
+      </div>
+
+      <!-- 전출 학생 섹션 -->
+      <div class="reconcile-missing-section" style="display: none">
+        <div class="reconcile-missing-header">CSV에 없는 학생</div>
+        <div class="reconcile-missing-desc">배지 기록을 유지하면 학급 통계에 반영됩니다.</div>
+        <div class="reconcile-missing-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="csv-reconcile-modal-cancel">취소</button>
+      <button class="btn btn-primary" id="csv-reconcile-modal-apply">적용</button>
+    </div>
+  </div>
+</div>

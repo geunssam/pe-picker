@@ -311,6 +311,19 @@ function getCustomRangeBadgeCounts(classId, fromDate, toDate) {
 }
 
 /**
+ * 특정 학생들의 배지 로그 삭제
+ * @param {string} classId - 학급 ID
+ * @param {Array<string>} studentIds - 삭제할 학생 ID 배열
+ */
+function removeBadgeLogsForStudents(classId, studentIds) {
+  if (!classId || !Array.isArray(studentIds) || studentIds.length === 0) return;
+  const idSet = new Set(studentIds);
+  const logs = getBadgeLogs();
+  const filtered = logs.filter(log => !(log.classId === classId && idSet.has(log.studentId)));
+  if (filtered.length !== logs.length) saveBadgeLogs(filtered);
+}
+
+/**
  * 배지 로그 초기화
  * @param {string} [classId] - 학급 ID (없으면 전체 삭제)
  */
@@ -405,6 +418,7 @@ export const BadgeRepo = {
   getSemesterBadgeCounts,
   getCustomRangeBadgeCounts,
   clearBadgeLogs,
+  removeBadgeLogsForStudents,
   syncStudentNames,
   getAllThermostatSettings,
   getThermostatSettings,

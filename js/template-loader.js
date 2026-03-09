@@ -18,6 +18,7 @@ import classStatsHtml from './features/class-stats/class-stats.html?raw';
 import classRosterHtml from './features/class/class-roster-modal.html?raw';
 import classTeamHtml from './features/class/class-team-modal.html?raw';
 import classBulkHtml from './features/class/class-bulk-modal.html?raw';
+import csvReconcileHtml from './features/class/csv-reconcile-modal.html?raw';
 import tagNumberHtml from './features/tag-game/tag-number-modal.html?raw';
 import tagGenderHtml from './features/tag-game/tag-gender-modal.html?raw';
 import manualInputHtml from './features/tag-game/manual-input-modal.html?raw';
@@ -85,6 +86,7 @@ export function mountTemplates() {
     classRosterHtml +
     classTeamHtml +
     classBulkHtml +
+    csvReconcileHtml +
     overflowHtml +
     shortageHtml +
     tagNumberHtml +

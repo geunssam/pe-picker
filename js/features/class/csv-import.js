@@ -1,10 +1,273 @@
 /**
- * CSV 가져오기 + 일괄등록 모달
+ * CSV 가져오기 + 일괄등록 모달 + CSV 재업로드 매칭
  */
 import { state } from './state.js';
 import { UI } from '../../shared/ui-utils.js';
+import { Store } from '../../shared/store.js';
 import { sanitizeGender, sortStudentsByNumber } from './helpers.js';
 import { applyImportedStudents } from './modal-editor.js';
+import './csv-reconcile.css';
+
+// ===== CSV 매칭 (Reconcile) =====
+
+/** 매칭 대기 상태 */
+let pendingReconciliation = null;
+
+/**
+ * CSV 행과 기존 학생을 이름 기반으로 매칭
+ * @param {Array} csvRows - parseCSV 결과 [{name, number, gender}]
+ * @param {Array} existingStudents - 기존 학생 [{id, name, number, gender, ...}]
+ * @returns {{ matched: Array, added: Array, missing: Array, warnings: string[] }}
+ */
+export function reconcileCSV(csvRows, existingStudents) {
+  const warnings = [];
+  const matched = []; // { csvRow, student } — 기존 ID 매칭됨
+  const added = []; // csvRow — 신규 학생
+  const matchedStudentIds = new Set();
+
+  // 이름별 기존 학생 그룹핑
+  const byName = new Map();
+  for (const s of existingStudents) {
+    const name = (s.name || '').trim();
+    if (!name) continue;
+    if (!byName.has(name)) byName.set(name, []);
+    byName.get(name).push(s);
+  }
+
+  for (const row of csvRows) {
+    const csvName = (row.name || '').trim();
+    if (!csvName) continue;
+
+    const candidates = byName.get(csvName);
+    if (!candidates || candidates.length === 0) {
+      // 매칭 실패 → 신규
+      added.push(row);
+      continue;
+    }
+
+    // 아직 매칭되지 않은 후보만
+    const unmatched = candidates.filter(c => !matchedStudentIds.has(c.id));
+    if (unmatched.length === 0) {
+      // 모든 동명이인이 이미 매칭됨 → 신규
+      added.push(row);
+      continue;
+    }
+
+    if (unmatched.length === 1) {
+      // 1명 → 즉시 매칭
+      const student = unmatched[0];
+      matched.push({ csvRow: row, student });
+      matchedStudentIds.add(student.id);
+      continue;
+    }
+
+    // 동명이인 2명 이상 → 성별로 좁히기
+    const csvGender = sanitizeGender(row.gender);
+    if (csvGender) {
+      const byGender = unmatched.filter(s => s.gender === csvGender);
+      if (byGender.length === 1) {
+        matched.push({ csvRow: row, student: byGender[0] });
+        matchedStudentIds.add(byGender[0].id);
+        continue;
+      }
+    }
+
+    // 번호로 좁히기
+    if (row.number > 0) {
+      const byNumber = unmatched.filter(s => s.number === row.number);
+      if (byNumber.length === 1) {
+        matched.push({ csvRow: row, student: byNumber[0] });
+        matchedStudentIds.add(byNumber[0].id);
+        continue;
+      }
+    }
+
+    // 여전히 애매 → 첫 번째 자동 매칭 + 경고
+    const student = unmatched[0];
+    matched.push({ csvRow: row, student });
+    matchedStudentIds.add(student.id);
+    warnings.push(`동명이인 "${csvName}" — ${student.number}번 학생으로 자동 매칭됨`);
+  }
+
+  // CSV에 없는 기존 학생 → 전출 후보
+  const missing = existingStudents.filter(s => !matchedStudentIds.has(s.id));
+
+  return { matched, added, missing, warnings };
+}
+
+/**
+ * 매칭 결과 모달에 데이터 채우기
+ */
+export function showReconcileModal(result, classId) {
+  pendingReconciliation = { ...result, classId };
+
+  const el = document.getElementById('csv-reconcile-modal');
+  if (!el) return;
+
+  // 요약 태그
+  const summaryEl = el.querySelector('.reconcile-summary');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <span class="reconcile-tag reconcile-tag--kept">유지 ${result.matched.length}명</span>
+      <span class="reconcile-tag reconcile-tag--new">신규 ${result.added.length}명</span>
+      ${result.missing.length > 0 ? `<span class="reconcile-tag reconcile-tag--missing">전출 ${result.missing.length}명</span>` : ''}
+    `;
+  }
+
+  // 경고
+  const warningEl = el.querySelector('.reconcile-warnings');
+  if (warningEl) {
+    if (result.warnings.length > 0) {
+      warningEl.innerHTML = result.warnings
+        .map(w => `<div class="reconcile-warning-item">${UI.escapeHtml(w)}</div>`)
+        .join('');
+      warningEl.style.display = '';
+    } else {
+      warningEl.style.display = 'none';
+    }
+  }
+
+  // 유지 목록 (아코디언)
+  const keptListEl = el.querySelector('.reconcile-kept-list');
+  if (keptListEl) {
+    keptListEl.innerHTML = result.matched
+      .map(m => {
+        const numChanged = m.csvRow.number !== m.student.number;
+        const numNote = numChanged
+          ? ` <span class="reconcile-num-change">${m.student.number}→${m.csvRow.number}</span>`
+          : '';
+        return `<div class="reconcile-student-row">${m.csvRow.number}. ${UI.escapeHtml(m.csvRow.name)}${numNote}</div>`;
+      })
+      .join('');
+  }
+
+  // 신규 목록 (아코디언)
+  const newListEl = el.querySelector('.reconcile-new-list');
+  if (newListEl) {
+    newListEl.innerHTML = result.added
+      .map(
+        r =>
+          `<div class="reconcile-student-row reconcile-student-row--new">${r.number}. ${UI.escapeHtml(r.name)}</div>`
+      )
+      .join('');
+  }
+
+  // 전출 학생 섹션
+  const missingSection = el.querySelector('.reconcile-missing-section');
+  const missingListEl = el.querySelector('.reconcile-missing-list');
+  if (missingSection && missingListEl) {
+    if (result.missing.length > 0) {
+      missingSection.style.display = '';
+      // 배지 수 조회
+      missingListEl.innerHTML = result.missing
+        .map(s => {
+          const badgeCount = Store.getBadgeLogsByStudent(classId, s.id).length;
+          const badgeText = badgeCount > 0 ? `배지 ${badgeCount}개` : '배지 없음';
+          return `<div class="reconcile-missing-row" data-student-id="${UI.escapeHtml(s.id)}">
+            <span class="reconcile-missing-name">${s.number}. ${UI.escapeHtml(s.name)}</span>
+            <span class="reconcile-missing-badge">${badgeText}</span>
+            <button type="button" class="reconcile-badge-toggle" data-keep="true">배지 유지</button>
+          </div>`;
+        })
+        .join('');
+    } else {
+      missingSection.style.display = 'none';
+    }
+  }
+
+  UI.showModal('csv-reconcile-modal');
+}
+
+/**
+ * "적용" 버튼 핸들러
+ */
+export function applyReconciliation() {
+  if (!pendingReconciliation) return;
+
+  const { matched, added, missing, classId } = pendingReconciliation;
+
+  // matched → 기존 ID + CSV 번호/성별 + 기존 확장 필드 유지
+  const finalRows = matched.map(m => ({
+    id: m.student.id,
+    name: m.csvRow.name,
+    number: m.csvRow.number,
+    gender: sanitizeGender(m.csvRow.gender) || m.student.gender,
+    team: m.student.team || '',
+    sportsAbility: m.student.sportsAbility || '',
+    tags: m.student.tags || [],
+    note: m.student.note || '',
+  }));
+
+  // added → ID 없이 전달 (createModalStudent이 새 ID 생성)
+  for (const row of added) {
+    finalRows.push({
+      name: row.name,
+      number: row.number,
+      gender: sanitizeGender(row.gender),
+    });
+  }
+
+  // missing 중 "배지 삭제" 선택된 학생 처리
+  const modal = document.getElementById('csv-reconcile-modal');
+  if (modal && classId) {
+    const deleteIds = [];
+    modal.querySelectorAll('.reconcile-missing-row').forEach(rowEl => {
+      const toggleBtn = rowEl.querySelector('.reconcile-badge-toggle');
+      if (toggleBtn && toggleBtn.dataset.keep === 'false') {
+        const sid = rowEl.dataset.studentId;
+        if (sid) deleteIds.push(sid);
+      }
+    });
+    if (deleteIds.length > 0) {
+      Store.removeBadgeLogsForStudents(classId, deleteIds);
+    }
+  }
+
+  const count = applyImportedStudents(finalRows);
+  closeReconcileModal();
+  if (count > 0) {
+    UI.showToast(`${count}명 매칭 적용 완료`, 'success');
+  }
+
+  pendingReconciliation = null;
+}
+
+/**
+ * 모달 닫기
+ */
+export function closeReconcileModal() {
+  UI.hideModal('csv-reconcile-modal');
+  pendingReconciliation = null;
+}
+
+/**
+ * 모달 내 클릭 이벤트 위임
+ */
+export function handleReconcileModalClick(event) {
+  const target = event.target;
+  if (!target) return;
+
+  // 아코디언 토글
+  const accordionBtn = target.closest('.reconcile-accordion-btn');
+  if (accordionBtn) {
+    const content = accordionBtn.nextElementSibling;
+    if (content) {
+      const isOpen = content.classList.toggle('open');
+      accordionBtn.classList.toggle('open', isOpen);
+    }
+    return;
+  }
+
+  // 배지 유지/삭제 토글
+  const toggleBtn = target.closest('.reconcile-badge-toggle');
+  if (toggleBtn) {
+    const isKeep = toggleBtn.dataset.keep === 'true';
+    toggleBtn.dataset.keep = isKeep ? 'false' : 'true';
+    toggleBtn.textContent = isKeep ? '배지 삭제' : '배지 유지';
+    toggleBtn.classList.toggle('reconcile-badge-delete', isKeep);
+    return;
+  }
+}
 
 // ===== 일괄등록 모달 =====
 
@@ -389,10 +652,23 @@ export function handleCSVImport(event) {
       return;
     }
 
+    // 기존 학생이 있으면 매칭 모달 표시
+    const existing = state.rosterStudents || [];
+    if (existing.length > 0) {
+      const result = reconcileCSV(rows, existing);
+      const classId = state.editingClassId || '';
+      showReconcileModal(result, classId);
+      return;
+    }
+
+    // 빈 학급 → 기존 동작 (바로 적용)
     const count = applyImportedStudents(rows);
     if (count > 0) UI.showToast(`${count}명 가져오기 완료`, 'success');
   };
   reader.readAsText(file, 'UTF-8');
+
+  // 파일 입력 초기화 (같은 파일 재선택 가능)
+  event.target.value = '';
 }
 
 export function downloadCSVTemplate() {

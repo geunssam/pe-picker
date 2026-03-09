@@ -1,0 +1,196 @@
+/* ============================================
+   CSV Reconcile Modal Styles
+   ============================================ */
+
+.csv-reconcile-modal {
+  max-width: 480px;
+  max-height: 85vh;
+}
+
+.csv-reconcile-modal .modal-body {
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* === 요약 태그 === */
+
+.reconcile-summary {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.reconcile-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.reconcile-tag--kept {
+  background: rgba(124, 224, 163, 0.18);
+  color: var(--color-success-dark);
+}
+
+.reconcile-tag--new {
+  background: rgba(124, 158, 245, 0.18);
+  color: var(--color-primary-dark);
+}
+
+.reconcile-tag--missing {
+  background: rgba(245, 166, 124, 0.18);
+  color: var(--color-secondary-dark);
+}
+
+/* === 경고 박스 === */
+
+.reconcile-warnings {
+  background: rgba(245, 224, 124, 0.15);
+  border: 1px solid rgba(224, 200, 91, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.reconcile-warning-item {
+  font-size: var(--font-size-sm);
+  color: var(--color-warning-dark);
+  padding: var(--space-xs) 0;
+}
+
+.reconcile-warning-item::before {
+  content: '\26A0\FE0F ';
+}
+
+/* === 아코디언 === */
+
+.reconcile-section {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.reconcile-accordion-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--glass-bg);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast);
+}
+
+.reconcile-accordion-btn:hover {
+  background: var(--glass-bg-heavy);
+}
+
+.reconcile-accordion-icon::before {
+  content: '\25B6';
+  display: inline-block;
+  font-size: 0.7em;
+  transition: transform var(--transition-fast);
+}
+
+.reconcile-accordion-btn.open .reconcile-accordion-icon::before {
+  transform: rotate(90deg);
+}
+
+.reconcile-accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--transition-normal);
+}
+
+.reconcile-accordion-content.open {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* === 학생 행 === */
+
+.reconcile-student-row {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  border-top: 1px solid rgba(124, 158, 245, 0.08);
+}
+
+.reconcile-student-row--new {
+  color: var(--color-primary-dark);
+}
+
+.reconcile-num-change {
+  font-size: var(--font-size-xs);
+  color: var(--color-secondary-dark);
+  background: rgba(245, 166, 124, 0.12);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-xs);
+}
+
+/* === 전출 학생 섹션 === */
+
+.reconcile-missing-header {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-secondary-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.reconcile-missing-desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-sm);
+}
+
+.reconcile-missing-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.reconcile-missing-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.reconcile-missing-badge {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* === 배지 유지/삭제 토글 === */
+
+.reconcile-badge-toggle {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  background: rgba(124, 224, 163, 0.1);
+  color: var(--color-success-dark);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.reconcile-badge-toggle.reconcile-badge-delete {
+  border-color: var(--color-danger);
+  background: rgba(245, 124, 124, 0.1);
+  color: var(--color-danger-dark);
+}

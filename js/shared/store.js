@@ -140,6 +140,10 @@ function clearBadgeLogs(classId) {
   return BadgeRepo.clearBadgeLogs(classId);
 }
 
+function removeBadgeLogsForStudents(classId, studentIds) {
+  return BadgeRepo.removeBadgeLogsForStudents(classId, studentIds);
+}
+
 function syncBadgeStudentNames(classId, students) {
   return BadgeRepo.syncStudentNames(classId, students);
 }
@@ -568,6 +572,7 @@ export const Store = {
   getSemesterBadgeCounts,
   getCustomRangeBadgeCounts,
   clearBadgeLogs,
+  removeBadgeLogsForStudents,
   syncBadgeStudentNames,
   getThermostatSettings,
   saveThermostatSettings,
