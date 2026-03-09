@@ -1590,6 +1590,29 @@
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 
+.roster-registered-pills .tag-student-card[draggable] {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.roster-registered-pills .tag-student-card.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.roster-registered-pills .tag-student-card.roster-drop-before {
+  box-shadow:
+    inset 3px 0 0 var(--color-primary),
+    0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.roster-registered-pills .tag-student-card.roster-drop-after {
+  box-shadow:
+    inset -3px 0 0 var(--color-primary),
+    0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
 .roster-registered-pills .roster-pill-remove {
   position: absolute;
   right: 4px;

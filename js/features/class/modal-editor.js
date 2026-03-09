@@ -33,6 +33,121 @@ function renderPillCardHTML(student, options = {}) {
 
 // ========== Roster 모달 ==========
 
+const ROSTER_TOUCH_DRAG_THRESHOLD = 10;
+
+let rosterDraggedId = null;
+let rosterDropTargetId = null;
+let rosterDropPosition = 'after';
+let rosterSuppressClickUntil = 0;
+
+const rosterTouchState = {
+  startX: 0,
+  startY: 0,
+  studentId: null,
+  card: null,
+  isDragging: false,
+};
+
+function setRosterClickSuppressed(durationMs = 300) {
+  rosterSuppressClickUntil = Date.now() + durationMs;
+}
+
+function isRosterClickSuppressed() {
+  return Date.now() < rosterSuppressClickUntil;
+}
+
+function renumberRosterStudentsByCurrentOrder(students = state.rosterStudents) {
+  return students.map((student, index) => ({
+    ...student,
+    number: index + 1,
+  }));
+}
+
+function clearRosterDropIndicator() {
+  const activeCard = document.querySelector(
+    '#roster-registered-pills .tag-student-card.roster-drop-before, #roster-registered-pills .tag-student-card.roster-drop-after'
+  );
+  if (activeCard) {
+    activeCard.classList.remove('roster-drop-before', 'roster-drop-after');
+  }
+
+  rosterDropTargetId = null;
+  rosterDropPosition = 'after';
+}
+
+function clearRosterDraggingStyles() {
+  document
+    .querySelectorAll('#roster-registered-pills .tag-student-card.is-dragging')
+    .forEach(card => card.classList.remove('is-dragging'));
+}
+
+function updateRosterDropIndicator(card, position) {
+  if (!card) {
+    clearRosterDropIndicator();
+    return;
+  }
+
+  const nextTargetId = card.dataset.studentId || null;
+  const nextPosition = position === 'before' ? 'before' : 'after';
+  const currentCard = document.querySelector(
+    '#roster-registered-pills .tag-student-card.roster-drop-before, #roster-registered-pills .tag-student-card.roster-drop-after'
+  );
+
+  if (currentCard && currentCard !== card) {
+    currentCard.classList.remove('roster-drop-before', 'roster-drop-after');
+  }
+
+  card.classList.remove('roster-drop-before', 'roster-drop-after');
+  card.classList.add(nextPosition === 'before' ? 'roster-drop-before' : 'roster-drop-after');
+
+  rosterDropTargetId = nextTargetId;
+  rosterDropPosition = nextPosition;
+}
+
+function getRosterDropPosition(card, clientX) {
+  const rect = card.getBoundingClientRect();
+  return clientX < rect.left + rect.width / 2 ? 'before' : 'after';
+}
+
+function moveRosterStudent(studentId, targetStudentId, position = 'after') {
+  if (!studentId || !targetStudentId || studentId === targetStudentId) return false;
+
+  const ordered = [...state.rosterStudents];
+  const sourceIndex = ordered.findIndex(student => student.id === studentId);
+  if (sourceIndex === -1) return false;
+
+  const [movedStudent] = ordered.splice(sourceIndex, 1);
+  const targetIndex = ordered.findIndex(student => student.id === targetStudentId);
+  if (targetIndex === -1) return false;
+
+  const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+  ordered.splice(insertIndex, 0, movedStudent);
+
+  state.rosterStudents = renumberRosterStudentsByCurrentOrder(ordered);
+  renderRosterEditor();
+  return true;
+}
+
+function finalizeRosterDrop(studentId, targetStudentId, position = 'after') {
+  const moved = moveRosterStudent(studentId, targetStudentId, position);
+  clearRosterDropIndicator();
+  clearRosterDraggingStyles();
+  rosterDraggedId = null;
+
+  if (moved) {
+    setRosterClickSuppressed();
+  }
+}
+
+function cleanupRosterTouchDrag() {
+  clearRosterDropIndicator();
+  clearRosterDraggingStyles();
+  rosterDraggedId = null;
+  rosterTouchState.studentId = null;
+  rosterTouchState.card = null;
+  rosterTouchState.isDragging = false;
+}
+
 export function getRosterStudentById(studentId) {
   return state.rosterStudents.find(s => s.id === studentId) || null;
 }
@@ -205,7 +320,7 @@ function renderRegisteredPills() {
       const genderClass =
         s.gender === 'male' ? ' gender-male' : s.gender === 'female' ? ' gender-female' : '';
       const editingClass = state.rosterEditingStudentId === s.id ? ' is-editing' : '';
-      return `<div class="tag-student-card${genderClass}${editingClass}" data-student-id="${UI.escapeHtml(s.id)}">
+      return `<div class="tag-student-card${genderClass}${editingClass}" data-student-id="${UI.escapeHtml(s.id)}" draggable="true" title="드래그로 순서 변경, 클릭으로 수정">
           <span>${s.number}. ${UI.escapeHtml(s.name)}</span>
           <button type="button" class="roster-pill-remove" data-student-id="${UI.escapeHtml(s.id)}">✕</button>
         </div>`;
@@ -230,7 +345,7 @@ function renderEmptyInputCard() {
     : '';
   const helperText = isEditing
     ? '학생 정보를 수정한 뒤 저장하세요'
-    : '등록된 학생 카드를 누르면 번호, 이름, 성별을 수정할 수 있습니다';
+    : '등록된 학생 카드를 누르면 수정, 드래그하면 번호 순서를 바꿀 수 있습니다';
 
   listEl.innerHTML = `<div class="roster-add-card${isEditing ? ' is-editing' : ''}" data-student-id="${UI.escapeHtml(isEditing ? student.id : 'new')}">
       <input type="number" class="roster-form-number input" min="1" max="999"
@@ -313,6 +428,7 @@ export function handleRosterClick(event) {
 
   const registeredCard = target.closest('#roster-registered-pills .tag-student-card');
   if (registeredCard) {
+    if (isRosterClickSuppressed()) return;
     const studentId = registeredCard.dataset.studentId;
     if (studentId) startRosterEditing(studentId);
     return;
@@ -364,6 +480,155 @@ export function applyImportedStudents(importedRows) {
   focusRosterNameInput();
 
   return nextStudents.length;
+}
+
+export function handleRosterDragStart(event) {
+  const card = event.target.closest('#roster-registered-pills .tag-student-card[draggable]');
+  if (!card || event.target.closest('.roster-pill-remove')) return;
+
+  rosterDraggedId = card.dataset.studentId || null;
+  if (!rosterDraggedId) return;
+
+  card.classList.add('is-dragging');
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', rosterDraggedId);
+  }
+}
+
+export function handleRosterDragOver(event) {
+  if (!rosterDraggedId) return;
+
+  const card = event.target.closest('#roster-registered-pills .tag-student-card[draggable]');
+  const pillsEl = event.target.closest('#roster-registered-pills');
+  if (!pillsEl) return;
+
+  event.preventDefault();
+
+  if (!card || card.dataset.studentId === rosterDraggedId) {
+    const lastCard = pillsEl.querySelector('.tag-student-card[draggable]:last-child');
+    if (lastCard && lastCard.dataset.studentId !== rosterDraggedId) {
+      updateRosterDropIndicator(lastCard, 'after');
+    } else {
+      clearRosterDropIndicator();
+    }
+    return;
+  }
+
+  updateRosterDropIndicator(card, getRosterDropPosition(card, event.clientX));
+}
+
+export function handleRosterDrop(event) {
+  if (!rosterDraggedId) return;
+
+  event.preventDefault();
+
+  const card = event.target.closest('#roster-registered-pills .tag-student-card[draggable]');
+  const pillsEl = event.target.closest('#roster-registered-pills');
+  if (!pillsEl) {
+    clearRosterDropIndicator();
+    clearRosterDraggingStyles();
+    rosterDraggedId = null;
+    return;
+  }
+
+  const targetStudentId =
+    rosterDropTargetId ||
+    card?.dataset.studentId ||
+    pillsEl.querySelector('.tag-student-card[draggable]:last-child')?.dataset.studentId;
+  if (!targetStudentId) {
+    clearRosterDropIndicator();
+    clearRosterDraggingStyles();
+    rosterDraggedId = null;
+    return;
+  }
+
+  const position = rosterDropTargetId || card ? rosterDropPosition : 'after';
+
+  finalizeRosterDrop(rosterDraggedId, targetStudentId, position);
+}
+
+export function handleRosterDragEnd() {
+  clearRosterDropIndicator();
+  clearRosterDraggingStyles();
+  rosterDraggedId = null;
+}
+
+export function handleRosterTouchStart(event) {
+  const card = event.target.closest('#roster-registered-pills .tag-student-card[draggable]');
+  if (!card || event.target.closest('.roster-pill-remove')) return;
+
+  const touch = event.touches?.[0];
+  if (!touch) return;
+
+  rosterTouchState.startX = touch.clientX;
+  rosterTouchState.startY = touch.clientY;
+  rosterTouchState.studentId = card.dataset.studentId || null;
+  rosterTouchState.card = card;
+  rosterTouchState.isDragging = false;
+}
+
+export function handleRosterTouchMove(event) {
+  if (!rosterTouchState.studentId || !rosterTouchState.card) return;
+
+  const touch = event.touches?.[0];
+  if (!touch) return;
+
+  const deltaX = touch.clientX - rosterTouchState.startX;
+  const deltaY = touch.clientY - rosterTouchState.startY;
+  const movedEnough =
+    Math.abs(deltaX) > ROSTER_TOUCH_DRAG_THRESHOLD ||
+    Math.abs(deltaY) > ROSTER_TOUCH_DRAG_THRESHOLD;
+
+  if (!rosterTouchState.isDragging && !movedEnough) return;
+
+  if (!rosterTouchState.isDragging) {
+    rosterTouchState.isDragging = true;
+    rosterDraggedId = rosterTouchState.studentId;
+    rosterTouchState.card.classList.add('is-dragging');
+    setRosterClickSuppressed();
+  }
+
+  event.preventDefault();
+
+  const currentCard = rosterTouchState.card;
+  currentCard.style.visibility = 'hidden';
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  currentCard.style.visibility = '';
+
+  const targetCard = elemBelow?.closest?.('#roster-registered-pills .tag-student-card[draggable]');
+  if (!targetCard || targetCard.dataset.studentId === rosterDraggedId) {
+    const pillsEl = document.getElementById('roster-registered-pills');
+    const lastCard = pillsEl?.querySelector('.tag-student-card[draggable]:last-child');
+    if (lastCard && lastCard.dataset.studentId !== rosterDraggedId) {
+      updateRosterDropIndicator(lastCard, 'after');
+    } else {
+      clearRosterDropIndicator();
+    }
+    return;
+  }
+
+  updateRosterDropIndicator(targetCard, getRosterDropPosition(targetCard, touch.clientX));
+}
+
+export function handleRosterTouchEnd() {
+  if (
+    rosterTouchState.isDragging &&
+    rosterDraggedId &&
+    rosterDropTargetId &&
+    rosterDropTargetId !== rosterDraggedId
+  ) {
+    finalizeRosterDrop(rosterDraggedId, rosterDropTargetId, rosterDropPosition);
+    rosterTouchState.studentId = null;
+    rosterTouchState.card = null;
+    rosterTouchState.isDragging = false;
+  } else {
+    cleanupRosterTouchDrag();
+  }
+}
+
+export function handleRosterTouchCancel() {
+  cleanupRosterTouchDrag();
 }
 
 // ========== Team 모달 ==========

@@ -12,6 +12,14 @@ import {
   handleRosterInput,
   handleRosterClick,
   handleRosterKeydown,
+  handleRosterDragStart,
+  handleRosterDragOver,
+  handleRosterDrop,
+  handleRosterDragEnd,
+  handleRosterTouchStart,
+  handleRosterTouchMove,
+  handleRosterTouchEnd,
+  handleRosterTouchCancel,
   handleTeamInput,
   onTeamCountChange,
   onTeamRowsChange,
@@ -71,6 +79,14 @@ function init() {
     rosterModalEl.addEventListener('input', handleRosterInput);
     rosterModalEl.addEventListener('click', handleRosterClick);
     rosterModalEl.addEventListener('keydown', handleRosterKeydown);
+    rosterModalEl.addEventListener('dragstart', handleRosterDragStart);
+    rosterModalEl.addEventListener('dragover', handleRosterDragOver);
+    rosterModalEl.addEventListener('drop', handleRosterDrop);
+    rosterModalEl.addEventListener('dragend', handleRosterDragEnd);
+    rosterModalEl.addEventListener('touchstart', handleRosterTouchStart, { passive: true });
+    rosterModalEl.addEventListener('touchmove', handleRosterTouchMove, { passive: false });
+    rosterModalEl.addEventListener('touchend', handleRosterTouchEnd);
+    rosterModalEl.addEventListener('touchcancel', handleRosterTouchCancel);
   }
 
   // === Team 모달 바인딩 ===
