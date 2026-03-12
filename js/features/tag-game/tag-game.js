@@ -28,6 +28,7 @@ let gameSettings = {
   excludePrevious: true,
 };
 let gameState = 'ready'; // ready, picking, picked, timer
+let loadedClassId = null;
 
 // 타이머 상태
 let timer = null;
@@ -45,21 +46,50 @@ function init() {
 }
 
 function onPageEnter() {
-  // 선택된 학급에서 학생 자동 로딩 (카드가 비어있을 때만)
-  const container = $('tag-student-cards');
-  if (container && container.children.length === 0) {
+  const currentClassId = Store.getSelectedClassId();
+  const classChanged = loadedClassId !== null && currentClassId !== loadedClassId;
+
+  if (classChanged) {
+    // 학급 전환 → 게임 상태 완전 초기화
+    currentPhase = 1;
+    currentRound = 0;
+    participants = [];
+    selectedIts = [];
+    selectedAngels = [];
+    availableForIt = [];
+    availableForAngel = [];
+    gameState = 'ready';
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+    isTimerRunning = false;
+    exitFullscreen();
     autoLoadFromSelectedClass();
+    saveToStorage();
+    updateUI();
+  } else {
+    // 첫 로드 또는 동일 학급 재진입
+    const container = $('tag-student-cards');
+    const hasCards = container && container.children.length > 0;
+    if (currentClassId !== loadedClassId || !hasCards) {
+      autoLoadFromSelectedClass();
+    }
   }
-  // 초기 wrapper 상태 설정
+
   showStudentCardsWrapper();
 }
 
 function autoLoadFromSelectedClass() {
   const cls = Store.getSelectedClass();
   if (!cls) {
+    loadedClassId = null;
+    const container = $('tag-student-cards');
+    if (container) container.innerHTML = '';
     showStudentCardsWrapper();
     return;
   }
+  loadedClassId = cls.id;
   const students = window.ClassManager.getStudents(cls.id);
 
   const container = $('tag-student-cards');

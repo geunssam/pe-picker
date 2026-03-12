@@ -14,6 +14,7 @@ import './group-manager.css';
 let currentGroups = [];
 let currentPhase = 1; // 1=설정, 2=결과
 let pendingPickData = null; // 부족 모달 콜백용
+let loadedClassId = null;
 
 // 타이머
 let timer = null;
@@ -146,11 +147,32 @@ function init() {
 }
 
 function onPageEnter() {
-  // 선택된 학급에서 학생 자동 로딩 (카드가 비어있을 때만)
-  const container = document.getElementById('gm-student-cards');
-  if (container && container.children.length === 0) {
+  const currentClassId = Store.getSelectedClassId();
+  const classChanged = loadedClassId !== null && currentClassId !== loadedClassId;
+
+  if (classChanged) {
+    // 학급 전환 → 모둠 상태 완전 초기화
+    currentGroups = [];
+    currentPhase = 1;
+    timerVisible = false;
+    if (timer) {
+      timer.reset(timerSeconds);
+      timer = null;
+    }
+    updateTimerDisplay(timerSeconds);
+    Store.saveCurrentTeams([]);
+    const groupsContainer = document.getElementById('gm-groups-container');
+    if (groupsContainer) groupsContainer.innerHTML = '';
     autoLoadFromSelectedClass();
+  } else {
+    // 첫 로드 또는 동일 학급 재진입
+    const container = document.getElementById('gm-student-cards');
+    const hasCards = container && container.children.length > 0;
+    if (currentClassId !== loadedClassId || !hasCards) {
+      autoLoadFromSelectedClass();
+    }
   }
+
   updateCalcInfo();
   updateGmUI();
   populateClassNameSelect();
@@ -159,11 +181,17 @@ function onPageEnter() {
 function autoLoadFromSelectedClass() {
   const cls = Store.getSelectedClass();
   if (!cls) {
+    loadedClassId = null;
+    const container = document.getElementById('gm-student-cards');
+    if (container) container.innerHTML = '';
     showStudentCardsWrapper();
     return;
   }
+  loadedClassId = cls.id;
   const students = window.ClassManager.getStudents(cls.id);
   if (students.length === 0) {
+    const container = document.getElementById('gm-student-cards');
+    if (container) container.innerHTML = '';
     showStudentCardsWrapper();
     return;
   }
