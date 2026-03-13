@@ -7,7 +7,7 @@ import { Store } from '../../shared/store.js';
 import { UI } from '../../shared/ui-utils.js';
 import { AuthManager } from '../auth/auth-manager.js';
 import { FirestoreSync } from '../../infra/firestore-sync.js';
-import { normalizeStudentName } from './helpers.js';
+import { normalizeStudentName, sortStudentsByNumber } from './helpers.js';
 import {
   handleRosterInput,
   handleRosterClick,
@@ -309,7 +309,8 @@ function getStudentNames(classId) {
 function getStudents(classId) {
   const cls = Store.getClassById(classId);
   if (!cls || !Array.isArray(cls.students)) return [];
-  return cls.students
+  return [...cls.students]
+    .sort(sortStudentsByNumber)
     .map(s => {
       const name = normalizeStudentName(s);
       if (!name) return null;

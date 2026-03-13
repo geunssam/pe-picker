@@ -665,6 +665,7 @@ export function handleCSVImport(event) {
   reader.onload = loadEvent => {
     const content = loadEvent.target?.result || '';
     const rows = parseCSV(content);
+    console.debug('[CSV] parsed rows:', rows.length);
     if (rows.length === 0) {
       UI.showToast('학생을 찾을 수 없습니다', 'error');
       return;
@@ -679,11 +680,30 @@ export function handleCSVImport(event) {
     const transferredPool = transferred.map(s => ({ ...s, _transferred: true }));
     const fullPool = [...existing, ...transferredPool];
 
+    console.debug(
+      '[CSV] existing:',
+      existing.length,
+      'transferred:',
+      transferred.length,
+      'fullPool:',
+      fullPool.length
+    );
+
     if (fullPool.length > 0) {
-      const result = reconcileCSV(rows, fullPool);
-      // missing에서 전출 학생은 제외 (이미 전출 처리됨)
-      result.missing = result.missing.filter(s => !s._transferred);
-      showReconcileModal(result, classId);
+      try {
+        const result = reconcileCSV(rows, fullPool);
+        console.debug('[CSV] reconcile result:', {
+          matched: result.matched.length,
+          added: result.added.length,
+          missing: result.missing.length,
+        });
+        // missing에서 전출 학생은 제외 (이미 전출 처리됨)
+        result.missing = result.missing.filter(s => !s._transferred);
+        showReconcileModal(result, classId);
+      } catch (err) {
+        console.error('[CSV] reconcile/modal error:', err);
+        UI.showToast('CSV 처리 중 오류가 발생했습니다', 'error');
+      }
       return;
     }
 
