@@ -53,30 +53,30 @@ function getSelectedClass() {
   return ClassRepo.getSelected();
 }
 
-// === 술래뽑기 (TagGameRepo) ===
-function getTagGameData() {
-  return TagGameRepo.getData();
+// === 술래뽑기 (TagGameRepo) — classId 기반 ===
+function getTagGameData(classId) {
+  return TagGameRepo.getData(classId);
 }
 
-function saveTagGameData(data) {
-  return TagGameRepo.saveData(data);
+function saveTagGameData(classId, data) {
+  return TagGameRepo.saveData(classId, data);
 }
 
-function clearTagGameData() {
-  return TagGameRepo.clear();
+function clearTagGameData(classId) {
+  return TagGameRepo.clear(classId);
 }
 
-// === 모둠 관리 (GroupManagerRepo) ===
-function getCurrentTeams() {
-  return GroupManagerRepo.getCurrentTeams();
+// === 모둠 관리 (GroupManagerRepo) — classId 기반 ===
+function getCurrentTeams(classId) {
+  return GroupManagerRepo.getCurrentTeams(classId);
 }
 
-function saveCurrentTeams(teams) {
-  return GroupManagerRepo.saveCurrentTeams(teams);
+function saveCurrentTeams(classId, teams) {
+  return GroupManagerRepo.saveCurrentTeams(classId, teams);
 }
 
-function clearCurrentTeams() {
-  return GroupManagerRepo.clearCurrentTeams();
+function clearCurrentTeams(classId) {
+  return GroupManagerRepo.clearCurrentTeams(classId);
 }
 
 // === 배지 (BadgeRepo) ===
@@ -268,6 +268,21 @@ function migrateGroupsToTeams() {
     set('pet_current_teams', oldTeams);
     localStorage.removeItem('pet_current_groups');
   }
+
+  // === per-class 키 마이그레이션 ===
+  const selectedClassId = getSelectedClassId();
+  // pet_tag_game → pet_tag_game_${classId}
+  const legacyTagGame = get(KEYS.TAG_GAME);
+  if (legacyTagGame && selectedClassId) {
+    set(`${KEYS.TAG_GAME}_${selectedClassId}`, legacyTagGame);
+    localStorage.removeItem(KEYS.TAG_GAME);
+  }
+  // pet_current_teams → pet_current_teams_${classId}
+  const legacyCurrentTeams = get(KEYS.CURRENT_TEAMS);
+  if (legacyCurrentTeams && selectedClassId) {
+    set(`${KEYS.CURRENT_TEAMS}_${selectedClassId}`, legacyCurrentTeams);
+    localStorage.removeItem(KEYS.CURRENT_TEAMS);
+  }
 }
 
 /**
@@ -381,10 +396,12 @@ function migrateFromLegacy() {
     set(KEYS.SETTINGS, legacySettings);
   }
 
-  // 기존 태그게임 데이터
+  // 기존 태그게임 데이터 → per-class 키로 이관
   const legacyTag = get('tagGameData');
-  if (legacyTag && !get(KEYS.TAG_GAME)) {
-    set(KEYS.TAG_GAME, legacyTag);
+  const migrateClassId = getSelectedClassId();
+  if (legacyTag && migrateClassId) {
+    set(`${KEYS.TAG_GAME}_${migrateClassId}`, legacyTag);
+    localStorage.removeItem('tagGameData');
   }
 
   // groups→teams 마이그레이션

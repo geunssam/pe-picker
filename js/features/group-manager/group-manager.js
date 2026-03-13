@@ -138,8 +138,9 @@ function init() {
   // 타이머
   initTimer();
 
-  // 기존 모둠 복원
-  const saved = Store.getCurrentTeams();
+  // 기존 모둠 복원 (학급별)
+  const initialClassId = Store.getSelectedClassId();
+  const saved = Store.getCurrentTeams(initialClassId);
   if (saved.length > 0) {
     currentGroups = saved;
     currentPhase = 2;
@@ -151,7 +152,7 @@ function onPageEnter() {
   const classChanged = loadedClassId !== null && currentClassId !== loadedClassId;
 
   if (classChanged) {
-    // 학급 전환 → 모둠 상태 완전 초기화
+    // 학급 전환 → 메모리 초기화 (이전 학급 데이터는 per-class 키로 보존됨)
     currentGroups = [];
     currentPhase = 1;
     timerVisible = false;
@@ -160,10 +161,16 @@ function onPageEnter() {
       timer = null;
     }
     updateTimerDisplay(timerSeconds);
-    Store.saveCurrentTeams([]);
     const groupsContainer = document.getElementById('gm-groups-container');
     if (groupsContainer) groupsContainer.innerHTML = '';
     autoLoadFromSelectedClass();
+
+    // 새 학급의 저장된 모둠 복원
+    const newSaved = Store.getCurrentTeams(loadedClassId);
+    if (newSaved.length > 0) {
+      currentGroups = newSaved;
+      currentPhase = 2;
+    }
   } else {
     // 첫 로드 또는 동일 학급 재진입
     const container = document.getElementById('gm-student-cards');
@@ -268,8 +275,8 @@ function resetGame() {
   if (startBtn) startBtn.style.display = '';
   if (pauseBtn) pauseBtn.style.display = 'none';
 
-  // 저장 초기화
-  Store.saveCurrentTeams([]);
+  // 저장 초기화 (현재 학급)
+  Store.saveCurrentTeams(loadedClassId, []);
 
   // 결과 영역 비우기
   const container = document.getElementById('gm-groups-container');
@@ -763,7 +770,7 @@ async function executeGroupPick(students, groupSize, groupCount) {
   updateGmUI();
 
   await GroupManagerUI.renderGroupsWithAnimation(currentGroups);
-  Store.saveCurrentTeams(currentGroups);
+  Store.saveCurrentTeams(loadedClassId, currentGroups);
 
   if (!isFixedGroups) {
     // 랜덤 모드일 때만 안내 (고정 모둠은 항상 불균형할 수 있음)

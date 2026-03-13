@@ -447,8 +447,8 @@ export async function resetStudentsForClass(classId) {
     teamCount
   );
 
-  Store.clearCurrentTeams();
-  Store.clearTagGameData();
+  Store.clearCurrentTeams(classId);
+  Store.clearTagGameData(classId);
 
   if (choice === 'all') {
     Store.clearBadgeLogs(classId);

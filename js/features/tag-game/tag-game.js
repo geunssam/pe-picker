@@ -805,8 +805,13 @@ function startNewGame() {
   availableForIt = [];
   availableForAngel = [];
   gameState = 'ready';
-  updateUI();
+
+  // 현재 학급의 저장 데이터 완전 삭제 후 새로 저장
+  const classId = loadedClassId || Store.getSelectedClassId();
+  Store.clearTagGameData(classId);
   saveToStorage();
+
+  updateUI();
   UI.showToast('새 게임이 시작되었습니다!', 'success');
 }
 
@@ -886,22 +891,24 @@ function updatePhase1Buttons() {
 // 원본은 selectedIts에 "현재 라운드" 것만 넣고 이력은 별도 관리하지 않았음
 // 여기서는 Store에 누적 저장
 function getAllSelectedIts() {
-  const data = Store.getTagGameData();
+  const classId = loadedClassId || Store.getSelectedClassId();
+  const data = Store.getTagGameData(classId);
   return data?.allItsHistory || [];
 }
 function getAllSelectedAngels() {
-  const data = Store.getTagGameData();
+  const classId = loadedClassId || Store.getSelectedClassId();
+  const data = Store.getTagGameData(classId);
   return data?.allAngelsHistory || [];
 }
 
 // ========== 저장/복원 ==========
 function saveToStorage() {
+  const classId = loadedClassId || Store.getSelectedClassId();
+  if (!classId) return;
   // 이력 누적
   let allIts = getAllSelectedIts();
   let allAngels = getAllSelectedAngels();
-  // 현재 라운드의 것이 이미 추가되었는지 확인
-  // 간단히: 최신 상태 전체 저장
-  Store.saveTagGameData({
+  Store.saveTagGameData(classId, {
     currentPhase,
     currentRound,
     participants,
@@ -917,7 +924,8 @@ function saveToStorage() {
 }
 
 function loadFromStorage() {
-  const data = Store.getTagGameData();
+  const classId = loadedClassId || Store.getSelectedClassId();
+  const data = Store.getTagGameData(classId);
   if (!data) return;
   currentPhase = data.currentPhase || 1;
   currentRound = data.currentRound || 0;

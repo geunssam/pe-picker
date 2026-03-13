@@ -42,10 +42,16 @@ export function set(key, value) {
   } catch (e) {
     if (e.name === 'QuotaExceededError' || e.code === 22) {
       // 임시 데이터 자동 정리 시도
-      const tempKeys = [KEYS.TAG_GAME, KEYS.CURRENT_TEAMS];
-      tempKeys.forEach(tk => {
+      const keysToClean = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith(KEYS.TAG_GAME) || k.startsWith(KEYS.CURRENT_TEAMS))) {
+          keysToClean.push(k);
+        }
+      }
+      keysToClean.forEach(k => {
         try {
-          localStorage.removeItem(tk);
+          localStorage.removeItem(k);
         } catch {
           // 무시
         }
