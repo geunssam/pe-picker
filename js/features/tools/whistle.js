@@ -50,8 +50,8 @@ function getCubicVol() {
 
 // === OfflineAudioContext 렌더링 ===
 
-// 단일 톤 렌더링 (hold, long용)
-async function renderWhistleWav(duration) {
+// 단일 톤 렌더링 (hold, long용) — loopMode: true면 끝부분 fade out 생략 (루프 끊김 방지)
+async function renderWhistleWav(duration, loopMode = false) {
   const sampleRate = 44100;
   const length = Math.ceil(sampleRate * duration);
   const offline = new OfflineAudioContext(1, length, sampleRate);
@@ -91,12 +91,14 @@ async function renderWhistleWav(duration) {
   limiter.connect(postGain);
   postGain.connect(offline.destination);
 
-  // 엔벨로프
+  // 엔벨로프 — loopMode면 fade out 생략 (끊김 없는 루프)
   const env = offline.createGain();
   env.gain.setValueAtTime(0, now);
   env.gain.linearRampToValueAtTime(1, now + 0.015);
-  env.gain.setValueAtTime(1, end - 0.04);
-  env.gain.linearRampToValueAtTime(0, end);
+  if (!loopMode) {
+    env.gain.setValueAtTime(1, end - 0.04);
+    env.gain.linearRampToValueAtTime(0, end);
+  }
   env.connect(preGain);
 
   // Oscillator 1 (2800Hz)
@@ -136,8 +138,10 @@ async function renderWhistleWav(duration) {
   hpf.frequency.setValueAtTime(2000, now);
   const nG = offline.createGain();
   nG.gain.setValueAtTime(0.4, now);
-  nG.gain.setValueAtTime(0.4, end - 0.04);
-  nG.gain.linearRampToValueAtTime(0, end);
+  if (!loopMode) {
+    nG.gain.setValueAtTime(0.4, end - 0.04);
+    nG.gain.linearRampToValueAtTime(0, end);
+  }
   noise.connect(hpf);
   hpf.connect(nG);
   nG.connect(preGain);
@@ -311,8 +315,8 @@ function writeString(view, offset, string) {
 // === 사전 렌더링 (앱 초기화 시 백그라운드) ===
 async function prepareAudioCache() {
   try {
-    // hold: 3초 (루프 재생)
-    const holdBuf = await renderWhistleWav(3.0);
+    // hold: 3초 (루프 재생 — fade out 없이 매끄러운 반복)
+    const holdBuf = await renderWhistleWav(3.0, true);
     const holdBlob = audioBufferToWav(holdBuf);
     audioCache.hold = new Audio(URL.createObjectURL(holdBlob));
     audioCache.hold.loop = true;
@@ -320,10 +324,12 @@ async function prepareAudioCache() {
     // long: 1.5초
     const longBuf = await renderWhistleWav(1.5);
     audioCache.long = new Audio(URL.createObjectURL(audioBufferToWav(longBuf)));
+    audioCache.long.addEventListener('ended', clearMediaSession);
 
     // triple: 삐삐삐 패턴
     const tripleBuf = await renderTripleWav();
     audioCache.triple = new Audio(URL.createObjectURL(audioBufferToWav(tripleBuf)));
+    audioCache.triple.addEventListener('ended', clearMediaSession);
 
     cacheReady = true;
     // 로딩 표시 해제
@@ -331,6 +337,14 @@ async function prepareAudioCache() {
     console.log('휘슬 사전 렌더링 완료');
   } catch (e) {
     console.warn('휘슬 사전 렌더링 실패:', e);
+  }
+}
+
+// === Media Session 초기화 (잠금화면 재생 카드 제거) ===
+function clearMediaSession() {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.playbackState = 'none';
   }
 }
 
@@ -353,6 +367,7 @@ function stopHoldWhistle() {
   }
   if (navigator.vibrate) navigator.vibrate(0);
   isPlaying = false;
+  clearMediaSession();
 }
 
 function playLong() {
