@@ -54,7 +54,8 @@ function getCubicVol() {
 async function renderWhistleWav(duration, loopMode = false) {
   const sampleRate = 44100;
   const length = Math.ceil(sampleRate * duration);
-  const offline = new OfflineAudioContext(1, length, sampleRate);
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const offline = new OfflineCtx(1, length, sampleRate);
   const now = 0;
   const end = duration;
 
@@ -163,7 +164,8 @@ async function renderTripleWav() {
   const sampleRate = 44100;
   const totalDuration = 1.2;
   const length = Math.ceil(sampleRate * totalDuration);
-  const offline = new OfflineAudioContext(1, length, sampleRate);
+  const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const offline = new OfflineCtx(1, length, sampleRate);
 
   // 3개의 톤 구간 정의
   const tones = [
@@ -315,10 +317,9 @@ function writeString(view, offset, string) {
 // === 사전 렌더링 (앱 초기화 시 백그라운드) ===
 async function prepareAudioCache() {
   try {
-    // hold: 3초 (루프 재생 — fade out 없이 매끄러운 반복)
-    const holdBuf = await renderWhistleWav(3.0, true);
-    const holdBlob = audioBufferToWav(holdBuf);
-    audioCache.hold = new Audio(URL.createObjectURL(holdBlob));
+    // hold: 2초 (루프 재생 — fade out 없이 매끄러운 반복)
+    const holdBuf = await renderWhistleWav(2.0, true);
+    audioCache.hold = new Audio(URL.createObjectURL(audioBufferToWav(holdBuf)));
     audioCache.hold.loop = true;
 
     // long: 1.5초
@@ -340,12 +341,20 @@ async function prepareAudioCache() {
   }
 }
 
-// === Media Session 초기화 (잠금화면 재생 카드 제거) ===
+// === Media Session 초기화 (잠금화면 재생 카드 최소화) ===
 function clearMediaSession() {
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = null;
-    navigator.mediaSession.playbackState = 'none';
-  }
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = null;
+  navigator.mediaSession.playbackState = 'none';
+  ['play', 'pause', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack', 'stop'].forEach(
+    a => {
+      try {
+        navigator.mediaSession.setActionHandler(a, null);
+      } catch (_) {
+        /* unsupported action */
+      }
+    }
+  );
 }
 
 // === 재생 로직 (HTML5 Audio) ===
@@ -652,6 +661,7 @@ function init() {
     if (document.hidden) {
       handleUp();
       handleTimerUp();
+      clearMediaSession();
     }
   });
   window.addEventListener('blur', () => {
