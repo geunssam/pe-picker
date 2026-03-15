@@ -1,16 +1,16 @@
 /* ============================================
    PE Picker - Whistle (만능 휘슬 FAB)
-   Web Audio API 기반 휘슬 모듈
-   sound.js와 별도 AudioContext 사용
+   OfflineAudioContext 사전 렌더링 + HTML5 Audio 재생
+   iOS Safari 무음 스위치 우회
    ============================================ */
 
-let audioCtx = null;
 let isPlaying = false;
-let activeNodes = null;
-let masterGain = null;
 let currentMode = 'hold';
 let pressing = false;
-let firstUnlocked = false;
+let cacheReady = false;
+
+// 사전 렌더링된 Audio 엘리먼트 캐시
+let audioCache = { hold: null, long: null, triple: null };
 
 // === DOM 참조 (패널) ===
 let panel = null;
@@ -26,7 +26,7 @@ let hintEl = null;
 let timerWhistleBtn = null;
 let timerRing1 = null;
 let timerRing2 = null;
-let timerMode = 'hold'; // 타이머에서는 기본 "꾹 누르기"
+let timerMode = 'hold';
 
 // === Audio 유틸 ===
 function makeSoftClipCurve(amount) {
@@ -39,34 +39,6 @@ function makeSoftClipCurve(amount) {
   return curve;
 }
 
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-async function unlockAudio() {
-  if (firstUnlocked) return;
-  ensureAudio();
-  // 모바일에서 resume()이 완료될 때까지 대기
-  if (audioCtx.state === 'suspended') {
-    try {
-      await audioCtx.resume();
-    } catch (e) {
-      /* ignore */
-    }
-  }
-  try {
-    const buf = audioCtx.createBuffer(1, 1, 22050);
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf;
-    src.connect(audioCtx.destination);
-    src.start(0);
-  } catch (e) {
-    /* ignore */
-  }
-  firstUnlocked = true;
-}
-
 function getVolume() {
   return volSlider ? parseFloat(volSlider.value) / 100 : 1;
 }
@@ -76,121 +48,93 @@ function getCubicVol() {
   return v * v * v;
 }
 
-function createMaxChain(now) {
-  masterGain = audioCtx.createGain();
-  masterGain.gain.setValueAtTime(getCubicVol() * 4.0, now);
+// === OfflineAudioContext 렌더링 ===
 
-  const shaper = audioCtx.createWaveShaper();
+// 단일 톤 렌더링 (hold, long용)
+async function renderWhistleWav(duration) {
+  const sampleRate = 44100;
+  const length = Math.ceil(sampleRate * duration);
+  const offline = new OfflineAudioContext(1, length, sampleRate);
+  const now = 0;
+  const end = duration;
+
+  // 체인: preGain → waveshaper → comp1 → comp2 → limiter → postGain → destination
+  const preGain = offline.createGain();
+  preGain.gain.setValueAtTime(4.0, now);
+  const shaper = offline.createWaveShaper();
   shaper.curve = makeSoftClipCurve(18);
   shaper.oversample = '4x';
-  const comp1 = audioCtx.createDynamicsCompressor();
+  const comp1 = offline.createDynamicsCompressor();
   comp1.threshold.setValueAtTime(-28, now);
   comp1.knee.setValueAtTime(3, now);
   comp1.ratio.setValueAtTime(14, now);
   comp1.attack.setValueAtTime(0.001, now);
   comp1.release.setValueAtTime(0.03, now);
-  const comp2 = audioCtx.createDynamicsCompressor();
+  const comp2 = offline.createDynamicsCompressor();
   comp2.threshold.setValueAtTime(-12, now);
   comp2.knee.setValueAtTime(2, now);
   comp2.ratio.setValueAtTime(10, now);
   comp2.attack.setValueAtTime(0.001, now);
   comp2.release.setValueAtTime(0.02, now);
-  const limiter = audioCtx.createDynamicsCompressor();
+  const limiter = offline.createDynamicsCompressor();
   limiter.threshold.setValueAtTime(-1, now);
   limiter.knee.setValueAtTime(0, now);
   limiter.ratio.setValueAtTime(20, now);
   limiter.attack.setValueAtTime(0.0005, now);
   limiter.release.setValueAtTime(0.005, now);
-  const postGain = audioCtx.createGain();
-  postGain.gain.setValueAtTime(2.0, now);
-
-  masterGain.connect(shaper);
-  shaper.connect(comp1);
-  comp1.connect(comp2);
-  comp2.connect(limiter);
-  limiter.connect(postGain);
-  postGain.connect(audioCtx.destination);
-  return masterGain;
-}
-
-// === 고정 길이 톤 (long, triple) ===
-function createFixedTone(startTime, duration) {
-  unlockAudio();
-  ensureAudio();
-
-  const now = startTime;
-  const end = now + duration;
-  const cv = getCubicVol();
-
-  const preGain = audioCtx.createGain();
-  preGain.gain.setValueAtTime(cv * 4.0, now);
-  const shaper = audioCtx.createWaveShaper();
-  shaper.curve = makeSoftClipCurve(18);
-  shaper.oversample = '4x';
-  const comp1 = audioCtx.createDynamicsCompressor();
-  comp1.threshold.setValueAtTime(-28, now);
-  comp1.knee.setValueAtTime(3, now);
-  comp1.ratio.setValueAtTime(14, now);
-  comp1.attack.setValueAtTime(0.001, now);
-  comp1.release.setValueAtTime(0.03, now);
-  const comp2 = audioCtx.createDynamicsCompressor();
-  comp2.threshold.setValueAtTime(-12, now);
-  comp2.knee.setValueAtTime(2, now);
-  comp2.ratio.setValueAtTime(10, now);
-  comp2.attack.setValueAtTime(0.001, now);
-  comp2.release.setValueAtTime(0.02, now);
-  const limiter = audioCtx.createDynamicsCompressor();
-  limiter.threshold.setValueAtTime(-1, now);
-  limiter.knee.setValueAtTime(0, now);
-  limiter.ratio.setValueAtTime(20, now);
-  limiter.attack.setValueAtTime(0.0005, now);
-  limiter.release.setValueAtTime(0.005, now);
-  const postGain = audioCtx.createGain();
+  const postGain = offline.createGain();
   postGain.gain.setValueAtTime(2.0, now);
   preGain.connect(shaper);
   shaper.connect(comp1);
   comp1.connect(comp2);
   comp2.connect(limiter);
   limiter.connect(postGain);
-  postGain.connect(audioCtx.destination);
+  postGain.connect(offline.destination);
 
-  const env = audioCtx.createGain();
+  // 엔벨로프
+  const env = offline.createGain();
   env.gain.setValueAtTime(0, now);
   env.gain.linearRampToValueAtTime(1, now + 0.015);
   env.gain.setValueAtTime(1, end - 0.04);
   env.gain.linearRampToValueAtTime(0, end);
   env.connect(preGain);
 
-  const osc1 = audioCtx.createOscillator();
+  // Oscillator 1 (2800Hz)
+  const osc1 = offline.createOscillator();
   osc1.type = 'sine';
   osc1.frequency.setValueAtTime(2800, now);
   osc1.connect(env);
-  const osc2 = audioCtx.createOscillator();
+
+  // Oscillator 2 (5600Hz, 배음)
+  const osc2 = offline.createOscillator();
   osc2.type = 'sine';
   osc2.frequency.setValueAtTime(5600, now);
-  const g2 = audioCtx.createGain();
+  const g2 = offline.createGain();
   g2.gain.setValueAtTime(0.2, now);
   osc2.connect(g2);
   g2.connect(env);
-  const lfo = audioCtx.createOscillator();
+
+  // LFO (28Hz 비브라토)
+  const lfo = offline.createOscillator();
   lfo.type = 'sine';
   lfo.frequency.setValueAtTime(28, now);
-  const lfoG = audioCtx.createGain();
+  const lfoG = offline.createGain();
   lfoG.gain.setValueAtTime(80, now);
   lfo.connect(lfoG);
   lfoG.connect(osc1.frequency);
   lfoG.connect(osc2.frequency);
 
-  const noiseLen = Math.ceil(audioCtx.sampleRate * duration);
-  const noiseBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
+  // 노이즈 (HPF 2000Hz)
+  const noiseLen = Math.ceil(sampleRate * duration);
+  const noiseBuf = offline.createBuffer(1, noiseLen, sampleRate);
   const nd = noiseBuf.getChannelData(0);
   for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * 0.12;
-  const noise = audioCtx.createBufferSource();
+  const noise = offline.createBufferSource();
   noise.buffer = noiseBuf;
-  const hpf = audioCtx.createBiquadFilter();
+  const hpf = offline.createBiquadFilter();
   hpf.type = 'highpass';
   hpf.frequency.setValueAtTime(2000, now);
-  const nG = audioCtx.createGain();
+  const nG = offline.createGain();
   nG.gain.setValueAtTime(0.4, now);
   nG.gain.setValueAtTime(0.4, end - 0.04);
   nG.gain.linearRampToValueAtTime(0, end);
@@ -206,109 +150,232 @@ function createFixedTone(startTime, duration) {
   lfo.stop(end + 0.01);
   noise.start(now);
   noise.stop(end + 0.01);
+
+  return offline.startRendering();
 }
 
-// === 꾹 누르기 (hold) ===
-async function startHoldWhistle() {
-  if (isPlaying) return;
-  ensureAudio();
-  if (audioCtx.state !== 'running') {
-    await audioCtx.resume();
+// 삐삐삐 패턴 렌더링 (0.25s + 0.1s쉼 + 0.25s + 0.1s쉼 + 0.5s)
+async function renderTripleWav() {
+  const sampleRate = 44100;
+  const totalDuration = 1.2;
+  const length = Math.ceil(sampleRate * totalDuration);
+  const offline = new OfflineAudioContext(1, length, sampleRate);
+
+  // 3개의 톤 구간 정의
+  const tones = [
+    { start: 0, duration: 0.25 },
+    { start: 0.35, duration: 0.25 },
+    { start: 0.7, duration: 0.5 },
+  ];
+
+  for (const tone of tones) {
+    const now = tone.start;
+    const end = now + tone.duration;
+
+    const preGain = offline.createGain();
+    preGain.gain.setValueAtTime(4.0, now);
+    const shaper = offline.createWaveShaper();
+    shaper.curve = makeSoftClipCurve(18);
+    shaper.oversample = '4x';
+    const comp1 = offline.createDynamicsCompressor();
+    comp1.threshold.setValueAtTime(-28, now);
+    comp1.knee.setValueAtTime(3, now);
+    comp1.ratio.setValueAtTime(14, now);
+    comp1.attack.setValueAtTime(0.001, now);
+    comp1.release.setValueAtTime(0.03, now);
+    const comp2 = offline.createDynamicsCompressor();
+    comp2.threshold.setValueAtTime(-12, now);
+    comp2.knee.setValueAtTime(2, now);
+    comp2.ratio.setValueAtTime(10, now);
+    comp2.attack.setValueAtTime(0.001, now);
+    comp2.release.setValueAtTime(0.02, now);
+    const limiter = offline.createDynamicsCompressor();
+    limiter.threshold.setValueAtTime(-1, now);
+    limiter.knee.setValueAtTime(0, now);
+    limiter.ratio.setValueAtTime(20, now);
+    limiter.attack.setValueAtTime(0.0005, now);
+    limiter.release.setValueAtTime(0.005, now);
+    const postGain = offline.createGain();
+    postGain.gain.setValueAtTime(2.0, now);
+    preGain.connect(shaper);
+    shaper.connect(comp1);
+    comp1.connect(comp2);
+    comp2.connect(limiter);
+    limiter.connect(postGain);
+    postGain.connect(offline.destination);
+
+    const env = offline.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(1, now + 0.015);
+    env.gain.setValueAtTime(1, end - 0.04);
+    env.gain.linearRampToValueAtTime(0, end);
+    env.connect(preGain);
+
+    const osc1 = offline.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(2800, now);
+    osc1.connect(env);
+    const osc2 = offline.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(5600, now);
+    const g2 = offline.createGain();
+    g2.gain.setValueAtTime(0.2, now);
+    osc2.connect(g2);
+    g2.connect(env);
+    const lfo = offline.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(28, now);
+    const lfoG = offline.createGain();
+    lfoG.gain.setValueAtTime(80, now);
+    lfo.connect(lfoG);
+    lfoG.connect(osc1.frequency);
+    lfoG.connect(osc2.frequency);
+
+    const noiseLen = Math.ceil(sampleRate * tone.duration);
+    const noiseBuf = offline.createBuffer(1, noiseLen, sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * 0.12;
+    const noise = offline.createBufferSource();
+    noise.buffer = noiseBuf;
+    const hpf = offline.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.setValueAtTime(2000, now);
+    const nG = offline.createGain();
+    nG.gain.setValueAtTime(0.4, now);
+    nG.gain.setValueAtTime(0.4, end - 0.04);
+    nG.gain.linearRampToValueAtTime(0, end);
+    noise.connect(hpf);
+    hpf.connect(nG);
+    nG.connect(preGain);
+
+    osc1.start(now);
+    osc1.stop(end + 0.01);
+    osc2.start(now);
+    osc2.stop(end + 0.01);
+    lfo.start(now);
+    lfo.stop(end + 0.01);
+    noise.start(now);
+    noise.stop(end + 0.01);
   }
-  doStartHold();
+
+  return offline.startRendering();
 }
 
-function doStartHold() {
+// AudioBuffer → WAV Blob 변환 (PCM 16bit)
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const bitDepth = 16;
+  const data = buffer.getChannelData(0);
+  const byteRate = sampleRate * numChannels * (bitDepth / 8);
+  const blockAlign = numChannels * (bitDepth / 8);
+  const dataLength = data.length * (bitDepth / 8);
+  const headerLength = 44;
+  const arrayBuffer = new ArrayBuffer(headerLength + dataLength);
+  const view = new DataView(arrayBuffer);
+
+  // RIFF 헤더
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, 'WAVE');
+
+  // fmt 청크
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // 청크 크기
+  view.setUint16(20, 1, true); // PCM 포맷
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+
+  // data 청크
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  // PCM 데이터 (float → int16)
+  for (let i = 0; i < data.length; i++) {
+    const s = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(headerLength + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+// === 사전 렌더링 (앱 초기화 시 백그라운드) ===
+async function prepareAudioCache() {
+  try {
+    // hold: 3초 (루프 재생)
+    const holdBuf = await renderWhistleWav(3.0);
+    const holdBlob = audioBufferToWav(holdBuf);
+    audioCache.hold = new Audio(URL.createObjectURL(holdBlob));
+    audioCache.hold.loop = true;
+
+    // long: 1.5초
+    const longBuf = await renderWhistleWav(1.5);
+    audioCache.long = new Audio(URL.createObjectURL(audioBufferToWav(longBuf)));
+
+    // triple: 삐삐삐 패턴
+    const tripleBuf = await renderTripleWav();
+    audioCache.triple = new Audio(URL.createObjectURL(audioBufferToWav(tripleBuf)));
+
+    cacheReady = true;
+    // 로딩 표시 해제
+    if (whistleBtn) whistleBtn.classList.remove('whistle-main-btn--loading');
+    console.log('휘슬 사전 렌더링 완료');
+  } catch (e) {
+    console.warn('휘슬 사전 렌더링 실패:', e);
+  }
+}
+
+// === 재생 로직 (HTML5 Audio) ===
+function startHoldWhistle() {
   if (isPlaying) return;
+  if (!audioCache.hold) return;
   isPlaying = true;
-  const now = audioCtx.currentTime;
-  const input = createMaxChain(now);
-
-  const env = audioCtx.createGain();
-  env.gain.setValueAtTime(0, now);
-  env.gain.linearRampToValueAtTime(1, now + 0.015);
-  env.connect(input);
-
-  const osc1 = audioCtx.createOscillator();
-  osc1.type = 'sine';
-  osc1.frequency.setValueAtTime(2800, now);
-  osc1.connect(env);
-  const osc2 = audioCtx.createOscillator();
-  osc2.type = 'sine';
-  osc2.frequency.setValueAtTime(5600, now);
-  const g2 = audioCtx.createGain();
-  g2.gain.setValueAtTime(0.2, now);
-  osc2.connect(g2);
-  g2.connect(env);
-  const lfo = audioCtx.createOscillator();
-  lfo.type = 'sine';
-  lfo.frequency.setValueAtTime(28, now);
-  const lfoG = audioCtx.createGain();
-  lfoG.gain.setValueAtTime(80, now);
-  lfo.connect(lfoG);
-  lfoG.connect(osc1.frequency);
-  lfoG.connect(osc2.frequency);
-
-  const noiseLen = audioCtx.sampleRate * 30;
-  const noiseBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
-  const nd = noiseBuf.getChannelData(0);
-  for (let i = 0; i < noiseLen; i++) nd[i] = (Math.random() * 2 - 1) * 0.12;
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = noiseBuf;
-  const hpf = audioCtx.createBiquadFilter();
-  hpf.type = 'highpass';
-  hpf.frequency.setValueAtTime(2000, now);
-  const nG = audioCtx.createGain();
-  nG.gain.setValueAtTime(0.4, now);
-  noise.connect(hpf);
-  hpf.connect(nG);
-  nG.connect(input);
-
-  osc1.start(now);
-  osc2.start(now);
-  lfo.start(now);
-  noise.start(now);
+  audioCache.hold.volume = getCubicVol();
+  audioCache.hold.currentTime = 0;
+  audioCache.hold.play().catch(() => {});
   if (navigator.vibrate) navigator.vibrate([9999]);
-  activeNodes = { osc1, osc2, lfo, noise, env, nG };
 }
 
 function stopHoldWhistle() {
-  if (!isPlaying || !activeNodes) {
-    isPlaying = false;
-    return;
-  }
-  const now = audioCtx.currentTime;
-  const fade = 0.03;
-  try {
-    activeNodes.env.gain.cancelScheduledValues(now);
-    activeNodes.env.gain.setValueAtTime(activeNodes.env.gain.value, now);
-    activeNodes.env.gain.linearRampToValueAtTime(0, now + fade);
-    activeNodes.nG.gain.cancelScheduledValues(now);
-    activeNodes.nG.gain.setValueAtTime(activeNodes.nG.gain.value, now);
-    activeNodes.nG.gain.linearRampToValueAtTime(0, now + fade);
-    const st = now + fade + 0.01;
-    activeNodes.osc1.stop(st);
-    activeNodes.osc2.stop(st);
-    activeNodes.lfo.stop(st);
-    activeNodes.noise.stop(st);
-  } catch (e) {
-    /* ignore */
+  if (!isPlaying) return;
+  if (audioCache.hold) {
+    audioCache.hold.pause();
+    audioCache.hold.currentTime = 0;
   }
   if (navigator.vibrate) navigator.vibrate(0);
-  activeNodes = null;
-  masterGain = null;
   isPlaying = false;
+}
+
+function playLong() {
+  if (!audioCache.long) return;
+  audioCache.long.volume = getCubicVol();
+  audioCache.long.currentTime = 0;
+  audioCache.long.play().catch(() => {});
+}
+
+function playTriple() {
+  if (!audioCache.triple) return;
+  audioCache.triple.volume = getCubicVol();
+  audioCache.triple.currentTime = 0;
+  audioCache.triple.play().catch(() => {});
 }
 
 // === 볼륨 업데이트 ===
 function updateVolume() {
   const v = getVolume();
   if (volLabel) volLabel.textContent = Math.round(v * 100) + '%';
-  if (masterGain && audioCtx) {
-    const now = audioCtx.currentTime;
-    const expVol = v * v * v;
-    masterGain.gain.cancelScheduledValues(now);
-    masterGain.gain.setValueAtTime(expVol * 4.0, now);
+  // 재생 중인 hold Audio 볼륨 실시간 업데이트
+  if (isPlaying && audioCache.hold) {
+    audioCache.hold.volume = getCubicVol();
   }
 }
 
@@ -352,24 +419,18 @@ function pulseTimerRipple() {
   });
 }
 
-// === 이벤트 핸들러 ===
-async function handleDown(e) {
+// === 이벤트 핸들러 (async 제거 — 제스처 컨텍스트 보존) ===
+function handleDown(e) {
   e.preventDefault();
-  if (pressing) return;
+  if (pressing || !cacheReady) return;
   pressing = true;
   if (whistleBtn) whistleBtn.classList.add('whistle-main-btn--pressed');
-
-  // 모바일: AudioContext resume을 확실히 대기
-  ensureAudio();
-  if (audioCtx.state !== 'running') {
-    await audioCtx.resume();
-  }
 
   if (currentMode === 'hold') {
     startHoldWhistle();
     startRipple();
   } else if (currentMode === 'long') {
-    createFixedTone(audioCtx.currentTime, 1.5);
+    playLong();
     pulseRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -377,10 +438,7 @@ async function handleDown(e) {
       if (whistleBtn) whistleBtn.classList.remove('whistle-main-btn--pressed');
     }, 300);
   } else if (currentMode === 'triple') {
-    const now = audioCtx.currentTime;
-    createFixedTone(now, 0.25);
-    createFixedTone(now + 0.35, 0.25);
-    createFixedTone(now + 0.7, 0.5);
+    playTriple();
     pulseRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -404,23 +462,17 @@ function handleUp(e) {
 // === 타이머 인라인 휘슬 핸들러 ===
 let timerPressing = false;
 
-async function handleTimerDown(e) {
+function handleTimerDown(e) {
   e.preventDefault();
-  if (timerPressing) return;
+  if (timerPressing || !cacheReady) return;
   timerPressing = true;
   if (timerWhistleBtn) timerWhistleBtn.classList.add('timer-whistle-btn--pressed');
-
-  // 모바일: AudioContext resume을 확실히 대기
-  ensureAudio();
-  if (audioCtx.state !== 'running') {
-    await audioCtx.resume();
-  }
 
   if (timerMode === 'hold') {
     startHoldWhistle();
     startTimerRipple();
   } else if (timerMode === 'long') {
-    createFixedTone(audioCtx.currentTime, 1.5);
+    playLong();
     pulseTimerRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -428,10 +480,7 @@ async function handleTimerDown(e) {
       if (timerWhistleBtn) timerWhistleBtn.classList.remove('timer-whistle-btn--pressed');
     }, 300);
   } else if (timerMode === 'triple') {
-    const now = audioCtx.currentTime;
-    createFixedTone(now, 0.25);
-    createFixedTone(now + 0.35, 0.25);
-    createFixedTone(now + 0.7, 0.5);
+    playTriple();
     pulseTimerRipple();
     if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
     setTimeout(() => {
@@ -503,7 +552,6 @@ function bindTimerWhistle(btnId, ring1Id, ring2Id) {
   const r2 = document.getElementById(ring2Id);
   if (!btn) return;
 
-  // 첫 번째 바인딩만 timerWhistleBtn 등에 저장 (기존 호환)
   if (!timerWhistleBtn) {
     timerWhistleBtn = btn;
     timerRing1 = r1;
@@ -512,7 +560,6 @@ function bindTimerWhistle(btnId, ring1Id, ring2Id) {
 
   const down = e => {
     e.preventDefault();
-    // 현재 활성 버튼/링 교체
     timerWhistleBtn = btn;
     timerRing1 = r1;
     timerRing2 = r2;
@@ -547,6 +594,10 @@ function init() {
   hintEl = document.getElementById('whistle-hint');
 
   if (!panel || !whistleBtn) return;
+
+  // 휘슬 소리 사전 렌더링 (백그라운드) — 완료 전까지 로딩 표시
+  whistleBtn.classList.add('whistle-main-btn--loading');
+  prepareAudioCache();
 
   // 패널 바깥 클릭으로 닫기 (right-toolbar도 제외)
   document.addEventListener('click', e => {
@@ -605,7 +656,6 @@ function init() {
   document.querySelectorAll('[data-whistle-mode], [data-gm-whistle-mode]').forEach(b => {
     b.addEventListener('click', () => {
       timerMode = b.dataset.mode;
-      // 같은 컨테이너 내 모드 버튼만 토글
       const attr = b.hasAttribute('data-gm-whistle-mode')
         ? 'data-gm-whistle-mode'
         : 'data-whistle-mode';
@@ -619,11 +669,15 @@ function init() {
 function destroy() {
   closePanel();
   if (isPlaying) stopHoldWhistle();
-  if (audioCtx) {
-    audioCtx.close().catch(() => {});
-    audioCtx = null;
-  }
-  firstUnlocked = false;
+  // Object URL 해제
+  Object.values(audioCache).forEach(audio => {
+    if (audio) {
+      audio.pause();
+      URL.revokeObjectURL(audio.src);
+    }
+  });
+  audioCache = { hold: null, long: null, triple: null };
+  cacheReady = false;
 }
 
 function setTimerMode(mode) {
@@ -637,7 +691,6 @@ export const Whistle = {
   hide,
   togglePanel,
   closePanel,
-  unlockAudio,
   bindTimerWhistle,
   setTimerMode,
 };

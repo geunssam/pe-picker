@@ -3088,6 +3088,11 @@
   -webkit-user-select: none;
 }
 
+.whistle-main-btn--loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .whistle-main-btn--pressed {
   transform: translateY(4px);
   box-shadow:

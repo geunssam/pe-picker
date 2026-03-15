@@ -30,9 +30,6 @@ function startQuickTimer(seconds) {
   if (!seconds || seconds <= 0) return;
   closePanel();
 
-  // AudioContext 미리 활성화 (사용자 제스처에서 호출 — 모바일 필수)
-  Whistle.unlockAudio();
-
   // 전체화면 DOM 보장
   TimerModule.ensureFullscreenDOM();
 
