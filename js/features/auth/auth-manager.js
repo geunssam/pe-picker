@@ -5,11 +5,15 @@ import {
   onAuthStateChanged,
   reauthenticateWithPopup,
   signInWithPopup,
+  signInWithCredential,
   signOut as firebaseSignOut,
   setPersistence,
   browserLocalPersistence,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { withTimeout } from '../../shared/promise-utils.js';
+
+// Capacitor 네이티브 플랫폼 감지
+const isNative = () => window.Capacitor?.isNativePlatform?.() ?? false;
 
 let currentUser = null;
 let initialized = false;
@@ -106,6 +110,21 @@ async function signInWithGoogle() {
   const auth = getAuth();
   if (!auth) throw new Error('Firebase 인증 모듈이 준비되지 않았습니다.');
 
+  // 네이티브 앱: @capacitor-firebase/authentication으로 Google Sign-In
+  if (isNative()) {
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+    const result = await withTimeout(
+      FirebaseAuthentication.signInWithGoogle(),
+      30000,
+      'Native Google sign in'
+    );
+    // 네이티브 idToken으로 Firebase Web SDK credential 생성
+    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+    const userCredential = await signInWithCredential(auth, credential);
+    return userCredential.user;
+  }
+
+  // 웹: 기존 signInWithPopup 유지
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   const result = await withTimeout(signInWithPopup(auth, provider), 30000, 'Google sign in');
@@ -131,9 +150,18 @@ async function deleteAuthAccount() {
     await withTimeout(deleteUser(user), 10000, 'delete user');
   } catch (error) {
     if (error.code === 'auth/requires-recent-login') {
-      const provider = new GoogleAuthProvider();
-      await reauthenticateWithPopup(user, provider);
-      await withTimeout(deleteUser(user), 10000, 'delete user retry');
+      if (isNative()) {
+        // 네이티브: Capacitor Firebase Auth로 재인증 후 재시도
+        const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+        await signInWithCredential(getAuth(), credential);
+        await withTimeout(deleteUser(getAuth().currentUser), 10000, 'delete user retry');
+      } else {
+        const provider = new GoogleAuthProvider();
+        await reauthenticateWithPopup(user, provider);
+        await withTimeout(deleteUser(user), 10000, 'delete user retry');
+      }
     } else {
       throw error;
     }

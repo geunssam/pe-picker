@@ -586,6 +586,13 @@ export function handleBulkModalClick(event) {
   }
 }
 
+// ===== CSV 입력 검증 =====
+
+/** CSV에서 읽은 이름에서 위험 문자 제거 */
+function sanitizeName(name) {
+  return (name || '').trim().replace(/[<>"']/g, '');
+}
+
 // ===== CSV 파싱 =====
 
 const CSV_MAX_LINES = 200;
@@ -633,7 +640,7 @@ export function parseCSV(content) {
 
   for (let i = startIdx; i < lines.length; i++) {
     const cols = lines[i].split(delimiter).map(col => col.trim());
-    const name = (cols[nameColIdx] || '').trim();
+    const name = sanitizeName(cols[nameColIdx]);
     if (!name) continue;
 
     const numberRaw = numberColIdx >= 0 ? parseInt(cols[numberColIdx], 10) : NaN;

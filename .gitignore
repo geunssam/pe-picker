@@ -11,3 +11,8 @@ docs/.bkit-*
 .claude/
 video/node_modules/
 video/out/
+
+# Capacitor
+ios/App/Pods/
+ios/App/App/GoogleService-Info.plist
+android/app/google-services.json

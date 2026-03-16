@@ -2,7 +2,10 @@
    PE Picker - Whistle (만능 휘슬 FAB)
    OfflineAudioContext 사전 렌더링 + HTML5 Audio 재생
    iOS Safari 무음 스위치 우회
+   Capacitor 네이티브: AVAudioSession + mixWithOthers (Now Playing 방지)
    ============================================ */
+
+import { IosUtils } from '../../shared/ios-utils.js';
 
 let isPlaying = false;
 let currentMode = 'hold';
@@ -357,9 +360,34 @@ function clearMediaSession() {
   );
 }
 
-// === 재생 로직 (HTML5 Audio) ===
+// === 네이티브 오디오 (Capacitor) ===
+let NativeWhistle = null;
+
+async function getNativeWhistle() {
+  if (NativeWhistle) return NativeWhistle;
+  if (!IosUtils.isNativeApp()) return null;
+  try {
+    const { registerPlugin } = await import('@capacitor/core');
+    NativeWhistle = registerPlugin('NativeWhistle');
+    return NativeWhistle;
+  } catch {
+    return null;
+  }
+}
+
+// === 재생 로직 ===
 function startHoldWhistle() {
   if (isPlaying) return;
+
+  // 네이티브 앱: AVAudioSession 기반 재생
+  if (IosUtils.isNativeApp()) {
+    isPlaying = true;
+    getNativeWhistle().then(p => p?.play({ type: 'hold', volume: getCubicVol() }));
+    IosUtils.haptic('medium');
+    return;
+  }
+
+  // 웹: 기존 HTML5 Audio
   if (!audioCache.hold) return;
   isPlaying = true;
   audioCache.hold.volume = getCubicVol();
@@ -370,6 +398,13 @@ function startHoldWhistle() {
 
 function stopHoldWhistle() {
   if (!isPlaying) return;
+
+  if (IosUtils.isNativeApp()) {
+    getNativeWhistle().then(p => p?.stop());
+    isPlaying = false;
+    return;
+  }
+
   if (audioCache.hold) {
     audioCache.hold.pause();
     audioCache.hold.currentTime = 0;
@@ -380,6 +415,11 @@ function stopHoldWhistle() {
 }
 
 function playLong() {
+  if (IosUtils.isNativeApp()) {
+    getNativeWhistle().then(p => p?.play({ type: 'long', volume: getCubicVol() }));
+    IosUtils.haptic('medium');
+    return;
+  }
   if (!audioCache.long) return;
   audioCache.long.volume = getCubicVol();
   audioCache.long.currentTime = 0;
@@ -387,6 +427,11 @@ function playLong() {
 }
 
 function playTriple() {
+  if (IosUtils.isNativeApp()) {
+    getNativeWhistle().then(p => p?.play({ type: 'triple', volume: getCubicVol() }));
+    IosUtils.haptic('medium');
+    return;
+  }
   if (!audioCache.triple) return;
   audioCache.triple.volume = getCubicVol();
   audioCache.triple.currentTime = 0;

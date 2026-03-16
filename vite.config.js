@@ -14,6 +14,7 @@ export default defineConfig({
         login: 'login.html',
         privacy: 'privacy.html',
         terms: 'terms.html',
+        whistle: 'whistle.html',
       },
     },
   },
