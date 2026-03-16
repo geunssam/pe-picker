@@ -16,17 +16,25 @@
     <div class="timer-custom-field">
       <label class="timer-custom-label">분</label>
       <div class="number-stepper">
-        <button class="stepper-btn stepper-minus" data-target="timer-quick-min">−</button>
+        <button class="stepper-btn stepper-minus" data-target="timer-quick-min" data-dir="down">
+          −
+        </button>
         <input type="number" id="timer-quick-min" value="1" min="0" max="59" />
-        <button class="stepper-btn stepper-plus" data-target="timer-quick-min">+</button>
+        <button class="stepper-btn stepper-plus" data-target="timer-quick-min" data-dir="up">
+          +
+        </button>
       </div>
     </div>
     <div class="timer-custom-field">
       <label class="timer-custom-label">초</label>
       <div class="number-stepper">
-        <button class="stepper-btn stepper-minus" data-target="timer-quick-sec">−</button>
+        <button class="stepper-btn stepper-minus" data-target="timer-quick-sec" data-dir="down">
+          −
+        </button>
         <input type="number" id="timer-quick-sec" value="0" min="0" max="59" />
-        <button class="stepper-btn stepper-plus" data-target="timer-quick-sec">+</button>
+        <button class="stepper-btn stepper-plus" data-target="timer-quick-sec" data-dir="up">
+          +
+        </button>
       </div>
     </div>
   </div>

@@ -68,30 +68,6 @@ function bindFsWhistleOnce() {
   fsBound = true;
 }
 
-// === 스텝퍼 바인딩 (패널 내 분/초) ===
-function initSteppers() {
-  if (!panel) return;
-
-  panel.querySelectorAll('.stepper-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target;
-      const input = document.getElementById(targetId);
-      if (!input) return;
-
-      const min = parseInt(input.min) || 0;
-      const max = parseInt(input.max) || 59;
-      let val = parseInt(input.value) || 0;
-
-      if (btn.classList.contains('stepper-plus')) {
-        val = Math.min(val + 1, max);
-      } else {
-        val = Math.max(val - 1, min);
-      }
-      input.value = val;
-    });
-  });
-}
-
 // === 초기화 ===
 function init() {
   panel = document.getElementById('timer-panel');
@@ -116,9 +92,6 @@ function init() {
       if (seconds > 0) startQuickTimer(seconds);
     });
   });
-
-  // 스텝퍼
-  initSteppers();
 
   // 커스텀 시작 버튼
   const startBtn = document.getElementById('timer-quick-start');
