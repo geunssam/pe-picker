@@ -87,7 +87,11 @@ function bindLogin() {
       const profileData = { teacherName };
       if (user?.email) profileData.email = user.email;
       if (user?.photoURL) profileData.photoURL = user.photoURL;
-      await FirestoreSync.syncTeacherProfileToFirestore(profileData);
+
+      // 프로필 동기화는 백그라운드 — 실패해도 로그인 진행 (app.js에서 재동기화)
+      FirestoreSync.syncTeacherProfileToFirestore(profileData).catch(err => {
+        console.warn('[Login] 프로필 동기화 실패 (무시):', err.message);
+      });
 
       renderProfile();
       goToNextStep();
