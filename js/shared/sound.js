@@ -2,6 +2,11 @@
    PE Picker - Sound (Web Audio API)
    ============================================ */
 
+// iOS 무음모드 우회용 무음 MP3
+const SILENT_MP3 =
+  'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwMHAAAAAAD/+1DEAAAGAAGn9AAAIiOk9p89oABAEB2e7ocBAPwfB8HwfD5cHwfB8P/BAMPwQ/B8HwfB8uD4f/lwfB8H4f/5cEAQBB//y4Pg+D4f/+XBAEAQBA//5cHwfB8H///lwQBAEAQBAAAJieKgqGpJCYaCgqTy5JFlVVVJYQpKCBQgCFxIjEIABAwcaBh4UADAsDBgwZMjP/7UMQTgAkZJ6/09oABNSUz/z2gADAwY0GA4cIJBYMGD5w0GAJhRjWYIIhg4DAYUBliKYPA4kBphaYNEg4NARoYSCxgODhQAMHBxQVMDhk0IGTB0aGhQwIAjA4KKDxgMKlQAFAJEBzA4IMCg8wIBjAgLChgaLmAAYGBZYKVSqqlSWJYlqYliWJYlVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+let silentUnlocked = false;
+
 let audioCtx = null;
 
 function getContext() {
@@ -95,9 +100,19 @@ function playError() {
   playTone([300, 200], [0.15, 0.15], 0.2);
 }
 
-// AudioContext 활성화 (사용자 제스처 필요)
+// AudioContext 활성화 (사용자 제스처 필요) + iOS 무음모드 우회
 function activate() {
   getContext();
+  if (!silentUnlocked) {
+    try {
+      const el = new Audio(SILENT_MP3);
+      el.volume = 0.01;
+      el.play().catch(() => {});
+    } catch (e) {
+      /* ignore */
+    }
+    silentUnlocked = true;
+  }
 }
 
 export const Sound = {

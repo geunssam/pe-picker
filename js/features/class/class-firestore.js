@@ -147,6 +147,7 @@ export async function syncStudentsToFirestore(classId, students) {
     await withTimeout(batch.commit(), FIRESTORE_TIMEOUT_MS, '학생 서브컬렉션 동기화');
   } catch (error) {
     console.error('[Firestore] 학생 서브컬렉션 동기화 실패:', error);
+    throw error;
   }
 }
 

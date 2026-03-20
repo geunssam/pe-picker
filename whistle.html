@@ -248,6 +248,11 @@
     </div>
 
     <script>
+      // iOS 무음모드 우회용 무음 MP3
+      const SILENT_MP3 =
+        'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwMHAAAAAAD/+1DEAAAGAAGn9AAAIiOk9p89oABAEB2e7ocBAPwfB8HwfD5cHwfB8P/BAMPwQ/B8HwfB8uD4f/lwfB8H4f/5cEAQBB//y4Pg+D4f/+XBAEAQBA//5cHwfB8H///lwQBAEAQBAAAJieKgqGpJCYaCgqTy5JFlVVVJYQpKCBQgCFxIjEIABAwcaBh4UADAsDBgwZMjP/7UMQTgAkZJ6/09oABNSUz/z2gADAwY0GA4cIJBYMGD5w0GAJhRjWYIIhg4DAYUBliKYPA4kBphaYNEg4NARoYSCxgODhQAMHBxQVMDhk0IGTB0aGhQwIAjA4KKDxgMKlQAFAJEBzA4IMCg8wIBjAgLChgaLmAAYGBZYKVSqqlSWJYlqYliWJYlVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+      let silentAudioEl = null;
+
       let audioCtx = null;
       let isPlaying = false;
       let activeNodes = null;
@@ -273,6 +278,16 @@
       function unlockAudio() {
         if (firstUnlocked) return;
         ensureAudio();
+        // iOS 무음모드 우회: HTML5 Audio로 무음 mp3 재생
+        try {
+          if (!silentAudioEl) {
+            silentAudioEl = new Audio(SILENT_MP3);
+            silentAudioEl.loop = false;
+            silentAudioEl.volume = 0.01;
+          }
+          silentAudioEl.play().catch(() => {});
+        } catch (e) {}
+        // 기존 Web Audio 무음 버퍼 재생
         try {
           const buf = audioCtx.createBuffer(1, 1, 22050);
           const src = audioCtx.createBufferSource();
@@ -581,8 +596,7 @@
             hint.innerHTML = '버튼을 누르세요 🔊';
           }
           if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-            hint.innerHTML =
-              '<span class="warn">📱 소리가 안 나면 옆면 무음 스위치를 해제하세요</span>';
+            hint.innerHTML = '<span class="warn">📱 첫 터치 후 무음모드에서도 소리가 납니다</span>';
           }
         });
       });

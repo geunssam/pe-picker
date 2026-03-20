@@ -28,6 +28,7 @@ const USER_ID_KEY = 'pet_current_uid';
 let db = null;
 let currentUserId = null;
 let unsubscribeClasses = null;
+let _syncGeneration = 0;
 
 function notifyStoreUpdated() {
   window.dispatchEvent(new CustomEvent(STORE_UPDATED_EVENT, { detail: { source: 'firestore' } }));
@@ -235,7 +236,7 @@ async function hydrateClassesFromFirestore() {
     notifyStoreUpdated();
 
     // 2단계: 백그라운드에서 학생 서브컬렉션(badges/xp) 로드 → 업데이트
-    // 서브컬렉션에 이름 없는 학생은 로컬에서 복구
+    const gen = ++_syncGeneration;
     Promise.all(
       snap.docs.map(async docItem => {
         const data = docItem.data() || {};
@@ -243,7 +244,12 @@ async function hydrateClassesFromFirestore() {
         const cls = normalizeClassFromSnapshot(docItem.id, data, subStudents);
 
         const localStudents = localStudentsMap.get(docItem.id);
-        if (localStudents && localStudents.length > 0) {
+        if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
+          // 서브컬렉션 비어있음 (첫 동기화 or 로드 실패) → 로컬 보존
+          cls.students = localStudents;
+        } else if (localStudents && localStudents.length > 0) {
+          // 서브컬렉션에 데이터 있음 → source of truth
+          // 로컬에서 빈 이름만 복구 (서브컬렉션에 이름 없는 학생)
           const localMap = new Map(localStudents.map(s => [s.id, s]));
           cls.students = cls.students.map(s => {
             if ((!s.name || !s.name.trim()) && localMap.has(s.id)) {
@@ -257,13 +263,7 @@ async function hydrateClassesFromFirestore() {
             }
             return s;
           });
-          // 로컬에만 있는 학생(서브컬렉션 미동기화) 추가
-          const subIds = new Set(cls.students.map(s => s.id));
-          for (const local of localStudents) {
-            if (local.name && local.name.trim() && !subIds.has(local.id)) {
-              cls.students.push(local);
-            }
-          }
+          // 로컬에만 있는 학생은 추가하지 않음 → 삭제 부활 방지
         }
 
         // 로컬 transferredStudents 보존
@@ -278,6 +278,7 @@ async function hydrateClassesFromFirestore() {
       })
     )
       .then(fullClasses => {
+        if (gen !== _syncGeneration) return;
         Store.saveClasses(fullClasses);
         hydrateBadgesFromStudents(fullClasses);
         hydrateThermostatFromClasses(fullClasses);
@@ -396,7 +397,7 @@ function startRealtimeClassSync() {
       notifyStoreUpdated();
 
       // 2단계: 백그라운드에서 학생 서브컬렉션 로드
-      // 서브컬렉션에 이름 없는 학생은 로컬에서 복구
+      const gen = ++_syncGeneration;
       Promise.all(
         snapshot.docs.map(async docItem => {
           const data = docItem.data() || {};
@@ -404,7 +405,12 @@ function startRealtimeClassSync() {
           const cls = normalizeClassFromSnapshot(docItem.id, data, subStudents);
 
           const localStudents = localStudentsMap.get(docItem.id);
-          if (localStudents && localStudents.length > 0) {
+          if (cls.students.length === 0 && localStudents && localStudents.length > 0) {
+            // 서브컬렉션 비어있음 (첫 동기화 or 로드 실패) → 로컬 보존
+            cls.students = localStudents;
+          } else if (localStudents && localStudents.length > 0) {
+            // 서브컬렉션에 데이터 있음 → source of truth
+            // 로컬에서 빈 이름만 복구 (서브컬렉션에 이름 없는 학생)
             const localMap = new Map(localStudents.map(s => [s.id, s]));
             cls.students = cls.students.map(s => {
               if ((!s.name || !s.name.trim()) && localMap.has(s.id)) {
@@ -418,13 +424,7 @@ function startRealtimeClassSync() {
               }
               return s;
             });
-            // 로컬에만 있는 학생(서브컬렉션 미동기화) 추가
-            const subIds = new Set(cls.students.map(s => s.id));
-            for (const local of localStudents) {
-              if (local.name && local.name.trim() && !subIds.has(local.id)) {
-                cls.students.push(local);
-              }
-            }
+            // 로컬에만 있는 학생은 추가하지 않음 → 삭제 부활 방지
           }
 
           // 로컬 transferredStudents 보존
@@ -439,6 +439,7 @@ function startRealtimeClassSync() {
         })
       )
         .then(fullClasses => {
+          if (gen !== _syncGeneration) return;
           Store.saveClasses(fullClasses);
           hydrateBadgesFromStudents(fullClasses);
           hydrateThermostatFromClasses(fullClasses);
@@ -646,6 +647,7 @@ export function stop() {
     unsubscribeClasses();
     unsubscribeClasses = null;
   }
+  _syncGeneration = 0;
   currentUserId = null;
 }
 
